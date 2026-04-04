@@ -7,7 +7,7 @@ type GamesResponse =  {
 };
 
 export const getGames = async (skip= 0, limit =20): Promise<GamesResponse> => {
-    const response = await client.get<GamesResponse>('/api/v1/games', {
+    const response = await client.get<GamesResponse>('/games', {
         params: { skip, limit },
     });
     return response.data;

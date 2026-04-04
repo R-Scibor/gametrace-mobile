@@ -17,7 +17,7 @@ export const useAuth = () => {
         setError(null);
         try {
             const data = await login(discordName);
-            setState({ token: data.token, user: { discord_name: data.discord_name, username: data.username, timezone: data.timezone } });
+            setState({ token: data.token, user: { discord_id: data.discord_id, username: data.username, timezone: data.timezone } });
             return data.token;
         } catch (e: any) {
             const message = e.response?.data?.detail ?? 'An error occurred during login';

@@ -6,7 +6,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  discord_name: string;
+  discord_id: string;
   username: string;
   timezone: string;
 }
