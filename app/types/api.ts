@@ -6,7 +6,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  discord_id: string;
+  discord_name: string;
   username: string;
   timezone: string;
 }
@@ -69,7 +69,7 @@ export interface PendingErrorEntry {
   notes: string | null;
 }
 
-export interface StatsSummaryResponse {
+export interface StatsSummary {
   days: number;
   window_start: string;
   window_end: string;
