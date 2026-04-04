@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from '../hooks/useAuth';
 
 export default function AuthScreen() {
     const [discordName, setDiscordName] = useState("");
     const navigation = useNavigation<any>();
+    const { login, loading, error } = useAuth();
 
-    const handleLogin = () => {
-        if (!discordName.trim()) {
-            Alert.alert("Error", "Please enter your Discord name.");
-            return;
+    const onPress = async () => {
+        if (!discordName.trim()) return;
+        const token = await login(discordName);
+        if (token) {
+            navigation.navigate('Main');
         }
-        // TODO: Api call here
-        navigation.navigate('Main');
     };
 
     return (
@@ -23,8 +24,8 @@ export default function AuthScreen() {
                 placeholder="Discord Name"
                 value={discordName}
                 onChangeText={setDiscordName}
-            /> 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            />
+            <TouchableOpacity style={styles.button} onPress={onPress}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
         </View>
@@ -33,7 +34,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
     title: { fontSize: 32, fontWeight: 'bold', marginBottom: 32, textAlign: 'center' },
-    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 16, },
-    button: { backgroundColor: '#5865F2', padding: 14, borderRadius: 8, alignItems: 'center' },
+    input: { borderWidth: 1, borderColor: '#f70000', borderRadius: 8, padding: 12, marginBottom: 16, },
+    button: { backgroundColor: '#e2f105', padding: 14, borderRadius: 8, alignItems: 'center' },
     buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
 });
