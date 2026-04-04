@@ -22,7 +22,7 @@ export interface GameBrief {
 export type SessionStatus = 'ONGOING' | 'COMPLETED' | 'ERROR';
 export type SessionSource = 'BOT' | 'MANUAL';
 
-export interface SessionResponse {
+export interface Session {
   id: number;
   game_id: number;
   game: GameBrief;
@@ -50,7 +50,7 @@ export interface SessionPatch {
 
 export interface ConflictResponse {
   detail: string;
-  conflicting_session: SessionResponse;
+  conflicting_session: Session;
 }
 
 // Stats
