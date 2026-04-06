@@ -8,11 +8,18 @@ const client = axios.create({
     },
 });
 
+export const setAuthToken = (token: string | null) => {
+    if (token) {
+        client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+        delete client.defaults.headers.common['Authorization'];
+    }
+};
 
 // Request interceptor to add auth token
 client.interceptors.request.use(
     (config) => {
-        return config;          //TODO: add token later
+        return config;
     });
 
 // Response interceptor to handle errors

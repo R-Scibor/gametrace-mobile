@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { login } from '../api/auth';
+import { setAuthToken } from '../api/client';
 import { LoginResponse } from '../types/api';
 
 type AuthState = {
@@ -17,6 +18,7 @@ export const useAuth = () => {
         setError(null);
         try {
             const data = await login(discordName);
+            setAuthToken(data.token);
             setState({ token: data.token, user: { discord_id: data.discord_id, username: data.username, timezone: data.timezone } });
             return data.token;
         } catch (e: any) {

@@ -77,3 +77,16 @@ export interface StatsSummary {
   per_game: GameStatEntry[];
   pending_errors: PendingErrorEntry[];
 }
+
+export interface ActiveSessionBrief {
+  id: number;
+  game_name: string;
+  start_time: string;
+}
+
+export interface DashboardSummary {
+  total_seconds_7d: number;
+  total_seconds_30d: number;
+  active_session: ActiveSessionBrief | null;
+  pending_errors: PendingErrorEntry[];
+}
