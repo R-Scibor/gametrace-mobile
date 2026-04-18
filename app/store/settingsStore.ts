@@ -11,7 +11,6 @@ export const useSettingsStore = create<SettingsState>()(
     persist(
         (set) => ({
             isDarkMode: false,
-            language: 'en',
 
             toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
         }),

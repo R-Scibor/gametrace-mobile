@@ -1,34 +1,30 @@
 import { useState } from 'react';
 import { login } from '../api/auth';
-import { setAuthToken } from '../api/client';
-import { LoginResponse } from '../types/api';
-
-type AuthState = {
-    token: string | null;
-    user: Omit<LoginResponse, 'token'> | null;
-};
+import { useAuthStore } from '../store/authStore';
 
 export const useAuth = () => {
-    const [state, setState] = useState<AuthState>({ token: null, user: null });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login: storeLogin, logout, isAuthenticated, user } = useAuthStore();
 
-    const handleLogin = async (discordName: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await login(discordName);
-            setAuthToken(data.token);
-            setState({ token: data.token, user: { discord_id: data.discord_id, username: data.username, timezone: data.timezone } });
-            return data.token;
-        } catch (e: any) {
-            const message = e.response?.data?.detail ?? 'An error occurred during login';
-            setError(message);
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleLogin = async (discordName: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await login(discordName);
+      storeLogin(data.token, {
+        discordId: data.discord_id,
+        username: data.username,
+      });
+      return true;
+    } catch (e: any) {
+      const message = e.response?.data?.detail ?? 'Błąd połączenia z serwerem';
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return { ...state, loading, error, login: handleLogin };
+  return { loading, error, isAuthenticated, user, handleLogin, logout };
 };

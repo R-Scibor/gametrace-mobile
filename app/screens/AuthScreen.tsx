@@ -1,19 +1,14 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from '../hooks/useAuth';
 
 export default function AuthScreen() {
     const [discordName, setDiscordName] = useState("");
-    const navigation = useNavigation<any>();
-    const { login, loading, error } = useAuth();
+    const { handleLogin, loading, error } = useAuth();
 
     const onPress = async () => {
         if (!discordName.trim()) return;
-        const token = await login(discordName);
-        if (token) {
-            navigation.navigate('Main');
-        }
+        const success = await handleLogin(discordName);
     };
 
     return (
