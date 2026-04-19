@@ -18,6 +18,17 @@ export interface GameBrief {
   cover_image_url: string | null;
 }
 
+export type EnrichmentStatus = 'PENDING' | 'ENRICHED' | 'NEEDS_REVIEW';
+export type CoverSource = 'EXTERNAL' | 'CUSTOM';
+
+export interface Game {
+  id: number;
+  primary_name: string;
+  cover_image_url: string | null;
+  cover_source: CoverSource;
+  enrichment_status: EnrichmentStatus;
+}
+
 // Sessions
 export type SessionStatus = 'ONGOING' | 'COMPLETED' | 'ERROR';
 export type SessionSource = 'BOT' | 'MANUAL';
