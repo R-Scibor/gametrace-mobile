@@ -101,3 +101,9 @@ export interface DashboardSummary {
   active_session: ActiveSessionBrief | null;
   pending_errors: PendingErrorEntry[];
 }
+
+export type ProfileSettings = {
+  timezone: string;
+  language: 'pl' | 'en';
+  notifications_enabled: boolean;
+};

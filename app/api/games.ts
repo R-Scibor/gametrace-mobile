@@ -21,6 +21,9 @@ export const getGameSessions = async (
     return response.data;
 };
 
+export const getNeedsReviewGames = async (skip = 0, limit = 20): Promise<Game[]> =>
+    getGames(skip, limit, 'NEEDS_REVIEW');
+
 export const mergeGame = async (gameId: number, targetId: number): Promise<void> => {
     await client.post(`/games/${gameId}/merge/${targetId}`);
 };
