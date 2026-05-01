@@ -1,16 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { patchSession } from '../api/sessions';
+import DateTimeField from '../components/DateTimeField';
+import { getSession, patchSession } from '../api/sessions';
 
 export default function EditSessionScreen() {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const { sessionId, status } = route.params;
 
-    const [endTime, setEndTime] = useState('');
+    const [endTime, setEndTime] = useState<Date | null>(null);
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (status === 'ONGOING') return;
+        (async () => {
+            try {
+                const s = await getSession(sessionId);
+                if (s.end_time) setEndTime(new Date(s.end_time));
+                if (s.notes) setNotes(s.notes);
+            } catch {
+                // TODO
+            }
+        })();
+    }, [sessionId]);
 
     if (status === 'ONGOING') {
         return (
@@ -25,23 +39,23 @@ export default function EditSessionScreen() {
         setLoading(true);
         try {
             await patchSession(sessionId, {
-                end_time: endTime.trim() ? new Date(endTime).toISOString() : undefined,
+                end_time: endTime ? endTime.toISOString() : undefined,
                 notes: notes.trim() || undefined,
             });
             navigation.goBack();
-        } catch {
-            Alert.alert('Błąd', 'Nie udało się zapisać zmian');
-            // TODO
+        } catch (e: any) {
+            console.log('patchSession failed', e?.response?.status, e?.response?.data, e?.message);
+            const detail = e?.response?.data?.detail;
+            const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać zmian';
+            Alert.alert('Błąd', msg);
         }
         setLoading(false);
     };
 
     return (
         <ScrollView style={styles.container}>
-            <Text>Data w tym formacie: 2024-01-15T18:00</Text>
-
             <Text style={styles.label}>Czas zakończenia</Text>
-            <TextInput style={styles.input} value={endTime} onChangeText={setEndTime} />
+            <DateTimeField value={endTime} onChange={setEndTime} />
 
             <Text style={styles.label}>Notatki</Text>
             <TextInput
