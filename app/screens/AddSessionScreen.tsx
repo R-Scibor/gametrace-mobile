@@ -69,6 +69,10 @@ export default function AddSessionScreen() {
             <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
                 <Text style={styles.buttonText}>{loading ? 'Zapisywanie...' : 'Zapisz sesję'}</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Camera')}>
+                <Text style={styles.secondaryButtonText}>Nagraj głosowo</Text>
+            </TouchableOpacity>
         </ScrollView>
     );
 }
@@ -78,6 +82,8 @@ const styles = StyleSheet.create({
     label: { fontSize: 14, fontWeight: '600', marginBottom: 4, marginTop: 12 },
     input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16 },
     textArea: { height: 80, textAlignVertical: 'top' },
-    button: { backgroundColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 24, marginBottom: 40 },
+    button: { backgroundColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 24, marginBottom: 12 },
     buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+    secondaryButton: { borderWidth: 1, borderColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 40 },
+    secondaryButtonText: { color: '#5865F2', fontSize: 16, fontWeight: '600' },
 });
