@@ -91,11 +91,14 @@ export interface StatsSummary {
 
 export interface ActiveSessionBrief {
   id: number;
+  game_id: number;
   game_name: string;
+  cover_image_url: string | null;
   start_time: string;
 }
 
 export interface DashboardSummary {
+  total_seconds_today: number;
   total_seconds_7d: number;
   total_seconds_30d: number;
   active_session: ActiveSessionBrief | null;
