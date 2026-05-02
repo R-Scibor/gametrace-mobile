@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert 
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DateTimeField from '../components/DateTimeField';
 import { getSession, patchSession } from '../api/sessions';
+import { useSessionsStore } from '../store/sessionsStore';
 
 export default function EditSessionScreen() {
     const route = useRoute<any>();
@@ -42,6 +43,7 @@ export default function EditSessionScreen() {
                 end_time: endTime ? endTime.toISOString() : undefined,
                 notes: notes.trim() || undefined,
             });
+            useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
             console.log('patchSession failed', e?.response?.status, e?.response?.data, e?.message);

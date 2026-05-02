@@ -5,6 +5,7 @@ import DateTimeField from '../components/DateTimeField';
 import { createSession } from '../api/sessions';
 import { getGames } from '../api/games';
 import { Game } from '../types/api';
+import { useSessionsStore } from '../store/sessionsStore';
 
 export default function AddSessionScreen() {
     const navigation = useNavigation<any>();
@@ -47,6 +48,7 @@ export default function AddSessionScreen() {
                 end_time: endTime.toISOString(),
                 notes: notes.trim() || undefined,
             });
+            useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
             console.log('createSession failed', e?.response?.status, e?.response?.data, e?.message);
