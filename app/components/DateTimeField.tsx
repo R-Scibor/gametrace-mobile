@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { colors } from '../theme/colors';
+import { bodyFont } from '../theme/fonts';
 
 type Props = {
     value: Date | null;
@@ -17,8 +19,11 @@ export default function DateTimeField({ value, onChange, placeholder = 'Wybierz.
 
     return (
         <>
-            <TouchableOpacity style={styles.input} onPress={open}>
-                <Text>{value ? value.toLocaleString() : placeholder}</Text>
+            <TouchableOpacity style={styles.wrapper} onPress={open} activeOpacity={0.8}>
+                <View style={styles.orangeBar} />
+                <Text style={[styles.value, !value && styles.placeholder]}>
+                    {value ? value.toLocaleString('pl') : placeholder}
+                </Text>
             </TouchableOpacity>
             {picker && (
                 <DateTimePicker
@@ -46,5 +51,16 @@ export default function DateTimeField({ value, onChange, placeholder = 'Wybierz.
 }
 
 const styles = StyleSheet.create({
-    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 },
+    wrapper: {
+        flexDirection: 'row',
+        backgroundColor: colors.bg3,
+        borderWidth: 1, borderColor: colors.borderBright,
+        borderRadius: 2, overflow: 'hidden',
+    },
+    orangeBar: { width: 2, alignSelf: 'stretch', backgroundColor: colors.orange },
+    value: {
+        flex: 1, paddingHorizontal: 14, paddingVertical: 12,
+        fontFamily: bodyFont.regular, fontSize: 15, color: colors.text,
+    },
+    placeholder: { color: colors.text3 },
 });
