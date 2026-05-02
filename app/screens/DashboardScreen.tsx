@@ -93,7 +93,6 @@ export default function DashboardScreen() {
     const today = data?.total_seconds_today ?? 0;
     const week = data?.total_seconds_7d ?? 0;
     const month = data?.total_seconds_30d ?? 0;
-    const avgPerDay = week / 7;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -172,9 +171,8 @@ export default function DashboardScreen() {
                 {/* Stat tiles */}
                 <View style={styles.tilesRow}>
                     <StatTile label="DZIŚ" value={fmtHours(today)} unit="h" />
-                    <StatTile label="OSTATNIE 7 DNI" value={fmtHours(week)} unit="h"
-                        sub={`Ø ${avgPerDay.toFixed(1)} h/dzień`} />
-                    <StatTile label="OSTATNIE 30 DNI" value={fmtHours(month)} unit="h" />
+                    <StatTile label="7 DNI" value={fmtHours(week)} unit="h" />
+                    <StatTile label="30 DNI" value={fmtHours(month)} unit="h" />
                 </View>
 
                 {/* Recent sessions */}
@@ -217,16 +215,17 @@ export default function DashboardScreen() {
     );
 }
 
-function StatTile({ label, value, unit, sub }: { label: string; value: string; unit: string; sub?: string }) {
+function StatTile({ label, value, unit }: { label: string; value: string; unit: string }) {
     return (
         <View style={styles.tile}>
             <View style={styles.tileRule} />
-            <Text style={styles.tileLabel}>{label}</Text>
-            <View style={styles.tileValueRow}>
-                <Text style={styles.tileValue}>{value}</Text>
-                <Text style={styles.tileUnit}>{unit}</Text>
+            <View style={styles.tileBody}>
+                <Text style={styles.tileLabel}>{label}</Text>
+                <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{value}</Text>
+                    <Text style={styles.tileUnit}>{unit}</Text>
+                </View>
             </View>
-            {sub && <Text style={styles.tileSub}>{sub}</Text>}
         </View>
     );
 }
@@ -314,25 +313,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 16,
     },
     tile: {
-        flex: 1, backgroundColor: colors.bg2, borderRadius: 4, borderWidth: 1, borderColor: colors.border,
-        paddingHorizontal: 12, paddingVertical: 14, overflow: 'hidden', position: 'relative',
+        flex: 1, flexDirection: 'row',
+        backgroundColor: colors.bg2, borderRadius: 4,
+        borderWidth: 1, borderColor: colors.border,
+        overflow: 'hidden',
     },
     tileRule: {
-        position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
-        backgroundColor: colors.orange, opacity: 0.6,
+        width: 3, backgroundColor: colors.orange, opacity: 0.7,
+    },
+    tileBody: {
+        flex: 1, paddingHorizontal: 10, paddingVertical: 10,
     },
     tileLabel: {
-        fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 2, color: colors.text3, marginBottom: 8,
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2, color: colors.text3, marginBottom: 6,
     },
     tileValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
     tileValue: {
-        fontFamily: displayFont.bold, fontSize: 28, letterSpacing: -1, color: colors.orange, lineHeight: 30,
+        fontFamily: displayFont.bold, fontSize: 32, letterSpacing: -1, color: colors.orange, lineHeight: 34,
     },
     tileUnit: {
-        fontFamily: displayFont.regular, fontSize: 13, color: colors.text3,
-    },
-    tileSub: {
-        fontFamily: bodyFont.regular, fontSize: 10, color: colors.text3, marginTop: 6,
+        fontFamily: displayFont.regular, fontSize: 14, color: colors.text3,
     },
 
     // Section header
