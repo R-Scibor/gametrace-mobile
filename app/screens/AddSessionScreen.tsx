@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import DateTimeField from '../components/DateTimeField';
 import { createSession } from '../api/sessions';
 import { getGames } from '../api/games';
 import { Game } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
+import { colors } from '../theme/colors';
+import { bodyFont, displayFont } from '../theme/fonts';
+import { common } from '../theme/styles';
 
 export default function AddSessionScreen() {
     const navigation = useNavigation<any>();
@@ -60,74 +64,135 @@ export default function AddSessionScreen() {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.label}>Gra</Text>
-            {selectedGame ? (
-                <TouchableOpacity
-                    style={styles.selectedGame}
-                    onPress={() => { setSelectedGame(null); setGameQuery(''); }}
-                >
-                    <Text style={styles.selectedGameText}>{selectedGame.primary_name}</Text>
-                    <Text style={styles.changeLink}>Zmień</Text>
-                </TouchableOpacity>
-            ) : (
-                <>
+        <SafeAreaView style={common.safe} edges={['top']}>
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={common.eyebrow}>◈ GAMETRACE</Text>
+                    <Text style={common.title}>Dodaj sesję</Text>
+                </View>
+
+                {/* Game picker */}
+                <Text style={common.label}>GRA</Text>
+                {selectedGame ? (
+                    <TouchableOpacity
+                        style={styles.selectedGame}
+                        onPress={() => { setSelectedGame(null); setGameQuery(''); }}
+                        activeOpacity={0.8}
+                    >
+                        <View style={styles.selectedGameRule} />
+                        <Text style={styles.selectedGameText} numberOfLines={1}>{selectedGame.primary_name}</Text>
+                        <Text style={styles.changeLink}>Zmień →</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <>
+                        <View style={common.inputWrapper}>
+                            <View style={common.orangeBar} />
+                            <TextInput
+                                style={common.input}
+                                placeholder="Szukaj gry..."
+                                placeholderTextColor={colors.text3}
+                                value={gameQuery}
+                                onChangeText={setGameQuery}
+                                autoCorrect={false}
+                            />
+                        </View>
+                        {filteredGames.length > 0 && (
+                            <View style={styles.dropdown}>
+                                {filteredGames.map((game, i) => (
+                                    <TouchableOpacity
+                                        key={game.id}
+                                        style={[styles.dropdownRow, i < filteredGames.length - 1 && styles.dropdownRowBorder]}
+                                        onPress={() => setSelectedGame(game)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={styles.dropdownText}>{game.primary_name}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </>
+                )}
+
+                {/* Start time */}
+                <Text style={common.label}>ROZPOCZĘCIE</Text>
+                <DateTimeField value={startTime} onChange={setStartTime} />
+
+                {/* End time */}
+                <Text style={common.label}>ZAKOŃCZENIE</Text>
+                <DateTimeField value={endTime} onChange={setEndTime} />
+
+                {/* Notes */}
+                <Text style={common.label}>NOTATKI (OPCJONALNE)</Text>
+                <View style={common.inputWrapper}>
+                    <View style={common.orangeBar} />
                     <TextInput
-                        style={styles.input}
-                        placeholder="Szukaj gry..."
-                        value={gameQuery}
-                        onChangeText={setGameQuery}
+                        style={[common.input, styles.textArea]}
+                        placeholder="Dodatkowe informacje"
+                        placeholderTextColor={colors.text3}
+                        value={notes}
+                        onChangeText={setNotes}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
                     />
-                    {filteredGames.map(game => (
-                        <TouchableOpacity
-                            key={game.id}
-                            style={styles.gameRow}
-                            onPress={() => setSelectedGame(game)}
-                        >
-                            <Text>{game.primary_name}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </>
-            )}
+                </View>
 
-            <Text style={styles.label}>Rozpoczęcie</Text>
-            <DateTimeField value={startTime} onChange={setStartTime} />
+                {/* Submit */}
+                <TouchableOpacity
+                    style={[common.button, loading && common.buttonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={loading}
+                    activeOpacity={0.85}
+                >
+                    <Text style={[common.buttonText, loading && common.buttonTextDisabled]}>
+                        {loading ? 'ZAPISYWANIE...' : 'ZAPISZ SESJĘ'}
+                    </Text>
+                </TouchableOpacity>
 
-            <Text style={styles.label}>Zakończenie</Text>
-            <DateTimeField value={endTime} onChange={setEndTime} />
+                {/* Voice */}
+                <TouchableOpacity
+                    style={common.secondaryButton}
+                    onPress={() => navigation.navigate('Camera')}
+                    activeOpacity={0.7}
+                >
+                    <Text style={common.secondaryButtonText}>NAGRAJ GŁOSOWO</Text>
+                </TouchableOpacity>
 
-            <Text style={styles.label}>Notatki (opcjonalne)</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Np. sesja z kolegami..."
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                numberOfLines={3}
-            />
-
-            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-                <Text style={styles.buttonText}>{loading ? 'Zapisywanie...' : 'Zapisz sesję'}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Camera')}>
-                <Text style={styles.secondaryButtonText}>Nagraj głosowo</Text>
-            </TouchableOpacity>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    label: { fontSize: 14, fontWeight: '600', marginBottom: 4, marginTop: 12 },
-    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16 },
-    textArea: { height: 80, textAlignVertical: 'top' },
-    gameRow: { padding: 12, borderBottomWidth: 1, borderColor: '#eee' },
-    selectedGame: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#5865F2', borderRadius: 8, padding: 12 },
-    selectedGameText: { fontSize: 16, fontWeight: '600' },
-    changeLink: { color: '#5865F2' },
-    button: { backgroundColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 24, marginBottom: 12 },
-    buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-    secondaryButton: { borderWidth: 1, borderColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 40 },
-    secondaryButtonText: { color: '#5865F2', fontSize: 16, fontWeight: '600' },
+    content: { paddingHorizontal: 20, paddingBottom: 40 },
+    header: { paddingTop: 16, paddingBottom: 20 },
+    textArea: { height: 80, paddingTop: 12 },
+
+    dropdown: {
+        marginTop: 2,
+        backgroundColor: colors.bg2,
+        borderWidth: 1, borderColor: colors.border,
+        borderRadius: 2,
+    },
+    dropdownRow: { paddingHorizontal: 14, paddingVertical: 12 },
+    dropdownRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    dropdownText: { fontFamily: bodyFont.regular, fontSize: 15, color: colors.text },
+
+    selectedGame: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: colors.bg2,
+        borderWidth: 1, borderColor: colors.border,
+        borderRadius: 2, overflow: 'hidden',
+    },
+    selectedGameRule: { width: 2, alignSelf: 'stretch', backgroundColor: colors.orange },
+    selectedGameText: {
+        flex: 1, paddingHorizontal: 14, paddingVertical: 12,
+        fontFamily: bodyFont.medium, fontSize: 15, color: colors.text,
+    },
+    changeLink: {
+        fontFamily: displayFont.regular, fontSize: 11, letterSpacing: 1,
+        color: colors.text3, paddingRight: 14,
+    },
 });
