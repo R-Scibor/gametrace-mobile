@@ -1,0 +1,15 @@
+export const colors = {
+  bg:           '#14110f',
+  bg2:          '#1a1714',
+  bg3:          '#221e1a',
+  bg4:          '#2c2722',
+  border:       '#2f2b27',
+  borderBright: '#423a32',
+  text:         '#ebe7e0',
+  text2:        '#a39e95',
+  text3:        '#645f57',
+  orange:       '#ff7a1a',
+  orangeDim:    '#b85a14',
+  orangeGlow:   'rgba(255, 122, 26, 0.25)',
+  buttonTextOnOrange: '#1a1410',
+};
