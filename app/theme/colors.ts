@@ -12,4 +12,7 @@ export const colors = {
   orangeDim:    '#b85a14',
   orangeGlow:   'rgba(255, 122, 26, 0.25)',
   buttonTextOnOrange: '#1a1410',
+  warn:         '#dcb95c',
+  warnTint:     'rgba(220, 185, 92, 0.10)',
+  warnBorder:   'rgba(220, 185, 92, 0.40)',
 };
