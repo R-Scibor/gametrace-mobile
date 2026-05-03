@@ -12,7 +12,7 @@ type SettingsState = {
 export const useSettingsStore = create<SettingsState>()(
     persist(
         (set) => ({
-            isDarkMode: false,
+            isDarkMode: true,
             timezone: 'UTC',
 
             toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
