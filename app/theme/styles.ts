@@ -17,6 +17,12 @@ export const common = StyleSheet.create({
         color: colors.text3, marginTop: 20, marginBottom: 8,
     },
 
+    headerTop: { flexDirection: 'row', alignItems: 'baseline', gap: 14 },
+    back: {
+        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
+        color: colors.text3,
+    },
+
     inputWrapper: {
         flexDirection: 'row',
         backgroundColor: colors.bg3,

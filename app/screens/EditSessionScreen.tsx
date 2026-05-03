@@ -66,9 +66,9 @@ export default function EditSessionScreen() {
 
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.headerTop}>
+                    <View style={common.headerTop}>
                         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-                            <Text style={styles.back}>← COFNIJ</Text>
+                            <Text style={common.back}>← COFNIJ</Text>
                         </TouchableOpacity>
                         <Text style={common.eyebrow}>◈ GAMETRACE</Text>
                     </View>
@@ -115,11 +115,6 @@ export default function EditSessionScreen() {
 const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 20 },
-    headerTop: { flexDirection: 'row', alignItems: 'baseline', gap: 14 },
-    back: {
-        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
-        color: colors.text3,
-    },
     textArea: { height: 80, paddingTop: 12 },
 
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
