@@ -110,3 +110,18 @@ export type ProfileSettings = {
   language: 'pl' | 'en';
   notifications_enabled: boolean;
 };
+
+export type BotStatus = 'online' | 'offline' | 'unknown';
+
+export interface HealthResponse {
+  status: string;
+  version: string;
+  commit_sha: string;
+  build_time: string;
+  api: { uptime_seconds: number };
+  bot: {
+    status: BotStatus;
+    uptime_seconds: number | null;
+    last_heartbeat_seconds_ago: number | null;
+  };
+}
