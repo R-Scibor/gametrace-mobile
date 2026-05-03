@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DateTimeField from '../components/DateTimeField';
 import { getSession, patchSession } from '../api/sessions';
 import { useSessionsStore } from '../store/sessionsStore';
+import { colors } from '../theme/colors';
+import { displayFont } from '../theme/fonts';
+import { common } from '../theme/styles';
 
 export default function EditSessionScreen() {
     const route = useRoute<any>();
@@ -29,9 +33,11 @@ export default function EditSessionScreen() {
 
     if (status === 'ONGOING') {
         return (
-            <View style={styles.center}>
-                <Text>Nie można edytować aktywnej sesji</Text>
-            </View>
+            <SafeAreaView style={common.safe} edges={['top']}>
+                <View style={styles.center}>
+                    <Text style={styles.blockedText}>Nie można edytować aktywnej sesji</Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
@@ -55,32 +61,70 @@ export default function EditSessionScreen() {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.label}>Czas zakończenia</Text>
-            <DateTimeField value={endTime} onChange={setEndTime} />
+        <SafeAreaView style={common.safe} edges={['top']}>
+            <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-            <Text style={styles.label}>Notatki</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                numberOfLines={3}
-            />
+                {/* Header */}
+                <View style={styles.header}>
+                    <View style={styles.headerTop}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
+                            <Text style={styles.back}>← COFNIJ</Text>
+                        </TouchableOpacity>
+                        <Text style={common.eyebrow}>◈ GAMETRACE</Text>
+                    </View>
+                    <Text style={common.title}>Edytuj sesję</Text>
+                </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleSave} disabled={loading}>
-                <Text style={styles.buttonText}>{loading ? 'Zapisywanie...' : 'Zapisz zmiany'}</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                {/* End time */}
+                <Text style={common.label}>ZAKOŃCZENIE</Text>
+                <DateTimeField value={endTime} onChange={setEndTime} />
+
+                {/* Notes */}
+                <Text style={common.label}>NOTATKI (OPCJONALNE)</Text>
+                <View style={common.inputWrapper}>
+                    <View style={common.orangeBar} />
+                    <TextInput
+                        style={[common.input, styles.textArea]}
+                        placeholder="Dodatkowe informacje"
+                        placeholderTextColor={colors.text3}
+                        value={notes}
+                        onChangeText={setNotes}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
+                    />
+                </View>
+
+                {/* Submit */}
+                <TouchableOpacity
+                    style={[common.button, loading && common.buttonDisabled]}
+                    onPress={handleSave}
+                    disabled={loading}
+                    activeOpacity={0.85}
+                >
+                    <Text style={[common.buttonText, loading && common.buttonTextDisabled]}>
+                        {loading ? 'ZAPISYWANIE...' : 'ZAPISZ ZMIANY'}
+                    </Text>
+                </TouchableOpacity>
+
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    label: { fontSize: 14, fontWeight: '600', marginBottom: 4, marginTop: 12 },
-    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16 },
-    textArea: { height: 80, textAlignVertical: 'top' },
-    button: { backgroundColor: '#5865F2', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 24, marginBottom: 40 },
-    buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+    content: { paddingHorizontal: 20, paddingBottom: 40 },
+    header: { paddingTop: 16, paddingBottom: 20 },
+    headerTop: { flexDirection: 'row', alignItems: 'baseline', gap: 14 },
+    back: {
+        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
+        color: colors.text3,
+    },
+    textArea: { height: 80, paddingTop: 12 },
+
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
+    blockedText: {
+        fontFamily: displayFont.bold, fontSize: 13, letterSpacing: 2,
+        color: colors.text3, textAlign: 'center',
+    },
 });
