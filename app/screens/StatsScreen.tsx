@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import {
@@ -241,23 +241,7 @@ export default function StatsScreen() {
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
                     <View style={styles.trend}>
-                        <View style={styles.trendBars}>
-                            {trend.weeks.map(w => {
-                                const heightPct = trendMax > 0 ? (w.total_seconds / trendMax) * 100 : 0;
-                                return (
-                                    <View key={w.week_start} style={styles.trendCol}>
-                                        <View style={styles.trendBarTrack}>
-                                            <View
-                                                style={[
-                                                    styles.trendBarFill,
-                                                    { height: `${heightPct}%` },
-                                                ]}
-                                            />
-                                        </View>
-                                    </View>
-                                );
-                            })}
-                        </View>
+                        <TrendLine weeks={trend.weeks} max={trendMax} />
                         <View style={styles.trendLabels}>
                             <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[0].week_start)}</Text>
                             <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[trend.weeks.length - 1].week_start)}</Text>
@@ -472,6 +456,34 @@ function DonutChart({ slices }: { slices: DonutSlice[] }) {
     );
 }
 
+// Card width = screen - screen padding (20*2) - card padding (12*2). Computed
+// once from Dimensions; this app doesn't support rotation.
+const TREND_W = Dimensions.get('window').width - 40 - 24;
+const TREND_H = 90;
+
+function TrendLine({ weeks, max }: { weeks: { week_start: string; total_seconds: number }[]; max: number }) {
+    if (weeks.length === 0 || max === 0) return null;
+
+    const stepX = weeks.length > 1 ? TREND_W / (weeks.length - 1) : 0;
+    const points = weeks.map((w, i) => ({
+        x: i * stepX,
+        y: TREND_H - (w.total_seconds / max) * TREND_H,
+    }));
+
+    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const areaPath = `${linePath} L ${TREND_W} ${TREND_H} L 0 ${TREND_H} Z`;
+
+    return (
+        <Svg width={TREND_W} height={TREND_H}>
+            <Path d={areaPath} fill="rgba(255, 122, 26, 0.15)" />
+            <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+            {points.map((p, i) => (
+                <Circle key={i} cx={p.x} cy={p.y} r={3} fill={colors.orange} />
+            ))}
+        </Svg>
+    );
+}
+
 function BreakdownBar({ label, seconds, max }: { label: string; seconds: number; max: number }) {
     const widthPct = max > 0 ? (seconds / max) * 100 : 0;
     return (
@@ -562,19 +574,6 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: colors.borderBright,
         borderRadius: 2,
         padding: 12,
-    },
-    trendBars: {
-        flexDirection: 'row',
-        height: 100,
-        alignItems: 'flex-end',
-        gap: 4,
-    },
-    trendCol: { flex: 1, height: '100%', justifyContent: 'flex-end' },
-    trendBarTrack: { height: '100%', justifyContent: 'flex-end' },
-    trendBarFill: {
-        backgroundColor: colors.orange,
-        borderRadius: 1,
-        minHeight: 2,
     },
     trendLabels: {
         flexDirection: 'row', justifyContent: 'space-between', marginTop: 8,
