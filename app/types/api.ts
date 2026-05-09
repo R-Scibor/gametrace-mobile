@@ -130,6 +130,71 @@ export interface DashboardSummary {
   pending_errors: PendingErrorEntry[];
 }
 
+// Heatmap: 7x24 grid, dow 0=Mon..6=Sun, hour 0..23
+export interface HeatmapCell {
+  dow: number;
+  hour: number;
+  seconds: number;
+}
+
+export interface HeatmapResponse {
+  days: number;
+  cells: HeatmapCell[];
+}
+
+export interface StreakResponse {
+  current_streak: number;
+  longest_streak: number;
+}
+
+export interface WeeklyTrendEntry {
+  week_start: string;
+  total_seconds: number;
+}
+
+export interface WeeklyTrendResponse {
+  weeks: WeeklyTrendEntry[];
+}
+
+export interface GenreEntry {
+  genre: string;
+  total_seconds: number;
+}
+
+export interface GenresResponse {
+  items: GenreEntry[];
+}
+
+export interface ThemeEntry {
+  theme: string;
+  total_seconds: number;
+}
+
+export interface ThemesResponse {
+  items: ThemeEntry[];
+}
+
+export type CompanyRole = 'developer' | 'publisher';
+
+export interface CompanyEntry {
+  name: string;
+  total_seconds: number;
+  game_count: number;
+}
+
+export interface CompaniesResponse {
+  items: CompanyEntry[];
+}
+
+export interface ReleaseYearEntry {
+  decade: string;
+  total_seconds: number;
+}
+
+export interface ReleaseYearsResponse {
+  items: ReleaseYearEntry[];
+}
+
 export type ProfileSettings = {
   timezone: string;
   language: 'pl' | 'en';
