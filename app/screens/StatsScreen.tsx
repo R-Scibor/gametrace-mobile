@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 import {
     getCompanies,
     getGenres,
@@ -37,6 +38,12 @@ const ROLE_LABELS: Record<CompanyRole, string> = {
 };
 
 const DOW_LABELS = ['PN', 'WT', 'ŚR', 'CZ', 'PT', 'SB', 'ND'];
+
+// 5 distinct warm tones + a muted neutral for "Other".
+const DONUT_PALETTE = ['#ff7a1a', '#ffb04d', '#dcb95c', '#b85a14', '#7a5230'];
+const DONUT_OTHER = '#3d362f';
+
+const TOP_N = 5;
 
 function formatHours(seconds: number) {
     const h = Math.floor(seconds / 3600);
@@ -134,12 +141,6 @@ export default function StatsScreen() {
         : 0;
     const decadeMax = releaseYears
         ? releaseYears.items.reduce((m, r) => Math.max(m, r.total_seconds), 0)
-        : 0;
-    const genreMax = genres
-        ? genres.items.reduce((m, g) => Math.max(m, g.total_seconds), 0)
-        : 0;
-    const themeMax = themes
-        ? themes.items.reduce((m, t) => Math.max(m, t.total_seconds), 0)
         : 0;
 
     return (
@@ -281,37 +282,34 @@ export default function StatsScreen() {
                     ))
                 )}
 
-                {/* Genres */}
+                {/* Genres donut */}
                 <Text style={common.label}>GATUNKI</Text>
-                {!genres || genres.items.length === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
-                ) : (
-                    genres.items.slice(0, 8).map(item => (
-                        <BreakdownBar
-                            key={item.genre}
-                            label={item.genre}
-                            seconds={item.total_seconds}
-                            max={genreMax}
-                        />
-                    ))
-                )}
+                <DonutSection
+                    items={genres ? genres.items.map(g => ({ label: g.genre, seconds: g.total_seconds })) : null}
+                />
 
-                {/* Themes */}
+                {/* Themes donut */}
                 <Text style={common.label}>MOTYWY</Text>
-                {!themes || themes.items.length === 0 ? (
+                <DonutSection
+                    items={themes ? themes.items.map(t => ({ label: t.theme, seconds: t.total_seconds })) : null}
+                />
+
+                {/* Release years */}
+                <Text style={common.label}>DEKADY WYDANIA</Text>
+                {!releaseYears || releaseYears.items.length === 0 ? (
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
-                    themes.items.slice(0, 8).map(item => (
+                    releaseYears.items.map(item => (
                         <BreakdownBar
-                            key={item.theme}
-                            label={item.theme}
+                            key={item.decade}
+                            label={item.decade}
                             seconds={item.total_seconds}
-                            max={themeMax}
+                            max={decadeMax}
                         />
                     ))
                 )}
 
-                {/* Companies (role toggle) */}
+                {/* Companies (role toggle) — at the bottom */}
                 <Text style={common.label}>STUDIA</Text>
                 <View style={styles.pillRow}>
                     {ROLES.map(r => {
@@ -350,23 +348,127 @@ export default function StatsScreen() {
                     ))
                 )}
 
-                {/* Release years */}
-                <Text style={common.label}>DEKADY WYDANIA</Text>
-                {!releaseYears || releaseYears.items.length === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
-                ) : (
-                    releaseYears.items.map(item => (
-                        <BreakdownBar
-                            key={item.decade}
-                            label={item.decade}
-                            seconds={item.total_seconds}
-                            max={decadeMax}
-                        />
-                    ))
-                )}
-
             </ScrollView>
         </SafeAreaView>
+    );
+}
+
+type DonutItem = { label: string; seconds: number };
+type DonutSlice = DonutItem & { color: string; pct: number };
+
+function DonutSection({ items }: { items: DonutItem[] | null }) {
+    if (!items) {
+        return <Text style={styles.empty}>—</Text>;
+    }
+    if (items.length === 0) {
+        return <Text style={styles.empty}>Brak danych</Text>;
+    }
+
+    // Top N + aggregated "Inne" for the rest.
+    const sorted = [...items].sort((a, b) => b.seconds - a.seconds);
+    const top = sorted.slice(0, TOP_N);
+    const rest = sorted.slice(TOP_N);
+    const restTotal = rest.reduce((s, x) => s + x.seconds, 0);
+    const total = sorted.reduce((s, x) => s + x.seconds, 0);
+
+    const slices: DonutSlice[] = top.map((item, i) => ({
+        ...item,
+        color: DONUT_PALETTE[i],
+        pct: total > 0 ? item.seconds / total : 0,
+    }));
+    if (restTotal > 0) {
+        slices.push({
+            label: 'Inne',
+            seconds: restTotal,
+            color: DONUT_OTHER,
+            pct: total > 0 ? restTotal / total : 0,
+        });
+    }
+
+    // TODO: a single game can carry multiple genres/themes — each session counts
+    // toward every tag on its game ("exposure", not a partition), so slice
+    // percentages don't sum to share-of-playtime. Rethink: normalize per-game,
+    // pick a primary tag per game, or relabel so the donut isn't misread.
+    return (
+        <View style={styles.donutSection}>
+            <DonutChart slices={slices} />
+            <View style={styles.legend}>
+                {slices.map(s => (
+                    <View key={s.label} style={styles.legendRow}>
+                        <View style={[styles.legendDot, { backgroundColor: s.color }]} />
+                        <Text style={styles.legendLabel} numberOfLines={1}>{s.label}</Text>
+                        <Text style={styles.legendValue}>{Math.round(s.pct * 100)}%</Text>
+                    </View>
+                ))}
+            </View>
+        </View>
+    );
+}
+
+const DONUT_SIZE = 120;
+const DONUT_R_OUTER = 56;
+const DONUT_R_INNER = 36;
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function arcPath(
+    cx: number, cy: number, rOuter: number, rInner: number,
+    startAngle: number, endAngle: number,
+) {
+    const startOuter = polarToCartesian(cx, cy, rOuter, endAngle);
+    const endOuter = polarToCartesian(cx, cy, rOuter, startAngle);
+    const startInner = polarToCartesian(cx, cy, rInner, startAngle);
+    const endInner = polarToCartesian(cx, cy, rInner, endAngle);
+    const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+    return [
+        `M ${startOuter.x} ${startOuter.y}`,
+        `A ${rOuter} ${rOuter} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
+        `L ${startInner.x} ${startInner.y}`,
+        `A ${rInner} ${rInner} 0 ${largeArc} 1 ${endInner.x} ${endInner.y}`,
+        'Z',
+    ].join(' ');
+}
+
+function DonutChart({ slices }: { slices: DonutSlice[] }) {
+    const cx = DONUT_SIZE / 2;
+    const cy = DONUT_SIZE / 2;
+
+    // SVG arc can't draw a single 360° slice — render full ring as a Circle stroke.
+    const isFullCircle = slices.length === 1 && slices[0].pct >= 0.999;
+
+    let cursor = 0;
+    return (
+        <View style={styles.donutWrapper}>
+            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
+                {isFullCircle ? (
+                    <Circle
+                        cx={cx}
+                        cy={cy}
+                        r={(DONUT_R_OUTER + DONUT_R_INNER) / 2}
+                        stroke={slices[0].color}
+                        strokeWidth={DONUT_R_OUTER - DONUT_R_INNER}
+                        fill="none"
+                    />
+                ) : (
+                    slices.map((s) => {
+                        const start = cursor;
+                        const end = cursor + s.pct * 360;
+                        cursor = end;
+                        if (end - start <= 0) return null;
+                        return (
+                            <Path
+                                key={s.label}
+                                d={arcPath(cx, cy, DONUT_R_OUTER, DONUT_R_INNER, start, end)}
+                                fill={s.color}
+                            />
+                        );
+                    })
+                )}
+            </Svg>
+        </View>
     );
 }
 
@@ -499,6 +601,28 @@ const styles = StyleSheet.create({
     companyMeta: {
         fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3,
         marginTop: 2,
+    },
+
+    donutSection: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: colors.bg3,
+        borderWidth: 1, borderColor: colors.borderBright,
+        borderRadius: 2,
+        padding: 14, gap: 14,
+    },
+    donutWrapper: {
+        width: DONUT_SIZE, height: DONUT_SIZE,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    legend: { flex: 1, gap: 6 },
+    legendRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendLabel: {
+        flex: 1, fontFamily: bodyFont.medium, fontSize: 13, color: colors.text,
+    },
+    legendValue: {
+        fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 0.5,
+        color: colors.text2,
     },
 
     breakdown: { marginBottom: 10 },
