@@ -5,7 +5,7 @@ import AuthScreen from '../screens/AuthScreen';
 import TabNavigator from './TabNavigator';
 import GameDetailScreen from '../screens/GameDetailScreen';
 import EditSessionScreen from '../screens/EditSessionScreen';
-import CameraScreen from '../screens/CameraScreen';
+import VoiceScreen from '../screens/VoiceScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,7 +30,7 @@ export default function RootNavigator() {
             />
             <Stack.Screen name="GameDetail" component={GameDetailScreen} options={{ headerShown: false }} />
             <Stack.Screen name="EditSession" component={EditSessionScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Camera" component={CameraScreen} />
+            <Stack.Screen name="Voice" component={VoiceScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -175,7 +175,7 @@ export default function AddSessionScreen() {
                 {/* Voice */}
                 <TouchableOpacity
                     style={common.secondaryButton}
-                    onPress={() => navigation.navigate('Camera')}
+                    onPress={() => navigation.navigate('Voice')}
                     activeOpacity={0.7}
                 >
                     <Text style={common.secondaryButtonText}>NAGRAJ GŁOSOWO</Text>

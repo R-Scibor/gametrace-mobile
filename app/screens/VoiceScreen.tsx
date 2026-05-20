@@ -5,7 +5,7 @@ import { useVoiceRecord } from '../hooks/useVoiceRecord';
 import { transcribeAudio } from '../api/voice';
 import { resolveGame } from '../api/games';
 
-export default function CameraScreen() {
+export default function VoiceScreen() {
     const navigation = useNavigation<any>();
     const { isRecording, start, stop } = useVoiceRecord();
     const [processing, setProcessing] = useState(false);
