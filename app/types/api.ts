@@ -125,3 +125,26 @@ export interface HealthResponse {
     last_heartbeat_seconds_ago: number | null;
   };
 }
+
+// Voice
+export interface TranscribeResponse {
+  game: string | null;
+  date: string | null;          // YYYY-MM-DD
+  start_time: string | null;    // HH:MM (24h)
+  end_time: string | null;      // HH:MM (24h)
+  duration_minutes: number | null;
+  raw_transcript: string;
+}
+
+export interface GameResolveResponse {
+  game_id: number;
+  name: string;
+}
+
+export interface AddSessionPrefill {
+  gameId?: number;
+  date?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  note?: string;
+}

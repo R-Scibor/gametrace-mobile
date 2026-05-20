@@ -1,5 +1,5 @@
 import client from './client';
-import { EnrichmentStatus, Game, Session } from '../types/api';
+import { EnrichmentStatus, Game, GameResolveResponse, Session } from '../types/api';
 
 export const getGames = async (
     skip = 0,
@@ -36,6 +36,15 @@ export const uploadCover = async (
     const response = await client.put<Game>(`/games/${gameId}/cover`, {
         image_base64: imageBase64,
         extension,
+    });
+    return response.data;
+};
+
+export const resolveGame = async (
+    name: string,
+): Promise<GameResolveResponse | null> => {
+    const response = await client.get<GameResolveResponse | null>('/games/resolve', {
+        params: { name },
     });
     return response.data;
 };
