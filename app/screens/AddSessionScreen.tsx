@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimeField from '../components/DateTimeField';
 import { createSession } from '../api/sessions';
 import { getGames } from '../api/games';
@@ -11,14 +11,25 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 
+function combineDateTime(date?: string | null, time?: string | null): Date | null {
+    if (!date || !time) return null;
+    const d = new Date(`${date}T${time}:00`);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 export default function AddSessionScreen() {
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
+    const prefill = route.params as
+        | { gameId?: number; date?: string | null; startTime?: string | null; endTime?: string | null; note?: string }
+        | undefined;
+
     const [games, setGames] = useState<Game[]>([]);
     const [gameQuery, setGameQuery] = useState('');
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [endTime, setEndTime] = useState<Date | null>(null);
-    const [notes, setNotes] = useState('');
+    const [notes, setNotes] = useState(prefill?.note ?? '');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -26,10 +37,20 @@ export default function AddSessionScreen() {
             try {
                 const data = await getGames(0, 100);
                 setGames(data);
+                if (prefill?.gameId) {
+                    const match = data.find(g => g.id === prefill.gameId);
+                    if (match) setSelectedGame(match);
+                }
             } catch {
                 // TODO
             }
         })();
+
+        const start = combineDateTime(prefill?.date, prefill?.startTime);
+        const end = combineDateTime(prefill?.date, prefill?.endTime);
+        if (start) setStartTime(start);
+        if (end) setEndTime(end);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const filteredGames = selectedGame

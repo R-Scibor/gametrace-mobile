@@ -28,7 +28,13 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Aplikacja używa mikrofonu do nagrywania sesji głosowych."
+        }
+      ]
     ]
   }
 }
