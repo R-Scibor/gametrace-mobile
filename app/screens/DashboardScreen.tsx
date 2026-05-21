@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-    View, Text, ScrollView, TouchableOpacity, StyleSheet, Image,
+    View, Text, ScrollView, TouchableOpacity, StyleSheet,
     RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDashboard } from '../hooks/useDashboard';
 import { useRecentSessions } from '../hooks/useRecentSessions';
 import LiveTimer from '../components/LiveTimer';
+import Cover from '../components/Cover';
 import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -121,14 +122,12 @@ export default function DashboardScreen() {
                     <TouchableOpacity activeOpacity={0.85} onPress={openActive} style={styles.activeCard}>
                         <View style={styles.activeRow}>
                             <View style={styles.coverWrap}>
-                                {data.active_session.cover_image_url ? (
-                                    <Image
-                                        source={{ uri: data.active_session.cover_image_url }}
-                                        style={styles.cover}
-                                    />
-                                ) : (
-                                    <View style={[styles.cover, styles.coverPlaceholder]} />
-                                )}
+                                <Cover
+                                    gameId={data.active_session.game_id}
+                                    fallbackUri={data.active_session.cover_image_url}
+                                    style={styles.cover}
+                                    placeholderChar={data.active_session.game_name?.[0]}
+                                />
                             </View>
                             <View style={styles.activeMeta}>
                                 <View style={styles.liveRow}>
@@ -191,11 +190,12 @@ export default function DashboardScreen() {
                             activeOpacity={0.85}
                             style={[styles.sessionRow, s.status === 'ERROR' && styles.sessionRowError]}
                         >
-                            {s.game.cover_image_url ? (
-                                <Image source={{ uri: s.game.cover_image_url }} style={styles.sessionCover} />
-                            ) : (
-                                <View style={[styles.sessionCover, styles.coverPlaceholder]} />
-                            )}
+                            <Cover
+                                gameId={s.game_id}
+                                fallbackUri={s.game.cover_image_url}
+                                style={styles.sessionCover}
+                                placeholderChar={s.game.primary_name?.[0]}
+                            />
                             <View style={{ flex: 1, minWidth: 0 }}>
                                 <Text style={styles.sessionName} numberOfLines={1}>{s.game.primary_name}</Text>
                                 <Text style={styles.sessionMeta}>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, Image, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getGames, getNeedsReviewGames } from '../api/games';
 import { Game } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import Cover from '../components/Cover';
 
 const PAGE_SIZE = 20;
 const GRID_COLUMNS = 2;
@@ -132,13 +133,12 @@ export default function LibraryScreen() {
                         })}
                     >
                         <View style={styles.coverWrap}>
-                            {item.cover_image_url ? (
-                                <Image source={{ uri: item.cover_image_url }} style={styles.cover} />
-                            ) : (
-                                <View style={[styles.cover, styles.coverPlaceholder]}>
-                                    <Text style={styles.placeholderText}>{item.primary_name[0]}</Text>
-                                </View>
-                            )}
+                            <Cover
+                                gameId={item.id}
+                                fallbackUri={item.cover_image_url}
+                                style={styles.cover}
+                                placeholderChar={item.primary_name[0]}
+                            />
                             {isReview && (
                                 <View style={styles.reviewBadge}>
                                     <Text style={styles.reviewBadgeText}>⚠</Text>
