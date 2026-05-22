@@ -30,7 +30,7 @@ export default function RootNavigator() {
             />
             <Stack.Screen name="GameDetail" component={GameDetailScreen} options={{ headerShown: false }} />
             <Stack.Screen name="EditSession" component={EditSessionScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Voice" component={VoiceScreen} />
+            <Stack.Screen name="Voice" component={VoiceScreen} options={{ headerShown: false }} />
           </>
         )}
       </Stack.Navigator>
