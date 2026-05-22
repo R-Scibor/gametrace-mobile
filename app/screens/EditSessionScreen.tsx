@@ -8,6 +8,7 @@ import { useSessionsStore } from '../store/sessionsStore';
 import { colors } from '../theme/colors';
 import { displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
+import ErrorBanner from '../components/ErrorBanner';
 
 export default function EditSessionScreen() {
     const route = useRoute<any>();
@@ -17,6 +18,7 @@ export default function EditSessionScreen() {
     const [endTime, setEndTime] = useState<Date | null>(null);
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         if (status === 'ONGOING') return;
@@ -26,7 +28,7 @@ export default function EditSessionScreen() {
                 if (s.end_time) setEndTime(new Date(s.end_time));
                 if (s.notes) setNotes(s.notes);
             } catch {
-                // TODO
+                setLoadError(true);
             }
         })();
     }, [sessionId]);
@@ -75,6 +77,8 @@ export default function EditSessionScreen() {
                     <Text style={common.title}>Edytuj sesję</Text>
                 </View>
 
+                {loadError && <ErrorBanner message="Nie udało się pobrać sesji do edycji." style={styles.errorWrap} />}
+
                 {/* End time */}
                 <Text style={common.label}>ZAKOŃCZENIE</Text>
                 <DateTimeField value={endTime} onChange={setEndTime} />
@@ -116,6 +120,7 @@ const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 20 },
     textArea: { height: 80, paddingTop: 12 },
+    errorWrap: { marginBottom: 4 },
 
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
     blockedText: {

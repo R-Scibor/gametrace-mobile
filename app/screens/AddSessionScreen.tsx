@@ -10,6 +10,7 @@ import { useSessionsStore } from '../store/sessionsStore';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
+import ErrorBanner from '../components/ErrorBanner';
 
 function combineDateTime(date?: string | null, time?: string | null): Date | null {
     if (!date || !time) return null;
@@ -31,6 +32,7 @@ export default function AddSessionScreen() {
     const [endTime, setEndTime] = useState<Date | null>(null);
     const [notes, setNotes] = useState(prefill?.note ?? '');
     const [loading, setLoading] = useState(false);
+    const [gamesLoadError, setGamesLoadError] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -42,7 +44,7 @@ export default function AddSessionScreen() {
                     if (match) setSelectedGame(match);
                 }
             } catch {
-                // TODO
+                setGamesLoadError(true);
             }
         })();
 
@@ -96,6 +98,7 @@ export default function AddSessionScreen() {
 
                 {/* Game picker */}
                 <Text style={common.label}>GRA</Text>
+                {gamesLoadError && <ErrorBanner message="Nie udało się pobrać listy gier. Sprawdź połączenie." style={styles.errorWrap} />}
                 {selectedGame ? (
                     <TouchableOpacity
                         style={styles.selectedGame}
@@ -190,6 +193,7 @@ const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 20 },
     textArea: { height: 80, paddingTop: 12 },
+    errorWrap: { marginBottom: 8 },
 
     dropdown: {
         marginTop: 2,

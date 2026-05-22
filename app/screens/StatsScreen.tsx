@@ -6,6 +6,7 @@ import { StatsSummary } from '../types/api';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
+import ErrorBanner from '../components/ErrorBanner';
 
 const PERIODS = [7, 30, 90] as const;
 type Period = typeof PERIODS[number];
@@ -19,14 +20,16 @@ function formatHours(seconds: number) {
 export default function StatsScreen() {
     const [days, setDays] = useState<Period>(7);
     const [data, setData] = useState<StatsSummary | null>(null);
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         (async () => {
             try {
                 const summary = await getStatsSummary(days);
                 setData(summary);
+                setLoadError(false);
             } catch {
-                // TODO
+                setLoadError(true);
             }
         })();
     }, [days]);
@@ -60,6 +63,8 @@ export default function StatsScreen() {
                         );
                     })}
                 </View>
+
+                {loadError && <ErrorBanner message="Nie udało się pobrać statystyk." style={styles.errorWrap} />}
 
                 {/* Total */}
                 <Text style={common.label}>ŁĄCZNIE</Text>
@@ -131,4 +136,5 @@ const styles = StyleSheet.create({
     gameTime: { fontFamily: bodyFont.medium, fontSize: 14, color: colors.text2 },
 
     empty: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.text3, marginTop: 8 },
+    errorWrap: { marginTop: 16 },
 });

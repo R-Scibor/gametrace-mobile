@@ -7,6 +7,7 @@ import { Game } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import Cover from '../components/Cover';
+import ErrorBanner from '../components/ErrorBanner';
 
 const PAGE_SIZE = 20;
 const GRID_COLUMNS = 2;
@@ -28,6 +29,7 @@ export default function LibraryScreen() {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [query, setQuery] = useState('');
+    const [loadError, setLoadError] = useState(false);
 
     const loadMore = async () => {
         if (loading) return;
@@ -40,8 +42,9 @@ export default function LibraryScreen() {
                 const data = await getNeedsReviewGames(reviewGames.length, PAGE_SIZE);
                 setReviewGames([...reviewGames, ...data]);
             }
+            setLoadError(false);
         } catch {
-            // TODO
+            setLoadError(true);
         }
         setLoading(false);
     };
@@ -58,8 +61,9 @@ export default function LibraryScreen() {
                 const data = await getNeedsReviewGames(0, PAGE_SIZE);
                 setReviewGames(data);
             }
+            setLoadError(false);
         } catch {
-            // TODO
+            setLoadError(true);
         }
         setRefreshing(false);
     };
@@ -109,6 +113,12 @@ export default function LibraryScreen() {
                     autoCorrect={false}
                 />
             </View>
+
+            {loadError && (
+                <View style={styles.errorWrap}>
+                    <ErrorBanner />
+                </View>
+            )}
 
             <FlatList
                 data={filtered}
@@ -257,4 +267,6 @@ const styles = StyleSheet.create({
         textAlign: 'center', paddingVertical: 32,
         fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3,
     },
+
+    errorWrap: { marginHorizontal: 20, marginTop: 4, marginBottom: 4 },
 });

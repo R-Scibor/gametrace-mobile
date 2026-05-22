@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import Cover from '../components/Cover';
+import ErrorBanner from '../components/ErrorBanner';
 import { useLocalCoversStore } from '../store/localCoversStore';
 
 const COVER_WIDTH = 264;
@@ -38,6 +39,7 @@ export default function GameDetailScreen() {
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -53,7 +55,7 @@ export default function GameDetailScreen() {
                 }
                 setSessions(all);
             } catch {
-                // TODO
+                setLoadError(true);
             }
             setLoading(false);
         })();
@@ -143,6 +145,7 @@ export default function GameDetailScreen() {
             </View>
 
             <Text style={[common.label, styles.historyLabel]}>HISTORIA</Text>
+            {loadError && <ErrorBanner message="Nie udało się pobrać sesji dla tej gry." style={styles.errorWrap} />}
         </View>
     );
 
@@ -237,6 +240,7 @@ const styles = StyleSheet.create({
     },
 
     historyLabel: { marginTop: 24, marginBottom: 4 },
+    errorWrap: { marginTop: 8 },
 
     sessionRow: {
         paddingHorizontal: 20, paddingVertical: 14,
