@@ -22,7 +22,7 @@ const CELL_HEIGHT = Math.round(CELL_WIDTH * 362 / 264); // IGDB cover aspect
 type Tab = 'all' | 'needs_review';
 
 export default function LibraryScreen() {
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState<Tab>('all');
     const [allGames, setAllGames] = useState<Game[]>([]);
     const [reviewGames, setReviewGames] = useState<Game[]>([]);

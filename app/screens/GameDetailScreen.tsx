@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
 import { getGameSessions } from '../api/games';
 import { Session, SessionStatus } from '../types/api';
@@ -39,8 +40,8 @@ const upgradeIgdbCover = (url: string | null): string | null =>
     url && url.includes('igdb.com') ? url.replace(/\/t_[a-z0-9_]+\//, '/t_1080p/') : url;
 
 export default function GameDetailScreen() {
-    const route = useRoute<any>();
-    const navigation = useNavigation<any>();
+    const route = useRoute<RouteProp<RootStackParamList, 'GameDetail'>>();
+    const navigation = useNavigation();
     const { gameId, gameName } = route.params;
 
     const [sessions, setSessions] = useState<Session[]>([]);

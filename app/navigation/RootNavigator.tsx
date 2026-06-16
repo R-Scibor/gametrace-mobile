@@ -6,8 +6,9 @@ import TabNavigator from './TabNavigator';
 import GameDetailScreen from '../screens/GameDetailScreen';
 import EditSessionScreen from '../screens/EditSessionScreen';
 import VoiceScreen from '../screens/VoiceScreen';
+import { RootStackParamList } from './types';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

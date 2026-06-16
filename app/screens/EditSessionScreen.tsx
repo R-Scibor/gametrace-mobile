@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import { getSession, patchSession } from '../api/sessions';
 import { useSessionsStore } from '../store/sessionsStore';
@@ -11,8 +12,8 @@ import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
 
 export default function EditSessionScreen() {
-    const route = useRoute<any>();
-    const navigation = useNavigation<any>();
+    const route = useRoute<RouteProp<RootStackParamList, 'EditSession'>>();
+    const navigation = useNavigation();
     const { sessionId, status } = route.params;
 
     const [endTime, setEndTime] = useState<Date | null>(null);

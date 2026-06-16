@@ -18,7 +18,7 @@ function formatElapsed(s: number) {
 }
 
 export default function VoiceScreen() {
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation();
     const { isRecording, start, stop } = useVoiceRecord();
     const [processing, setProcessing] = useState(false);
     const [elapsed, setElapsed] = useState(0);

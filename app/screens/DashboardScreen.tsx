@@ -38,7 +38,7 @@ const fmtHeaderDate = () => {
 };
 
 export default function DashboardScreen() {
-    const navigation = useNavigation<any>();
+    const navigation = useNavigation();
     const { data, loading, error, refresh } = useDashboard();
     const { data: recents, refresh: refreshRecents } = useRecentSessions(data?.active_session?.id ?? null);
     const [refreshing, setRefreshing] = useState(false);

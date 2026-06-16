@@ -9,8 +9,9 @@ import { bodyFont } from '../theme/fonts';
 import {
   DashboardIcon, LibraryIcon, AddIcon, StatsIcon, SettingsIcon,
 } from '../components/icons/TabIcons';
+import { TabParamList } from './types';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
   return (

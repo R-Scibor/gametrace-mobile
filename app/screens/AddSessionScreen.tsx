@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { TabParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import { createSession } from '../api/sessions';
 import { getGames } from '../api/games';
@@ -19,11 +20,9 @@ function combineDateTime(date?: string | null, time?: string | null): Date | nul
 }
 
 export default function AddSessionScreen() {
-    const navigation = useNavigation<any>();
-    const route = useRoute<any>();
-    const prefill = route.params as
-        | { gameId?: number; date?: string | null; startTime?: string | null; endTime?: string | null; note?: string }
-        | undefined;
+    const navigation = useNavigation();
+    const route = useRoute<RouteProp<TabParamList, 'AddSession'>>();
+    const prefill = route.params;
 
     const [games, setGames] = useState<Game[]>([]);
     const [gameQuery, setGameQuery] = useState('');
