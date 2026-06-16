@@ -41,7 +41,9 @@
         {
           "photosPermission": "Aplikacja potrzebuje dostępu do zdjęć, aby ustawić własną okładkę gry."
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-image"
     ]
   }
 }
