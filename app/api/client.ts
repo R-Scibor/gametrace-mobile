@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Alert } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 
 const client = axios.create({
@@ -19,9 +20,11 @@ client.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            const wasAuthenticated = useAuthStore.getState().isAuthenticated;
             useAuthStore.getState().logout();
-            // redirect and message later TODO!!
-            console.log('401 — brak autoryzacji, wylogowano użytkownika');
+            if (wasAuthenticated) {
+                Alert.alert('Sesja wygasła', 'Zaloguj się ponownie.');
+            }
         }
         return Promise.reject(error);
     }
