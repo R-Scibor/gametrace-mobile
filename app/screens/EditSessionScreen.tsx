@@ -54,7 +54,7 @@ export default function EditSessionScreen() {
             useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
-            console.log('patchSession failed', e?.response?.status, e?.response?.data, e?.message);
+            if (__DEV__) console.log('patchSession failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
             const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać zmian';
             Alert.alert('Błąd', msg);
