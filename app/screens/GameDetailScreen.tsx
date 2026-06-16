@@ -32,6 +32,12 @@ const formatDate = (iso: string) => {
     return d.toLocaleString('pl', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
+// The detail cover renders large (264px logical → upscaled on retina), so request a
+// higher-res IGDB rendition. Steam (library_600x900) and local covers have no size
+// token and are left untouched.
+const upgradeIgdbCover = (url: string | null): string | null =>
+    url && url.includes('igdb.com') ? url.replace(/\/t_[a-z0-9_]+\//, '/t_1080p/') : url;
+
 export default function GameDetailScreen() {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
@@ -64,7 +70,7 @@ export default function GameDetailScreen() {
     const completed = sessions.filter(s => s.duration_seconds);
     const totalSeconds = completed.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
     const avgSeconds = completed.length ? Math.round(totalSeconds / completed.length) : 0;
-    const cover = sessions[0]?.game?.cover_image_url ?? null;
+    const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? null);
 
     const localCover = useLocalCoversStore((s) => s.covers[gameId]);
     const setLocalCover = useLocalCoversStore((s) => s.setCover);
