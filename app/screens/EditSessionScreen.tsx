@@ -49,7 +49,7 @@ export default function EditSessionScreen() {
         try {
             await patchSession(sessionId, {
                 end_time: endTime ? endTime.toISOString() : undefined,
-                notes: notes.trim() || undefined,
+                notes: notes.trim(),
             });
             useSessionsStore.getState().invalidate();
             navigation.goBack();
