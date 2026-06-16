@@ -134,7 +134,7 @@ export default function GameDetailScreen() {
                         onPress={openCoverMenu}
                         hitSlop={12}
                     >
-                        <Text style={styles.coverEditButtonText}>◉</Text>
+                        <Text style={styles.coverEditButtonText}>✎</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -207,10 +207,12 @@ export default function GameDetailScreen() {
                     <Pressable style={styles.menuSheet} onPress={() => {}}>
                         <Text style={styles.menuTitle}>OKŁADKA</Text>
                         <TouchableOpacity style={styles.menuRow} onPress={handleChangeCover} activeOpacity={0.7}>
-                            <Text style={styles.menuRowText}>Zmień zdjęcie</Text>
+                            <Text style={styles.menuRowText}>Zmień okładkę</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.menuRow} onPress={handleRestoreCover} activeOpacity={0.7}>
-                            <Text style={[styles.menuRowText, styles.menuRowWarn]}>Przywróć oryginalną okładkę</Text>
+                            <Text style={[styles.menuRowText, styles.menuRowWarn]}>
+                                {cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.menuRow, styles.menuRowLast]} onPress={() => setCoverMenu(false)} activeOpacity={0.7}>
                             <Text style={[styles.menuRowText, styles.menuRowMuted]}>Anuluj</Text>
@@ -253,6 +255,7 @@ const styles = StyleSheet.create({
         fontFamily: displayFont.bold,
         fontSize: 20,
         color: colors.text,
+        marginBottom: 4,
     },
 
     gameTitle: {
