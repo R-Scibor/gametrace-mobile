@@ -1,4 +1,5 @@
-import { Image, View, Text, StyleSheet, ImageStyle, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, ImageStyle, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalCoversStore } from '../store/localCoversStore';
 import { colors } from '../theme/colors';
 import { displayFont } from '../theme/fonts';
@@ -26,7 +27,7 @@ export default function Cover({
     const uri = localUri ?? fallbackUri ?? null;
 
     if (uri) {
-        return <Image source={{ uri }} style={style} />;
+        return <Image source={{ uri }} style={style} cachePolicy="memory-disk" />;
     }
     return (
         <View style={[style, styles.placeholder, placeholderStyle]}>
