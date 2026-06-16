@@ -28,18 +28,6 @@ export const mergeGame = async (gameId: number, targetId: number): Promise<void>
     await client.post(`/games/${gameId}/merge/${targetId}`);
 };
 
-export const uploadCover = async (
-    gameId: number,
-    imageBase64: string,
-    extension = 'jpg',
-): Promise<Game> => {
-    const response = await client.put<Game>(`/games/${gameId}/cover`, {
-        image_base64: imageBase64,
-        extension,
-    });
-    return response.data;
-};
-
 export const resolveGame = async (
     name: string,
 ): Promise<GameResolveResponse | null> => {

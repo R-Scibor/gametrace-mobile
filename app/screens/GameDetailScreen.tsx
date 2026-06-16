@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -70,14 +70,16 @@ export default function GameDetailScreen() {
     const setLocalCover = useLocalCoversStore((s) => s.setCover);
     const clearLocalCover = useLocalCoversStore((s) => s.clearCover);
 
-    const takePhoto = async () => {
+    const [coverMenu, setCoverMenu] = useState(false);
+
+    const pickPhoto = async () => {
         try {
-            const perm = await ImagePicker.requestCameraPermissionsAsync();
+            const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!perm.granted) {
-                Alert.alert('Brak uprawnień', 'Nie udało się uzyskać dostępu do aparatu.');
+                Alert.alert('Brak uprawnień', 'Nie udało się uzyskać dostępu do zdjęć.');
                 return;
             }
-            const result = await ImagePicker.launchCameraAsync({
+            const result = await ImagePicker.launchImageLibraryAsync({
                 quality: 0.7,
                 allowsEditing: true,
                 aspect: [264, 362],
@@ -89,11 +91,22 @@ export default function GameDetailScreen() {
         }
     };
 
-    const promptRemovePhoto = () => {
-        Alert.alert('Usuń zdjęcie', 'Przywrócić oryginalną okładkę?', [
-            { text: 'Anuluj', style: 'cancel' },
-            { text: 'Usuń', style: 'destructive', onPress: () => clearLocalCover(gameId) },
-        ]);
+    const openCoverMenu = () => {
+        if (!localCover) {
+            pickPhoto();
+            return;
+        }
+        setCoverMenu(true);
+    };
+
+    const handleChangeCover = () => {
+        setCoverMenu(false);
+        pickPhoto();
+    };
+
+    const handleRestoreCover = () => {
+        setCoverMenu(false);
+        clearLocalCover(gameId);
     };
 
     const header = (
@@ -117,12 +130,11 @@ export default function GameDetailScreen() {
                         placeholderChar={gameName?.[0]}
                     />
                     <TouchableOpacity
-                        style={styles.cameraButton}
-                        onPress={takePhoto}
-                        onLongPress={localCover ? promptRemovePhoto : undefined}
+                        style={styles.coverEditButton}
+                        onPress={openCoverMenu}
                         hitSlop={12}
                     >
-                        <Text style={styles.cameraButtonText}>◉</Text>
+                        <Text style={styles.coverEditButtonText}>◉</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -184,6 +196,28 @@ export default function GameDetailScreen() {
                     );
                 }}
             />
+
+            <Modal
+                visible={coverMenu}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCoverMenu(false)}
+            >
+                <Pressable style={styles.menuScrim} onPress={() => setCoverMenu(false)}>
+                    <Pressable style={styles.menuSheet} onPress={() => {}}>
+                        <Text style={styles.menuTitle}>OKŁADKA</Text>
+                        <TouchableOpacity style={styles.menuRow} onPress={handleChangeCover} activeOpacity={0.7}>
+                            <Text style={styles.menuRowText}>Zmień zdjęcie</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.menuRow} onPress={handleRestoreCover} activeOpacity={0.7}>
+                            <Text style={[styles.menuRowText, styles.menuRowWarn]}>Przywróć oryginalną okładkę</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.menuRow, styles.menuRowLast]} onPress={() => setCoverMenu(false)} activeOpacity={0.7}>
+                            <Text style={[styles.menuRowText, styles.menuRowMuted]}>Anuluj</Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -202,7 +236,7 @@ const styles = StyleSheet.create({
         height: COVER_HEIGHT,
         position: 'relative',
     },
-    cameraButton: {
+    coverEditButton: {
         position: 'absolute',
         right: 8,
         bottom: 8,
@@ -215,7 +249,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    cameraButtonText: {
+    coverEditButtonText: {
         fontFamily: displayFont.bold,
         fontSize: 20,
         color: colors.text,
@@ -255,4 +289,22 @@ const styles = StyleSheet.create({
     },
     sessionStatusError: { color: colors.warn },
     sessionNotes: { fontFamily: bodyFont.regular, fontSize: 13, color: colors.text3, marginTop: 6 },
+
+    menuScrim: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'flex-end' },
+    menuSheet: {
+        backgroundColor: colors.bg2,
+        borderTopWidth: 1, borderColor: colors.borderBright,
+        paddingHorizontal: 20, paddingTop: 18, paddingBottom: 28,
+    },
+    menuTitle: {
+        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
+        color: colors.text3, marginBottom: 6,
+    },
+    menuRow: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+    menuRowLast: { borderBottomWidth: 0 },
+    menuRowText: {
+        fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.text,
+    },
+    menuRowWarn: { color: colors.warn },
+    menuRowMuted: { color: colors.text3 },
 });

@@ -35,6 +35,12 @@
         {
           "microphonePermission": "Aplikacja używa mikrofonu do nagrywania sesji głosowych."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Aplikacja potrzebuje dostępu do zdjęć, aby ustawić własną okładkę gry."
+        }
       ]
     ]
   }
