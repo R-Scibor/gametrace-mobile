@@ -6,50 +6,6 @@ Product backlog distilled from locked design decisions. Visual redesign explorat
 
 ## Dashboard
 
-### Stat tiles — rule of three
-
-**Status:** decided · not implemented
-
-Replace the current four-tile row with **three** summary tiles:
-
-| Tile | Metric | Scope |
-|------|--------|--------|
-| 1 | Total playtime | **Dziś** |
-| 2 | Total playtime | **7 dni** |
-| 3 | Average session length | **Last 7 days** (`ŚR. SESJA`) |
-
-- **Remove** the “30 DNI” tile from the dashboard — long-window totals stay on **Statystyki** only.
-- Third tile uses the same label + big number + unit pattern as neighbours (not a game name).
-- Edge cases: no sessions in 7d window → `—` or `0`; exclude in-progress session from average until ended.
-
-**Touches:** `DashboardScreen`, stats API/hooks if new aggregate needed.
-
----
-
-### Hero region — always occupied
-
-**Status:** decided · not implemented
-
-The top hero slot is **never empty** on the dashboard.
-
-| State | Hero content |
-|-------|----------------|
-| Active session | Live card (timer, game, bot footer) |
-| No active session | **Last played game** spotlight |
-| No play history | Onboarding / first-run hero (copy TBD) |
-
-**Idle spotlight (locked):**
-
-- Game cover + name (most recently played)
-- Last played recency (e.g. wczoraj, 3 dni temu)
-- **All-time** playtime on that game
-- +2 game-scoped quick stats — pair TBD at implementation
-- Calmer chrome than active card; tap → game detail
-
-**Touches:** `DashboardScreen`, `useDashboard` (or new hook), possibly backend if all-time-per-game not already available on dashboard payload.
-
----
-
 ### Dashboard onboarding (first-run & empty state)
 
 **Status:** decided · not implemented
@@ -117,3 +73,4 @@ New or returning users with **no play history** need a proper onboarding experie
 |------|------|
 | 2026-06-17 | Roadmap created — dashboard stat tiles, hero spotlight, edit session context. |
 | 2026-06-17 | Dashboard onboarding (first-run hero) added. |
+| 2026-06-17 | Shipped active-card polish + idle last-played spotlight; removed those and the stat-tiles item (dashboard already has 3 tiles) from the backlog. |
