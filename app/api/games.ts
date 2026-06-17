@@ -1,5 +1,5 @@
 import client from './client';
-import { EnrichmentStatus, Game, GameResolveResponse, Session } from '../types/api';
+import { EnrichmentStatus, Game, GameResolveResponse, GameStats, Session } from '../types/api';
 
 export const getGames = async (
     skip = 0,
@@ -18,6 +18,11 @@ export const getGameSessions = async (
     const response = await client.get<Session[]>(`/games/${gameId}/sessions`, {
         params: { skip, limit },
     });
+    return response.data;
+};
+
+export const getGameStats = async (gameId: number): Promise<GameStats> => {
+    const response = await client.get<GameStats>(`/games/${gameId}/stats`);
     return response.data;
 };
 

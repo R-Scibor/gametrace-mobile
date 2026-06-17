@@ -72,6 +72,14 @@ export interface GameStatEntry {
   total_seconds: number;
 }
 
+export interface GameStats {
+  game_id: number;
+  total_seconds: number;
+  session_count: number;
+  first_played: string;
+  last_played: string;
+}
+
 export interface PendingErrorEntry {
   id: number;
   game_id: number;

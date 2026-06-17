@@ -7,7 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDashboard } from '../hooks/useDashboard';
 import { useRecentSessions } from '../hooks/useRecentSessions';
+import { useGameStats } from '../hooks/useGameStats';
 import LiveTimer from '../components/LiveTimer';
+import PulsingDot from '../components/PulsingDot';
+import HeroSpotlight from '../components/HeroSpotlight';
 import Cover from '../components/Cover';
 import { Session } from '../types/api';
 import { colors } from '../theme/colors';
@@ -42,6 +45,11 @@ export default function DashboardScreen() {
     const { data, loading, error, refresh } = useDashboard();
     const { data: recents, refresh: refreshRecents } = useRecentSessions(data?.active_session?.id ?? null);
     const [refreshing, setRefreshing] = useState(false);
+
+    const lastPlayed = !data?.active_session
+        ? recents.find((s) => s.status === 'COMPLETED') ?? null
+        : null;
+    const { data: spotlightStats } = useGameStats(lastPlayed?.game_id);
 
     const onPullRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -131,7 +139,7 @@ export default function DashboardScreen() {
                             </View>
                             <View style={styles.activeMeta}>
                                 <View style={styles.liveRow}>
-                                    <View style={styles.liveDot} />
+                                    <PulsingDot />
                                     <Text style={styles.liveLabel}>AKTYWNA SESJA</Text>
                                 </View>
                                 <Text style={styles.activeName} numberOfLines={1}>
@@ -146,11 +154,16 @@ export default function DashboardScreen() {
                                 </Text>
                             </View>
                         </View>
-                        <View style={styles.activeFooter}>
-                            <Text style={styles.activeFooterLabel}>⬡ WYKRYTO PRZEZ BOTA</Text>
-                            <Text style={styles.activeFooterAction}>szczegóły →</Text>
-                        </View>
                     </TouchableOpacity>
+                )}
+
+                {/* Idle spotlight — last played game */}
+                {lastPlayed && (
+                    <HeroSpotlight
+                        session={lastPlayed}
+                        stats={spotlightStats}
+                        onPress={() => navigation.navigate('GameDetail', { gameId: lastPlayed.game_id })}
+                    />
                 )}
 
                 {/* Error banner */}
@@ -262,12 +275,11 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
     activeRow: { flexDirection: 'row' },
-    coverWrap: { width: 72, height: 100 },
+    coverWrap: { alignSelf: 'stretch', aspectRatio: 264 / 362 },
     cover: { width: '100%', height: '100%' },
     coverPlaceholder: { backgroundColor: colors.bg3 },
     activeMeta: { flex: 1, paddingHorizontal: 14, paddingVertical: 12, gap: 4 },
     liveRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.orange },
     liveLabel: {
         fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 2, color: colors.orange,
     },
@@ -280,18 +292,6 @@ const styles = StyleSheet.create({
     },
     activeStartedAt: {
         fontFamily: bodyFont.regular, fontSize: 11, color: colors.text3,
-    },
-    activeFooter: {
-        borderTopWidth: 1, borderTopColor: colors.orange,
-        backgroundColor: 'rgba(255, 122, 26, 0.05)',
-        paddingHorizontal: 14, paddingVertical: 6,
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    },
-    activeFooterLabel: {
-        fontFamily: displayFont.regular, fontSize: 10, letterSpacing: 1, color: colors.orangeDim,
-    },
-    activeFooterAction: {
-        fontFamily: bodyFont.regular, fontSize: 10, color: colors.text3,
     },
 
     // Error banner
