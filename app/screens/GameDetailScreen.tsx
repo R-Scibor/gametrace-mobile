@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
@@ -8,6 +8,7 @@ import { getGameSessions, updateGamePreference } from '../api/games';
 import { Session, SessionStatus } from '../types/api';
 import { useGamesStore } from '../store/gamesStore';
 import { useGameStats } from '../hooks/useGameStats';
+import { BottomSheet, sheetStyles } from '../components/BottomSheet';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -235,48 +236,38 @@ export default function GameDetailScreen() {
                 }}
             />
 
-            <Modal
-                visible={gameMenu}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setGameMenu(false)}
-            >
-                <Pressable style={styles.menuScrim} onPress={() => setGameMenu(false)}>
-                    <Pressable style={styles.menuSheet} onPress={() => {}}>
-                        <Text style={styles.menuTitle}>OPCJE</Text>
-                        {canAccept && (
-                            <TouchableOpacity style={styles.menuRow} onPress={handleAccept} activeOpacity={0.7} disabled={prefBusy}>
-                                <Text style={styles.menuRowText}>Akceptuj grę</Text>
-                                <Text style={styles.menuRowDesc}>Pokaż w bibliotece i statystykach</Text>
-                            </TouchableOpacity>
-                        )}
-                        {isIgnored ? (
-                            <TouchableOpacity style={styles.menuRow} onPress={handleRestore} activeOpacity={0.7} disabled={prefBusy}>
-                                <Text style={styles.menuRowText}>Przywróć grę</Text>
-                                <Text style={styles.menuRowDesc}>Pokaż ponownie w bibliotece</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity style={styles.menuRow} onPress={handleIgnore} activeOpacity={0.7} disabled={prefBusy}>
-                                <Text style={[styles.menuRowText, styles.menuRowWarn]}>Ignoruj grę</Text>
-                                <Text style={styles.menuRowDesc}>Ukryj z biblioteki i statystyk</Text>
-                            </TouchableOpacity>
-                        )}
-                        <TouchableOpacity style={styles.menuRow} onPress={handleChangeCover} activeOpacity={0.7}>
-                            <Text style={styles.menuRowText}>Zmień okładkę</Text>
-                            <Text style={styles.menuRowDesc}>Wybierz własne zdjęcie</Text>
-                        </TouchableOpacity>
-                        {localCover && (
-                            <TouchableOpacity style={styles.menuRow} onPress={handleRestoreCover} activeOpacity={0.7}>
-                                <Text style={styles.menuRowText}>{cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}</Text>
-                                <Text style={styles.menuRowDesc}>{cover ? 'Użyj okładki z bazy gier' : 'Wróć do litery zastępczej'}</Text>
-                            </TouchableOpacity>
-                        )}
-                        <TouchableOpacity style={[styles.menuRow, styles.menuRowLast]} onPress={() => setGameMenu(false)} activeOpacity={0.7}>
-                            <Text style={[styles.menuRowText, styles.menuRowMuted]}>Anuluj</Text>
-                        </TouchableOpacity>
-                    </Pressable>
-                </Pressable>
-            </Modal>
+            <BottomSheet visible={gameMenu} onClose={() => setGameMenu(false)} title="OPCJE">
+                {canAccept && (
+                    <TouchableOpacity style={sheetStyles.row} onPress={handleAccept} activeOpacity={0.7} disabled={prefBusy}>
+                        <Text style={sheetStyles.rowText}>Akceptuj grę</Text>
+                        <Text style={sheetStyles.rowDesc}>Pokaż w bibliotece i statystykach</Text>
+                    </TouchableOpacity>
+                )}
+                {isIgnored ? (
+                    <TouchableOpacity style={sheetStyles.row} onPress={handleRestore} activeOpacity={0.7} disabled={prefBusy}>
+                        <Text style={sheetStyles.rowText}>Przywróć grę</Text>
+                        <Text style={sheetStyles.rowDesc}>Pokaż ponownie w bibliotece</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={sheetStyles.row} onPress={handleIgnore} activeOpacity={0.7} disabled={prefBusy}>
+                        <Text style={[sheetStyles.rowText, sheetStyles.rowWarn]}>Ignoruj grę</Text>
+                        <Text style={sheetStyles.rowDesc}>Ukryj z biblioteki i statystyk</Text>
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity style={sheetStyles.row} onPress={handleChangeCover} activeOpacity={0.7}>
+                    <Text style={sheetStyles.rowText}>Zmień okładkę</Text>
+                    <Text style={sheetStyles.rowDesc}>Wybierz własne zdjęcie</Text>
+                </TouchableOpacity>
+                {localCover && (
+                    <TouchableOpacity style={sheetStyles.row} onPress={handleRestoreCover} activeOpacity={0.7}>
+                        <Text style={sheetStyles.rowText}>{cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}</Text>
+                        <Text style={sheetStyles.rowDesc}>{cover ? 'Użyj okładki z bazy gier' : 'Wróć do litery zastępczej'}</Text>
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={() => setGameMenu(false)} activeOpacity={0.7}>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>Anuluj</Text>
+                </TouchableOpacity>
+            </BottomSheet>
         </SafeAreaView>
     );
 }
@@ -350,25 +341,4 @@ const styles = StyleSheet.create({
     },
     sessionStatusError: { color: colors.warn },
     sessionNotes: { fontFamily: bodyFont.regular, fontSize: 13, color: colors.text3, marginTop: 6 },
-
-    menuScrim: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', justifyContent: 'flex-end' },
-    menuSheet: {
-        backgroundColor: colors.bg2,
-        borderTopWidth: 1, borderColor: colors.borderBright,
-        paddingHorizontal: 20, paddingTop: 18, paddingBottom: 28,
-    },
-    menuTitle: {
-        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
-        color: colors.text3, marginBottom: 6,
-    },
-    menuRow: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
-    menuRowLast: { borderBottomWidth: 0 },
-    menuRowText: {
-        fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.text,
-    },
-    menuRowDesc: {
-        fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 4,
-    },
-    menuRowWarn: { color: colors.warn },
-    menuRowMuted: { color: colors.text3 },
 });
