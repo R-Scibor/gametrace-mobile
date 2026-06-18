@@ -36,34 +36,32 @@ New or returning users with **no play history** need a proper onboarding experie
 
 ## Sessions
 
-### Edit session — richer context
+### Edit session — expand editable scope
+
+**Status:** partially shipped — read-only context done; editable scope pending
+
+Read-only context now ships on `EditSessionScreen`: game (cover + name), start time, **live** computed duration (updates as the end time is picked), and a status (`COMPLETED` / `ERROR`) badge with source (`BOT` / `MANUAL`). Save is disabled when the end precedes the start (with a hint), and editing a `BOT` session warns — via the styled confirm sheet — that its source flips to manual and may not count toward some community stats.
+
+**Still pending:**
+
+- Start time edit — if API supports patch; required for fixing ERROR sessions.
+- Discard / void session — `SessionPatch.discard` exists in types but is not exposed in UI.
+- Created-at / “logged” timestamp in context where useful.
+- Confirm the source flip fires only when the backend actually reassigns source (currently warns on any save of a `BOT` session).
+
+**Touches:** `EditSessionScreen`, `SessionPatch` / API if `start_time` patch needed.
+
+---
+
+## Library
+
+### Ignored games — management surface
 
 **Status:** decided · not implemented
 
-`EditSessionScreen` is too bare today: only **end time** and **notes**, with no session context. Users opening edit from game history or an error banner lack the information needed to understand or fix a session.
+Games can now be **ignored** (hidden from *Moje gry*, stats, and the *Inne* inbox) and un-ignored from `GameDetailScreen`'s OPCJE sheet. But there's no dedicated place to **review** ignored games — once ignored, a game only resurfaces if the user reaches its detail screen by some other route. Needs a surface to list ignored games and restore them.
 
-**Show (read-only context at minimum):**
-
-- Game — cover + name
-- Start time
-- Computed duration (from start/end)
-- Status (`COMPLETED` / `ERROR`) and source (`BOT` / `MANUAL`)
-- Created-at or “logged” timestamp where useful
-
-**Edit (scope TBD, expand beyond today):**
-
-- End time (existing)
-- Start time — if API supports patch; required for fixing ERROR sessions
-- Notes (existing)
-- Discard / void session — `SessionPatch.discard` exists in types but is not exposed in UI
-
-**UX notes:**
-
-- ERROR sessions (dashboard banner, game history) should surface *why* editing is needed — status badge, short helper copy.
-- Parity with **Dodaj sesję** where it helps: same date/time field patterns, game always visible even when not editable.
-- Block ONGOING sessions (keep current behaviour).
-
-**Touches:** `EditSessionScreen`, `SessionPatch` / API if `start_time` patch needed, navigation params (may only need `sessionId` once screen loads full session).
+**Touches:** `LibraryScreen` (filter/section or dedicated view), `getGames` (an "ignored" filter would need backend support — not in the current API), `GameDetailScreen` (existing un-ignore action).
 
 ---
 
@@ -74,3 +72,8 @@ New or returning users with **no play history** need a proper onboarding experie
 | 2026-06-17 | Roadmap created — dashboard stat tiles, hero spotlight, edit session context. |
 | 2026-06-17 | Dashboard onboarding (first-run hero) added. |
 | 2026-06-17 | Shipped active-card polish + idle last-played spotlight; removed those and the stat-tiles item (dashboard already has 3 tiles) from the backlog. |
+| 2026-06-18 | Shipped dashboard *Ostatnie sesje* fit-to-screen (measure-and-floor, no scroll). |
+| 2026-06-18 | Shipped library tabs *Moje gry* / *Inne* (NEEDS_REVIEW inbox), server-side search (`?q=`), `total` count, and lazy-paginated game history. |
+| 2026-06-18 | Shipped game accept/ignore + un-ignore via `GameDetailScreen` OPCJE sheet with status tags; added *Ignored games — management surface* to the backlog. |
+| 2026-06-18 | Shipped edit-session read-only context (game / start / live duration / status / source), save-disable on invalid end, and styled bot-source-flip warning; trimmed the edit-session item to remaining editable-scope work. |
+| 2026-06-18 | Extracted shared `BottomSheet` / `ConfirmSheet` from the GameDetail menu styling. |
