@@ -16,6 +16,8 @@ import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
+const ROW_HEIGHT = 66; // sessionRow: 44 cover + 16 vpadding + 2 border + 4 marginBottom — keep in sync with styles.sessionRow
+
 const fmtHours = (seconds: number) => (seconds / 3600).toFixed(1);
 
 const fmtDuration = (seconds: number | null) => {
@@ -45,6 +47,7 @@ export default function DashboardScreen() {
     const { data, loading, error, refresh } = useDashboard();
     const { data: recents, refresh: refreshRecents } = useRecentSessions(data?.active_session?.id ?? null);
     const [refreshing, setRefreshing] = useState(false);
+    const [listHeight, setListHeight] = useState(0);
 
     const lastPlayed = !data?.active_session
         ? recents.find((s) => s.status === 'COMPLETED') ?? null
@@ -103,10 +106,14 @@ export default function DashboardScreen() {
     const week = data?.total_seconds_7d ?? 0;
     const month = data?.total_seconds_30d ?? 0;
 
+    // last row's trailing margin can hang into the bottom edge, so it doesn't need counting
+    const visibleCount = Math.min(recents.length, Math.floor((listHeight + 4) / ROW_HEIGHT));
+
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView
-                contentContainerStyle={styles.content}
+                contentContainerStyle={[styles.content, { flexGrow: 1 }]}
+                alwaysBounceVertical
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -193,36 +200,38 @@ export default function DashboardScreen() {
                     <View style={styles.sectionRule} />
                 </View>
 
-                {recents.length === 0 ? (
-                    <Text style={styles.emptyText}>Brak sesji do wyświetlenia</Text>
-                ) : (
-                    recents.map((s) => (
-                        <TouchableOpacity
-                            key={s.id}
-                            onPress={() => openSession(s)}
-                            activeOpacity={0.85}
-                            style={[styles.sessionRow, s.status === 'ERROR' && styles.sessionRowError]}
-                        >
-                            <Cover
-                                gameId={s.game_id}
-                                fallbackUri={s.game.cover_image_url}
-                                style={styles.sessionCover}
-                                placeholderChar={s.game.primary_name?.[0]}
-                            />
-                            <View style={{ flex: 1, minWidth: 0 }}>
-                                <Text style={styles.sessionName} numberOfLines={1}>{s.game.primary_name}</Text>
-                                <Text style={styles.sessionMeta}>
-                                    {s.source === 'BOT' ? '⬡' : '✎'}  {fmtDateShort(s.start_time)}
-                                </Text>
-                            </View>
-                            {s.status === 'ERROR' ? (
-                                <Text style={styles.errorBadge}>BŁĄD</Text>
-                            ) : (
-                                <Text style={styles.sessionDuration}>{fmtDuration(s.duration_seconds)}</Text>
-                            )}
-                        </TouchableOpacity>
-                    ))
-                )}
+                <View style={styles.listRegion} onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}>
+                    {recents.length === 0 ? (
+                        <Text style={styles.emptyText}>Brak sesji do wyświetlenia</Text>
+                    ) : (
+                        recents.slice(0, visibleCount).map((s) => (
+                            <TouchableOpacity
+                                key={s.id}
+                                onPress={() => openSession(s)}
+                                activeOpacity={0.85}
+                                style={[styles.sessionRow, s.status === 'ERROR' && styles.sessionRowError]}
+                            >
+                                <Cover
+                                    gameId={s.game_id}
+                                    fallbackUri={s.game.cover_image_url}
+                                    style={styles.sessionCover}
+                                    placeholderChar={s.game.primary_name?.[0]}
+                                />
+                                <View style={{ flex: 1, minWidth: 0 }}>
+                                    <Text style={styles.sessionName} numberOfLines={1}>{s.game.primary_name}</Text>
+                                    <Text style={styles.sessionMeta}>
+                                        {s.source === 'BOT' ? '⬡' : '✎'}  {fmtDateShort(s.start_time)}
+                                    </Text>
+                                </View>
+                                {s.status === 'ERROR' ? (
+                                    <Text style={styles.errorBadge}>BŁĄD</Text>
+                                ) : (
+                                    <Text style={styles.sessionDuration}>{fmtDuration(s.duration_seconds)}</Text>
+                                )}
+                            </TouchableOpacity>
+                        ))
+                    )}
+                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -246,7 +255,7 @@ function StatTile({ label, value, unit }: { label: string; value: string; unit: 
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-    content: { paddingBottom: 32 },
+    content: {},
 
     // Header
     header: {
@@ -344,6 +353,9 @@ const styles = StyleSheet.create({
         fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2, color: colors.text3,
     },
     sectionRule: { flex: 1, height: 1, backgroundColor: colors.border },
+
+    // Recent sessions list region — flexes to remaining space; row count derived via onLayout
+    listRegion: { flex: 1 },
 
     // Recent session rows
     sessionRow: {
