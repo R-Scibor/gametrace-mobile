@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { getGames, getNeedsReviewGames } from '../api/games';
-import { Game } from '../types/api';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getGames } from '../api/games';
+import { EnrichmentStatus, Game } from '../types/api';
+import { useGamesStore } from '../store/gamesStore';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import Cover from '../components/Cover';
@@ -24,24 +25,66 @@ type Tab = 'all' | 'needs_review';
 export default function LibraryScreen() {
     const navigation = useNavigation();
     const [activeTab, setActiveTab] = useState<Tab>('all');
-    const [allGames, setAllGames] = useState<Game[]>([]);
-    const [reviewGames, setReviewGames] = useState<Game[]>([]);
+    const [games, setGames] = useState<Game[]>([]);
+    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [query, setQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
     const [loadError, setLoadError] = useState(false);
+    const [reloadNonce, setReloadNonce] = useState(0);
+
+    const gamesStale = useGamesStore((s) => s.stale);
+    const markGamesFresh = useGamesStore((s) => s.markFresh);
+
+    const status: EnrichmentStatus | undefined = activeTab === 'all' ? undefined : 'NEEDS_REVIEW';
+    const isReview = activeTab === 'needs_review';
+    const hasMore = games.length < total;
+
+    // Debounce the search box before hitting the server
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+        return () => clearTimeout(t);
+    }, [query]);
+
+    // Fetch the first page whenever the tab/search changes (skip resets to 0), or when
+    // a preference change elsewhere bumps reloadNonce
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setLoading(true);
+            try {
+                const res = await getGames(0, PAGE_SIZE, status, debouncedQuery || undefined);
+                if (cancelled) return;
+                setGames(res.items);
+                setTotal(res.total);
+                setLoadError(false);
+            } catch {
+                if (!cancelled) setLoadError(true);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [status, debouncedQuery, reloadNonce]);
+
+    // Refresh on focus if a game's accept/ignore state changed on another screen
+    useFocusEffect(
+        useCallback(() => {
+            if (gamesStale) {
+                markGamesFresh();
+                setReloadNonce((n) => n + 1);
+            }
+        }, [gamesStale, markGamesFresh])
+    );
 
     const loadMore = async () => {
-        if (loading) return;
+        if (loading || !hasMore) return;
         setLoading(true);
         try {
-            if (activeTab === 'all') {
-                const data = await getGames(allGames.length, PAGE_SIZE, 'ENRICHED');
-                setAllGames([...allGames, ...data]);
-            } else {
-                const data = await getNeedsReviewGames(reviewGames.length, PAGE_SIZE);
-                setReviewGames([...reviewGames, ...data]);
-            }
+            const res = await getGames(games.length, PAGE_SIZE, status, debouncedQuery || undefined);
+            setGames(prev => [...prev, ...res.items]);
+            setTotal(res.total);
             setLoadError(false);
         } catch {
             setLoadError(true);
@@ -49,31 +92,18 @@ export default function LibraryScreen() {
         setLoading(false);
     };
 
-    useEffect(() => { loadMore(); }, []);
-
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            if (activeTab === 'all') {
-                const data = await getGames(0, PAGE_SIZE, 'ENRICHED');
-                setAllGames(data);
-            } else {
-                const data = await getNeedsReviewGames(0, PAGE_SIZE);
-                setReviewGames(data);
-            }
+            const res = await getGames(0, PAGE_SIZE, status, debouncedQuery || undefined);
+            setGames(res.items);
+            setTotal(res.total);
             setLoadError(false);
         } catch {
             setLoadError(true);
         }
         setRefreshing(false);
     };
-
-    const games = activeTab === 'all' ? allGames : reviewGames;
-    const filtered = query.trim()
-        ? games.filter(g => g.primary_name.toLowerCase().includes(query.toLowerCase()))
-        : games;
-
-    const isReview = activeTab === 'needs_review';
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -83,18 +113,18 @@ export default function LibraryScreen() {
                     <Text style={styles.eyebrow}>◈ GAMETRACE</Text>
                     <Text style={styles.title}>Biblioteka</Text>
                 </View>
-                <Text style={styles.headerCount}>{filtered.length} GIER</Text>
+                <Text style={styles.headerCount}>{total} GIER</Text>
             </View>
 
             {/* Tabs */}
             <View style={styles.tabs}>
                 <TabButton
-                    label="WSZYSTKIE"
+                    label="MOJE GRY"
                     active={activeTab === 'all'}
                     onPress={() => setActiveTab('all')}
                 />
                 <TabButton
-                    label="NIEROZPOZNANE"
+                    label="INNE"
                     active={activeTab === 'needs_review'}
                     onPress={() => setActiveTab('needs_review')}
                 />
@@ -121,7 +151,7 @@ export default function LibraryScreen() {
             )}
 
             <FlatList
-                data={filtered}
+                data={games}
                 keyExtractor={(item) => item.id.toString()}
                 numColumns={GRID_COLUMNS}
                 contentContainerStyle={styles.gridContent}
@@ -140,6 +170,9 @@ export default function LibraryScreen() {
                         onPress={() => navigation.navigate('GameDetail', {
                             gameId: item.id,
                             gameName: item.primary_name,
+                            enrichmentStatus: item.enrichment_status,
+                            isAccepted: item.is_accepted,
+                            isIgnored: item.is_ignored,
                         })}
                     >
                         <View style={styles.coverWrap}>
@@ -207,7 +240,7 @@ const styles = StyleSheet.create({
         gap: 20,
         borderBottomWidth: 1, borderBottomColor: colors.border,
     },
-    tab: { paddingVertical: 10 },
+    tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
     tabLabel: {
         fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2, color: colors.text3,
     },

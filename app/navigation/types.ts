@@ -1,5 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { SessionStatus } from '../types/api';
+import type { EnrichmentStatus, SessionStatus } from '../types/api';
 
 export type AddSessionParams = {
     gameId?: number;
@@ -20,7 +20,13 @@ export type TabParamList = {
 export type RootStackParamList = {
     Auth: undefined;
     Main: NavigatorScreenParams<TabParamList> | undefined;
-    GameDetail: { gameId: number; gameName?: string };
+    GameDetail: {
+        gameId: number;
+        gameName?: string;
+        enrichmentStatus?: EnrichmentStatus;
+        isAccepted?: boolean | null;
+        isIgnored?: boolean;
+    };
     EditSession: { sessionId: number; status: SessionStatus };
     Voice: undefined;
 };

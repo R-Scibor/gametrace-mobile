@@ -37,9 +37,9 @@ export default function AddSessionScreen() {
         (async () => {
             try {
                 const data = await getGames(0, 100);
-                setGames(data);
+                setGames(data.items);
                 if (prefill?.gameId) {
-                    const match = data.find(g => g.id === prefill.gameId);
+                    const match = data.items.find(g => g.id === prefill.gameId);
                     if (match) setSelectedGame(match);
                 }
             } catch {

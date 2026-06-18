@@ -27,6 +27,20 @@ export interface Game {
   cover_image_url: string | null;
   cover_source: CoverSource;
   enrichment_status: EnrichmentStatus;
+  is_ignored: boolean;
+  is_accepted: boolean | null;
+}
+
+export interface GameListResponse {
+  total: number;
+  items: Game[];
+}
+
+export interface UserPreference {
+  game_id: number;
+  is_ignored: boolean;
+  is_accepted: boolean | null;
+  custom_tag: string | null;
 }
 
 // Sessions

@@ -4,8 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
-import { getGameSessions } from '../api/games';
+import { getGameSessions, updateGamePreference } from '../api/games';
 import { Session, SessionStatus } from '../types/api';
+import { useGamesStore } from '../store/gamesStore';
+import { useGameStats } from '../hooks/useGameStats';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -15,6 +17,7 @@ import { useLocalCoversStore } from '../store/localCoversStore';
 
 const COVER_WIDTH = 264;
 const COVER_HEIGHT = 362;
+const PAGE_SIZE = 20;
 
 const STATUS_LABEL: Record<SessionStatus, string | null> = {
     COMPLETED: null,
@@ -42,42 +45,71 @@ const upgradeIgdbCover = (url: string | null): string | null =>
 export default function GameDetailScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'GameDetail'>>();
     const navigation = useNavigation();
-    const { gameId, gameName } = route.params;
+    const { gameId, gameName, enrichmentStatus, isAccepted: initialAccepted, isIgnored: initialIgnored } = route.params;
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
 
-    useEffect(() => {
-        (async () => {
-            if (loading) return;
-            setLoading(true);
-            try {
-                const all: Session[] = [];
-                const PAGE = 100;
-                while (true) {
-                    const page = await getGameSessions(gameId, all.length, PAGE);
-                    all.push(...page);
-                    if (page.length < PAGE) break;
-                }
-                setSessions(all);
-            } catch {
-                setLoadError(true);
-            }
-            setLoading(false);
-        })();
-    }, []);
+    const [isIgnored, setIsIgnored] = useState(initialIgnored ?? false);
+    const [isAccepted, setIsAccepted] = useState<boolean | null>(initialAccepted ?? null);
+    const [gameMenu, setGameMenu] = useState(false);
+    const [prefBusy, setPrefBusy] = useState(false);
+    const invalidateGames = useGamesStore((s) => s.invalidate);
 
-    const completed = sessions.filter(s => s.duration_seconds);
-    const totalSeconds = completed.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
-    const avgSeconds = completed.length ? Math.round(totalSeconds / completed.length) : 0;
+    const canAccept = enrichmentStatus === 'NEEDS_REVIEW' && isAccepted !== true;
+
+    const applyPref = async (
+        pref: { is_ignored?: boolean; is_accepted?: boolean },
+        apply: () => void,
+    ) => {
+        if (prefBusy) return;
+        setPrefBusy(true);
+        try {
+            await updateGamePreference(gameId, pref);
+            apply();
+            invalidateGames();
+            setGameMenu(false);
+        } catch {
+            Alert.alert('Błąd', 'Nie udało się zapisać zmiany.');
+        } finally {
+            setPrefBusy(false);
+        }
+    };
+
+    const handleAccept = () => applyPref({ is_ignored: false, is_accepted: true }, () => {
+        setIsAccepted(true);
+        setIsIgnored(false);
+    });
+    const handleIgnore = () => applyPref({ is_ignored: true }, () => setIsIgnored(true));
+    const handleRestore = () => applyPref({ is_ignored: false }, () => setIsIgnored(false));
+
+    const loadMore = async () => {
+        if (loading || !hasMore) return;
+        setLoading(true);
+        try {
+            const page = await getGameSessions(gameId, sessions.length, PAGE_SIZE);
+            setSessions(prev => [...prev, ...page]);
+            if (page.length < PAGE_SIZE) setHasMore(false);
+            setLoadError(false);
+        } catch {
+            setLoadError(true);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => { loadMore(); }, []);
+
+    const { data: stats } = useGameStats(gameId);
+    const totalSeconds = stats?.total_seconds ?? 0;
+    const sessionCount = stats?.session_count ?? 0;
+    const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
     const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? null);
 
     const localCover = useLocalCoversStore((s) => s.covers[gameId]);
     const setLocalCover = useLocalCoversStore((s) => s.setCover);
     const clearLocalCover = useLocalCoversStore((s) => s.clearCover);
-
-    const [coverMenu, setCoverMenu] = useState(false);
 
     const pickPhoto = async () => {
         try {
@@ -98,33 +130,30 @@ export default function GameDetailScreen() {
         }
     };
 
-    const openCoverMenu = () => {
-        if (!localCover) {
-            pickPhoto();
-            return;
-        }
-        setCoverMenu(true);
-    };
-
     const handleChangeCover = () => {
-        setCoverMenu(false);
+        setGameMenu(false);
         pickPhoto();
     };
 
     const handleRestoreCover = () => {
-        setCoverMenu(false);
+        setGameMenu(false);
         clearLocalCover(gameId);
     };
 
     const header = (
         <View style={styles.headerWrap}>
-            <View style={common.headerTop}>
+            <View style={[common.headerTop, styles.headerTopRow]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
                     <Text style={common.back}>← COFNIJ</Text>
                 </TouchableOpacity>
                 <Text style={common.eyebrow}>◈ GAMETRACE</Text>
             </View>
-            <Text style={common.title}>Szczegóły gry</Text>
+            <View style={styles.titleRow}>
+                <Text style={common.title}>Szczegóły gry</Text>
+                <TouchableOpacity style={styles.menuButton} onPress={() => setGameMenu(true)} hitSlop={12}>
+                    <Text style={styles.menuDots}>⋯</Text>
+                </TouchableOpacity>
+            </View>
 
             <View style={styles.coverWrap}>
                 <View style={styles.coverFrame}>
@@ -136,21 +165,21 @@ export default function GameDetailScreen() {
                         placeholderTextStyle={styles.placeholderText}
                         placeholderChar={gameName?.[0]}
                     />
-                    <TouchableOpacity
-                        style={styles.coverEditButton}
-                        onPress={openCoverMenu}
-                        hitSlop={12}
-                    >
-                        <Text style={styles.coverEditButtonText}>✎</Text>
-                    </TouchableOpacity>
                 </View>
             </View>
 
             <Text style={styles.gameTitle} numberOfLines={2}>{gameName}</Text>
 
+            {(isAccepted === true || isIgnored) && (
+                <View style={styles.tagsRow}>
+                    {isAccepted === true && <Text style={[styles.tag, styles.tagAccepted]}>ZAAKCEPTOWANA</Text>}
+                    {isIgnored && <Text style={[styles.tag, styles.tagIgnored]}>IGNOROWANA</Text>}
+                </View>
+            )}
+
             <View style={styles.statsRow}>
                 <View style={styles.statCell}>
-                    <Text style={styles.statValue}>{sessions.length}</Text>
+                    <Text style={styles.statValue}>{sessionCount}</Text>
                     <Text style={styles.statLabel}>SESJE</Text>
                 </View>
                 <View style={styles.statCellMid}>
@@ -175,6 +204,8 @@ export default function GameDetailScreen() {
                 keyExtractor={(item) => item.id.toString()}
                 ListHeaderComponent={header}
                 contentContainerStyle={styles.listContent}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
                 renderItem={({ item }) => {
                     const statusLabel = STATUS_LABEL[item.status];
                     const duration = item.duration_seconds
@@ -205,23 +236,42 @@ export default function GameDetailScreen() {
             />
 
             <Modal
-                visible={coverMenu}
+                visible={gameMenu}
                 transparent
                 animationType="fade"
-                onRequestClose={() => setCoverMenu(false)}
+                onRequestClose={() => setGameMenu(false)}
             >
-                <Pressable style={styles.menuScrim} onPress={() => setCoverMenu(false)}>
+                <Pressable style={styles.menuScrim} onPress={() => setGameMenu(false)}>
                     <Pressable style={styles.menuSheet} onPress={() => {}}>
-                        <Text style={styles.menuTitle}>OKŁADKA</Text>
+                        <Text style={styles.menuTitle}>OPCJE</Text>
+                        {canAccept && (
+                            <TouchableOpacity style={styles.menuRow} onPress={handleAccept} activeOpacity={0.7} disabled={prefBusy}>
+                                <Text style={styles.menuRowText}>Akceptuj grę</Text>
+                                <Text style={styles.menuRowDesc}>Pokaż w bibliotece i statystykach</Text>
+                            </TouchableOpacity>
+                        )}
+                        {isIgnored ? (
+                            <TouchableOpacity style={styles.menuRow} onPress={handleRestore} activeOpacity={0.7} disabled={prefBusy}>
+                                <Text style={styles.menuRowText}>Przywróć grę</Text>
+                                <Text style={styles.menuRowDesc}>Pokaż ponownie w bibliotece</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={styles.menuRow} onPress={handleIgnore} activeOpacity={0.7} disabled={prefBusy}>
+                                <Text style={[styles.menuRowText, styles.menuRowWarn]}>Ignoruj grę</Text>
+                                <Text style={styles.menuRowDesc}>Ukryj z biblioteki i statystyk</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity style={styles.menuRow} onPress={handleChangeCover} activeOpacity={0.7}>
                             <Text style={styles.menuRowText}>Zmień okładkę</Text>
+                            <Text style={styles.menuRowDesc}>Wybierz własne zdjęcie</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.menuRow} onPress={handleRestoreCover} activeOpacity={0.7}>
-                            <Text style={[styles.menuRowText, styles.menuRowWarn]}>
-                                {cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.menuRow, styles.menuRowLast]} onPress={() => setCoverMenu(false)} activeOpacity={0.7}>
+                        {localCover && (
+                            <TouchableOpacity style={styles.menuRow} onPress={handleRestoreCover} activeOpacity={0.7}>
+                                <Text style={styles.menuRowText}>{cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}</Text>
+                                <Text style={styles.menuRowDesc}>{cover ? 'Użyj okładki z bazy gier' : 'Wróć do litery zastępczej'}</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity style={[styles.menuRow, styles.menuRowLast]} onPress={() => setGameMenu(false)} activeOpacity={0.7}>
                             <Text style={[styles.menuRowText, styles.menuRowMuted]}>Anuluj</Text>
                         </TouchableOpacity>
                     </Pressable>
@@ -245,30 +295,31 @@ const styles = StyleSheet.create({
         height: COVER_HEIGHT,
         position: 'relative',
     },
-    coverEditButton: {
-        position: 'absolute',
-        right: 8,
-        bottom: 8,
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: colors.bg2,
-        borderWidth: 1,
-        borderColor: colors.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    coverEditButtonText: {
-        fontFamily: displayFont.bold,
-        fontSize: 20,
-        color: colors.text,
-        marginBottom: 4,
-    },
-
     gameTitle: {
         fontFamily: displayFont.bold, fontSize: 22, letterSpacing: -0.5,
         color: colors.text, textAlign: 'center', marginBottom: 16,
     },
+
+    headerTopRow: { justifyContent: 'space-between' },
+    titleRow: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        marginTop: 8,
+    },
+    menuButton: {
+        width: 40, height: 40, borderRadius: 20,
+        backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.border,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    menuDots: { fontFamily: displayFont.bold, fontSize: 22, color: colors.text, marginBottom: 2 },
+
+    tagsRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: -4, marginBottom: 16 },
+    tag: {
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2,
+        paddingHorizontal: 8, paddingVertical: 4, borderRadius: 2,
+        borderWidth: 1, overflow: 'hidden',
+    },
+    tagAccepted: { color: colors.orange, borderColor: colors.orange },
+    tagIgnored: { color: colors.text3, borderColor: colors.border },
 
     statsRow: {
         flexDirection: 'row',
@@ -314,6 +365,9 @@ const styles = StyleSheet.create({
     menuRowLast: { borderBottomWidth: 0 },
     menuRowText: {
         fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.text,
+    },
+    menuRowDesc: {
+        fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 4,
     },
     menuRowWarn: { color: colors.warn },
     menuRowMuted: { color: colors.text3 },
