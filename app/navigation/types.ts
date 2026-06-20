@@ -18,6 +18,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+    ServerSetup: undefined;
     Auth: undefined;
     Main: NavigatorScreenParams<TabParamList> | undefined;
     GameDetail: {
