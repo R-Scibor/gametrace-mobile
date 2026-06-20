@@ -34,6 +34,7 @@ export default function EditSessionScreen() {
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
+    const [discardVisible, setDiscardVisible] = useState(false);
 
     useEffect(() => {
         if (status === 'ONGOING') return;
@@ -84,6 +85,21 @@ export default function EditSessionScreen() {
             return;
         }
         doSave();
+    };
+
+    const doDiscard = async () => {
+        if (loading) return;
+        setLoading(true);
+        try {
+            await patchSession(sessionId, { discard: true });
+            useSessionsStore.getState().invalidate();
+            navigation.goBack();
+        } catch (e: any) {
+            const detail = e?.response?.data?.detail;
+            const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się odrzucić sesji';
+            Alert.alert('Błąd', msg);
+        }
+        setLoading(false);
     };
 
     const rawDuration = session && endTime
@@ -180,6 +196,15 @@ export default function EditSessionScreen() {
                     </Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                    style={styles.discardButton}
+                    onPress={() => setDiscardVisible(true)}
+                    disabled={loading}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.discardButtonText}>ODRZUĆ SESJĘ</Text>
+                </TouchableOpacity>
+
             </ScrollView>
 
             <ConfirmSheet
@@ -189,6 +214,16 @@ export default function EditSessionScreen() {
                 confirmLabel="Zapisz mimo to"
                 onConfirm={() => { setConfirmVisible(false); doSave(); }}
                 onCancel={() => setConfirmVisible(false)}
+            />
+
+            <ConfirmSheet
+                visible={discardVisible}
+                title="Odrzucić sesję?"
+                message="Sesja zostanie odrzucona i nie będzie wliczana do statystyk."
+                confirmLabel="Odrzuć sesję"
+                destructive
+                onConfirm={() => { setDiscardVisible(false); doDiscard(); }}
+                onCancel={() => setDiscardVisible(false)}
             />
         </SafeAreaView>
     );
@@ -219,6 +254,13 @@ const styles = StyleSheet.create({
     metaValue: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.text },
     metaDuration: { fontFamily: displayFont.bold, color: colors.orange },
     warnText: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.warn, marginTop: 6 },
+    discardButton: {
+        borderWidth: 1, borderColor: colors.warnBorder, borderRadius: 2,
+        paddingVertical: 13, alignItems: 'center', marginTop: 10,
+    },
+    discardButtonText: {
+        fontFamily: displayFont.bold, fontSize: 13, letterSpacing: 2, color: colors.warn,
+    },
 
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
     blockedText: {
