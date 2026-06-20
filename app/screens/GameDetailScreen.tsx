@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
@@ -47,6 +47,7 @@ export default function GameDetailScreen() {
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     const [isIgnored, setIsIgnored] = useState(initialIgnored ?? false);
     const [isAccepted, setIsAccepted] = useState<boolean | null>(initialAccepted ?? null);
@@ -97,7 +98,23 @@ export default function GameDetailScreen() {
 
     useEffect(() => { loadMore(); }, []);
 
-    const { data: stats } = useGameStats(gameId);
+    const onRefresh = async () => {
+        setRefreshing(true);
+        try {
+            const [page] = await Promise.all([
+                getGameSessions(gameId, 0, PAGE_SIZE),
+                refreshStats(),
+            ]);
+            setSessions(page);
+            setHasMore(page.length === PAGE_SIZE);
+            setLoadError(false);
+        } catch {
+            setLoadError(true);
+        }
+        setRefreshing(false);
+    };
+
+    const { data: stats, refresh: refreshStats } = useGameStats(gameId);
     const totalSeconds = stats?.total_seconds ?? 0;
     const sessionCount = stats?.session_count ?? 0;
     const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
@@ -202,6 +219,14 @@ export default function GameDetailScreen() {
                 contentContainerStyle={styles.listContent}
                 onEndReached={loadMore}
                 onEndReachedThreshold={0.5}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.orange}
+                        colors={[colors.orange]}
+                    />
+                }
                 renderItem={({ item }) => {
                     const statusLabel = STATUS_LABEL[item.status];
                     const duration = formatDuration(item.duration_seconds);
