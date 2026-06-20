@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { logout as logoutApi } from '../api/profile';
@@ -36,6 +37,7 @@ function SettingsRow({ label, subtext, children }: { label: string, subtext?: st
 }
 
 export default function SettingsScreen() {
+    const navigation = useNavigation();
     const { user, logout } = useAuthStore();
     const { isDarkMode, timezone, toggleDarkMode, setTimezone } = useSettingsStore();
     const [loading, setLoading] = useState(false);
@@ -114,6 +116,16 @@ export default function SettingsScreen() {
                         <Text style={styles.statusValue}>{formatUptime(health.bot.uptime_seconds)}</Text>
                     </SettingsRow>
                 )}
+
+                {/* Data */}
+                <SectionHeaderLocal title="DANE" />
+                <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => navigation.navigate('Trash')}>
+                    <View style={styles.rowInfo}>
+                        <Text style={styles.rowLabel}>Kosz</Text>
+                        <Text style={styles.rowSubtext}>Odrzucone sesje</Text>
+                    </View>
+                    <Text style={styles.chevron}>→</Text>
+                </TouchableOpacity>
 
                 {/* Logout */}
                 <TouchableOpacity

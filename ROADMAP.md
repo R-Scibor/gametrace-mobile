@@ -42,23 +42,35 @@ New or returning users with **no play history** need a proper onboarding experie
 
 Read-only context now ships on `EditSessionScreen`: game (cover + name), start time, **live** computed duration (updates as the end time is picked), and a status (`COMPLETED` / `ERROR`) badge with source (`BOT` / `MANUAL`). Save is disabled when the end precedes the start (with a hint), and editing a `BOT` session warns — via the styled confirm sheet — that its source flips to manual and may not count toward some community stats.
 
-**Still pending:**
+**Still pending (minor):**
 
-- Start time edit — if API supports patch; required for fixing ERROR sessions.
 - Created-at / “logged” timestamp in context where useful.
 - Confirm the source flip fires only when the backend actually reassigns source (currently warns on any save of a `BOT` session).
 
-**Touches:** `EditSessionScreen`, `SessionPatch` / API if `start_time` patch needed.
+> Start-time editing is intentionally **out of scope** — to fix a wrong start time, discard the session and create a new one.
+
+**Touches:** `EditSessionScreen`.
 
 > Discard/void shipped: "Odrzuć sesję" → `DELETE /sessions/{id}` (soft-delete). The `discard` PATCH field never existed server-side and was removed from `SessionPatch`.
+> Session trash shipped: Settings → **Kosz** (`TrashScreen`) lists `GET /sessions/trash` with restore and permanent-delete via a bottom sheet.
 
-### Session trash / restore (Kosz)
+---
+
+## Library
+
+### Sort / ordering
 
 **Status:** decided · not implemented
 
-Discard is a **soft-delete** — the backend keeps trashed sessions ~7 days and exposes `GET /sessions/trash`, `POST /sessions/{id}/restore`, and `DELETE /sessions/{id}?hard=true`. Mobile has no surface for this yet: no way to view discarded sessions, restore one, or purge. Worth a "Kosz" view (likely under Settings or the session history) before the 7-day auto-purge makes accidental discards unrecoverable.
+The library grid has no sort control. Add ordering options:
 
-**Touches:** new trash screen/list, `api/sessions` (trash list / restore / hard-delete), navigation.
+- **By title** (A–Z)
+- **By total playtime** (most played first)
+- **By latest played** (most recently played first) — likely the default
+
+Must be **server-side**: the list is paginated, so a client-side sort would only order the already-loaded pages (the same limitation we hit with search). And "total playtime" / "last played" aren't on the games list response today (they live in `/stats`), so the backend needs to expose those as sortable fields plus a `sort` / `order` param on `GET /games`. Applies per tab (Moje gry / Inne) and should compose with `q` search.
+
+**Touches:** `LibraryScreen` (sort control — header dropdown/menu), `getGames` (`sort`/`order` params), backend (sortable fields + ordering).
 
 ---
 
@@ -77,3 +89,5 @@ Discard is a **soft-delete** — the backend keeps trashed sessions ~7 days and 
 | 2026-06-18 | Unified session duration formatting (floor) into `utils/duration`; fixed GameDetail rounding mismatch. |
 | 2026-06-18 | Shipped session discard via `DELETE /sessions/{id}` + styled `AlertSheet`; removed the non-existent `SessionPatch.discard`; added *Session trash / restore* to the backlog. |
 | 2026-06-18 | *Inne* tab now lists out-of-library games (`?in_library=false` union of ignored + unaccepted stubs) with ⚠/UKRYTE markers; revert/accept via GameDetail. Closes the *Ignored games — management surface* backlog item. |
+| 2026-06-18 | Shipped GameDetail pull-to-refresh + auto-refetch on focus after a session changes (e.g. discard). |
+| 2026-06-18 | Shipped session trash (Settings → Kosz): list/restore/permanent-delete of discarded sessions. Closes the *Session trash / restore* backlog item. Added *Library sort/ordering* to the backlog. |

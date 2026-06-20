@@ -1,5 +1,5 @@
 import client from './client';
-import { Session, SessionCreate, SessionPatch, SessionStatus } from '../types/api';
+import { Session, SessionCreate, SessionPatch, SessionStatus, TrashedSession } from '../types/api';
 
 export const listSessions = async (params?: {
     status?: SessionStatus[];
@@ -37,4 +37,17 @@ export const patchSession = async (
 // Discard = soft-delete (moves to trash, restorable ~7 days). 204 No Content.
 export const deleteSession = async (sessionId: number): Promise<void> => {
     await client.delete(`/sessions/${sessionId}`);
+};
+
+export const getTrashedSessions = async (skip = 0, limit = 20): Promise<TrashedSession[]> => {
+    const response = await client.get<TrashedSession[]>('/sessions/trash', { params: { skip, limit } });
+    return response.data;
+};
+
+export const restoreSession = async (sessionId: number): Promise<void> => {
+    await client.post(`/sessions/${sessionId}/restore`);
+};
+
+export const hardDeleteSession = async (sessionId: number): Promise<void> => {
+    await client.delete(`/sessions/${sessionId}`, { params: { hard: true } });
 };

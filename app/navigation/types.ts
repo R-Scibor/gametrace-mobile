@@ -29,6 +29,7 @@ export type RootStackParamList = {
         isIgnored?: boolean;
     };
     EditSession: { sessionId: number; status: SessionStatus };
+    Trash: undefined;
     Voice: undefined;
 };
 

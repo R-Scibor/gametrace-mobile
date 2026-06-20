@@ -5,6 +5,7 @@ import AuthScreen from '../screens/AuthScreen';
 import TabNavigator from './TabNavigator';
 import GameDetailScreen from '../screens/GameDetailScreen';
 import EditSessionScreen from '../screens/EditSessionScreen';
+import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
 import { RootStackParamList } from './types';
 
@@ -31,6 +32,7 @@ export default function RootNavigator() {
             />
             <Stack.Screen name="GameDetail" component={GameDetailScreen} options={{ headerShown: false }} />
             <Stack.Screen name="EditSession" component={EditSessionScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Trash" component={TrashScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Voice" component={VoiceScreen} options={{ headerShown: false }} />
           </>
         )}

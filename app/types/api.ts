@@ -72,6 +72,10 @@ export interface SessionPatch {
   notes?: string;
 }
 
+export interface TrashedSession extends Session {
+  purges_at: string;
+}
+
 export interface ConflictResponse {
   detail: string;
   conflicting_session: Session;
