@@ -6,12 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 
 // silence axios fetch-adapter load via transitively imported API modules; not a behavior expectation
 jest.mock('axios', () => ({ __esModule: true, default: { get: jest.fn(), create: jest.fn(() => ({ interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } } })) } }));
-jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaProvider: ({ children }) => children,
-  SafeAreaView: ({ children }) => children,
-  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
-  SafeAreaInsetsContext: { Provider: ({ children }) => children },
-}));
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('../TabNavigator', () => () => null);
 jest.mock('../../screens/GameDetailScreen', () => () => null);
 jest.mock('../../screens/EditSessionScreen', () => () => null);
