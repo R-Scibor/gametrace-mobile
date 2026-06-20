@@ -1,34 +1,20 @@
-// Mock axios with http adapter before importing client
-jest.mock('axios', () => {
-  const http = require('http');
-  const https = require('https');
-
-  const MockAxios = jest.fn().mockImplementation(function(config) {
-    this.defaults = { headers: {} };
-    this.interceptors = {
-      request: { handlers: [], use: function(onFulfilled, onRejected) {
-        this.handlers.push({ fulfilled: onFulfilled, rejected: onRejected });
-      }},
-      response: { handlers: [], use: function(onFulfilled, onRejected) {
-        this.handlers.push({ fulfilled: onFulfilled, rejected: onRejected });
-      }},
-    };
-    Object.assign(this, config);
-    return this;
-  });
-
-  MockAxios.create = function(config) {
-    const instance = new MockAxios(config);
-    return instance;
-  };
-
-  MockAxios.isAxiosError = jest.fn(() => false);
-
-  return {
-    __esModule: true,
-    default: MockAxios,
-  };
-});
+// Mock axios with minimal scaffolding for interceptor testing
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    create: (config: any) => ({
+      interceptors: {
+        request: {
+          handlers: [] as any[],
+          use: function(fn: any) {
+            this.handlers.push({ fulfilled: fn });
+          },
+        },
+        response: { use: jest.fn() },
+      },
+    }),
+  },
+}));
 
 import client from '../client';
 import { useServerStore } from '../../store/serverStore';
