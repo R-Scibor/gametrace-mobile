@@ -6,6 +6,7 @@ import { RootStackParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import Cover from '../components/Cover';
 import ConfirmSheet from '../components/ConfirmSheet';
+import { formatDuration } from '../utils/duration';
 import { getSession, patchSession } from '../api/sessions';
 import { Session } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
@@ -16,12 +17,6 @@ import ErrorBanner from '../components/ErrorBanner';
 
 const fmtDateTime = (iso: string) =>
     new Date(iso).toLocaleString('pl', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-
-const fmtDuration = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-};
 
 export default function EditSessionScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'EditSession'>>();
@@ -154,7 +149,7 @@ export default function EditSessionScreen() {
                             <View style={styles.metaCell}>
                                 <Text style={styles.metaLabel}>CZAS TRWANIA</Text>
                                 <Text style={[styles.metaValue, styles.metaDuration]}>
-                                    {durationValid ? fmtDuration(rawDuration!) : '—'}
+                                    {durationValid ? formatDuration(rawDuration) : '—'}
                                 </Text>
                             </View>
                         </View>

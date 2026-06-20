@@ -15,17 +15,11 @@ import Cover from '../components/Cover';
 import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import { formatDuration } from '../utils/duration';
 
 const ROW_HEIGHT = 66; // sessionRow: 44 cover + 16 vpadding + 2 border + 4 marginBottom — keep in sync with styles.sessionRow
 
 const fmtHours = (seconds: number) => (seconds / 3600).toFixed(1);
-
-const fmtDuration = (seconds: number | null) => {
-    if (!seconds) return '—';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-};
 
 const fmtTimeShort = (iso: string) => {
     const d = new Date(iso);
@@ -226,7 +220,7 @@ export default function DashboardScreen() {
                                 {s.status === 'ERROR' ? (
                                     <Text style={styles.errorBadge}>BŁĄD</Text>
                                 ) : (
-                                    <Text style={styles.sessionDuration}>{fmtDuration(s.duration_seconds)}</Text>
+                                    <Text style={styles.sessionDuration}>{formatDuration(s.duration_seconds)}</Text>
                                 )}
                             </TouchableOpacity>
                         ))

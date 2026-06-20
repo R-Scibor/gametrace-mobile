@@ -9,6 +9,7 @@ import { Session, SessionStatus } from '../types/api';
 import { useGamesStore } from '../store/gamesStore';
 import { useGameStats } from '../hooks/useGameStats';
 import { BottomSheet, sheetStyles } from '../components/BottomSheet';
+import { formatDuration } from '../utils/duration';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -24,12 +25,6 @@ const STATUS_LABEL: Record<SessionStatus, string | null> = {
     COMPLETED: null,
     ONGOING: 'TRWA',
     ERROR: 'BŁĄD',
-};
-
-const formatHM = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.round((seconds % 3600) / 60);
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
 };
 
 const formatDate = (iso: string) => {
@@ -184,11 +179,11 @@ export default function GameDetailScreen() {
                     <Text style={styles.statLabel}>SESJE</Text>
                 </View>
                 <View style={styles.statCellMid}>
-                    <Text style={styles.statValue}>{formatHM(totalSeconds)}</Text>
+                    <Text style={styles.statValue}>{formatDuration(totalSeconds)}</Text>
                     <Text style={styles.statLabel}>ŁĄCZNIE</Text>
                 </View>
                 <View style={styles.statCell}>
-                    <Text style={styles.statValue}>{formatHM(avgSeconds)}</Text>
+                    <Text style={styles.statValue}>{formatDuration(avgSeconds)}</Text>
                     <Text style={styles.statLabel}>ŚREDNIO</Text>
                 </View>
             </View>
@@ -209,9 +204,7 @@ export default function GameDetailScreen() {
                 onEndReachedThreshold={0.5}
                 renderItem={({ item }) => {
                     const statusLabel = STATUS_LABEL[item.status];
-                    const duration = item.duration_seconds
-                        ? formatHM(item.duration_seconds)
-                        : '—';
+                    const duration = formatDuration(item.duration_seconds);
                     return (
                         <TouchableOpacity
                             style={styles.sessionRow}
