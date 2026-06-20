@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
 import { getGameSessions, updateGamePreference } from '../api/games';
 import { Session, SessionStatus } from '../types/api';
 import { useGamesStore } from '../store/gamesStore';
+import { useSessionsStore } from '../store/sessionsStore';
 import { useGameStats } from '../hooks/useGameStats';
 import { BottomSheet, sheetStyles } from '../components/BottomSheet';
 import { formatDuration } from '../utils/duration';
@@ -54,6 +55,8 @@ export default function GameDetailScreen() {
     const [gameMenu, setGameMenu] = useState(false);
     const [prefBusy, setPrefBusy] = useState(false);
     const invalidateGames = useGamesStore((s) => s.invalidate);
+    const sessionsStale = useSessionsStore((s) => s.stale);
+    const markSessionsFresh = useSessionsStore((s) => s.markFresh);
 
     const canAccept = enrichmentStatus === 'NEEDS_REVIEW' && isAccepted !== true;
 
@@ -98,8 +101,14 @@ export default function GameDetailScreen() {
 
     useEffect(() => { loadMore(); }, []);
 
-    const onRefresh = async () => {
-        setRefreshing(true);
+    const { data: stats, refresh: refreshStats } = useGameStats(gameId);
+    const totalSeconds = stats?.total_seconds ?? 0;
+    const sessionCount = stats?.session_count ?? 0;
+    const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
+    const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? coverImageUrl ?? null);
+
+    // Reload page 0 of sessions + stats together
+    const reload = useCallback(async () => {
         try {
             const [page] = await Promise.all([
                 getGameSessions(gameId, 0, PAGE_SIZE),
@@ -111,14 +120,23 @@ export default function GameDetailScreen() {
         } catch {
             setLoadError(true);
         }
+    }, [gameId, refreshStats]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await reload();
         setRefreshing(false);
     };
 
-    const { data: stats, refresh: refreshStats } = useGameStats(gameId);
-    const totalSeconds = stats?.total_seconds ?? 0;
-    const sessionCount = stats?.session_count ?? 0;
-    const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
-    const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? coverImageUrl ?? null);
+    // Refetch when returning after a session was edited/discarded elsewhere
+    useFocusEffect(
+        useCallback(() => {
+            if (sessionsStale) {
+                markSessionsFresh();
+                reload();
+            }
+        }, [sessionsStale, markSessionsFresh, reload])
+    );
 
     const localCover = useLocalCoversStore((s) => s.covers[gameId]);
     const setLocalCover = useLocalCoversStore((s) => s.setCover);
