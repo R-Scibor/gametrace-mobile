@@ -36,7 +36,7 @@ export default function AddSessionScreen() {
     useEffect(() => {
         (async () => {
             try {
-                const data = await getGames(0, 100);
+                const data = await getGames({ limit: 100 });
                 setGames(data.items);
                 if (prefill?.gameId) {
                     const match = data.items.find(g => g.id === prefill.gameId);

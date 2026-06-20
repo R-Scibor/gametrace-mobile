@@ -62,18 +62,6 @@ Discard is a **soft-delete** — the backend keeps trashed sessions ~7 days and 
 
 ---
 
-## Library
-
-### Ignored games — management surface
-
-**Status:** decided · not implemented
-
-Games can now be **ignored** (hidden from *Moje gry*, stats, and the *Inne* inbox) and un-ignored from `GameDetailScreen`'s OPCJE sheet. But there's no dedicated place to **review** ignored games — once ignored, a game only resurfaces if the user reaches its detail screen by some other route. Needs a surface to list ignored games and restore them.
-
-**Touches:** `LibraryScreen` (filter/section or dedicated view), `getGames` (an "ignored" filter would need backend support — not in the current API), `GameDetailScreen` (existing un-ignore action).
-
----
-
 ## Changelog
 
 | Date | Item |
@@ -88,3 +76,4 @@ Games can now be **ignored** (hidden from *Moje gry*, stats, and the *Inne* inbo
 | 2026-06-18 | Extracted shared `BottomSheet` / `ConfirmSheet` from the GameDetail menu styling. |
 | 2026-06-18 | Unified session duration formatting (floor) into `utils/duration`; fixed GameDetail rounding mismatch. |
 | 2026-06-18 | Shipped session discard via `DELETE /sessions/{id}` + styled `AlertSheet`; removed the non-existent `SessionPatch.discard`; added *Session trash / restore* to the backlog. |
+| 2026-06-18 | *Inne* tab now lists out-of-library games (`?in_library=false` union of ignored + unaccepted stubs) with ⚠/UKRYTE markers; revert/accept via GameDetail. Closes the *Ignored games — management surface* backlog item. |

@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshC
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getGames } from '../api/games';
-import { EnrichmentStatus, Game } from '../types/api';
+import { Game } from '../types/api';
 import { useGamesStore } from '../store/gamesStore';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -20,7 +20,7 @@ const CELL_OUTER = (SCREEN_W - GRID_PADDING * 2) / GRID_COLUMNS;
 const CELL_WIDTH = CELL_OUTER - (CELL_MARGIN + CELL_PADDING) * 2;
 const CELL_HEIGHT = Math.round(CELL_WIDTH * 362 / 264); // IGDB cover aspect
 
-type Tab = 'all' | 'needs_review';
+type Tab = 'all' | 'other';
 
 export default function LibraryScreen() {
     const navigation = useNavigation();
@@ -37,8 +37,8 @@ export default function LibraryScreen() {
     const gamesStale = useGamesStore((s) => s.stale);
     const markGamesFresh = useGamesStore((s) => s.markFresh);
 
-    const status: EnrichmentStatus | undefined = activeTab === 'all' ? undefined : 'NEEDS_REVIEW';
-    const isReview = activeTab === 'needs_review';
+    // "Inne" = everything not in the main library (ignored + unaccepted NEEDS_REVIEW stubs)
+    const inLibrary = activeTab === 'all' ? undefined : false;
     const hasMore = games.length < total;
 
     // Debounce the search box before hitting the server
@@ -54,7 +54,7 @@ export default function LibraryScreen() {
         (async () => {
             setLoading(true);
             try {
-                const res = await getGames(0, PAGE_SIZE, status, debouncedQuery || undefined);
+                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
                 if (cancelled) return;
                 setGames(res.items);
                 setTotal(res.total);
@@ -66,7 +66,7 @@ export default function LibraryScreen() {
             }
         })();
         return () => { cancelled = true; };
-    }, [status, debouncedQuery, reloadNonce]);
+    }, [inLibrary, debouncedQuery, reloadNonce]);
 
     // Refresh on focus if a game's accept/ignore state changed on another screen
     useFocusEffect(
@@ -82,7 +82,7 @@ export default function LibraryScreen() {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            const res = await getGames(games.length, PAGE_SIZE, status, debouncedQuery || undefined);
+            const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
             setGames(prev => [...prev, ...res.items]);
             setTotal(res.total);
             setLoadError(false);
@@ -95,7 +95,7 @@ export default function LibraryScreen() {
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            const res = await getGames(0, PAGE_SIZE, status, debouncedQuery || undefined);
+            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
             setGames(res.items);
             setTotal(res.total);
             setLoadError(false);
@@ -125,8 +125,8 @@ export default function LibraryScreen() {
                 />
                 <TabButton
                     label="INNE"
-                    active={activeTab === 'needs_review'}
-                    onPress={() => setActiveTab('needs_review')}
+                    active={activeTab === 'other'}
+                    onPress={() => setActiveTab('other')}
                 />
             </View>
 
@@ -159,38 +159,46 @@ export default function LibraryScreen() {
                 ListEmptyComponent={
                     !loading ? (
                         <Text style={styles.emptyText}>
-                            {isReview ? 'Brak nierozpoznanych gier' : 'Brak gier do wyświetlenia'}
+                            {activeTab === 'other' ? 'Brak gier poza biblioteką' : 'Brak gier do wyświetlenia'}
                         </Text>
                     ) : null
                 }
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        activeOpacity={0.85}
-                        style={[styles.cell, isReview && styles.cellReview]}
-                        onPress={() => navigation.navigate('GameDetail', {
-                            gameId: item.id,
-                            gameName: item.primary_name,
-                            enrichmentStatus: item.enrichment_status,
-                            isAccepted: item.is_accepted,
-                            isIgnored: item.is_ignored,
-                        })}
-                    >
-                        <View style={styles.coverWrap}>
-                            <Cover
-                                gameId={item.id}
-                                fallbackUri={item.cover_image_url}
-                                style={styles.cover}
-                                placeholderChar={item.primary_name[0]}
-                            />
-                            {isReview && (
-                                <View style={styles.reviewBadge}>
-                                    <Text style={styles.reviewBadgeText}>⚠</Text>
-                                </View>
-                            )}
-                        </View>
-                        <Text style={styles.cellName} numberOfLines={2}>{item.primary_name}</Text>
-                    </TouchableOpacity>
-                )}
+                renderItem={({ item }) => {
+                    const needsReview = item.enrichment_status === 'NEEDS_REVIEW' && item.is_accepted !== true && !item.is_ignored;
+                    return (
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            style={[styles.cell, needsReview && styles.cellReview, item.is_ignored && styles.cellIgnored]}
+                            onPress={() => navigation.navigate('GameDetail', {
+                                gameId: item.id,
+                                gameName: item.primary_name,
+                                enrichmentStatus: item.enrichment_status,
+                                isAccepted: item.is_accepted,
+                                isIgnored: item.is_ignored,
+                            })}
+                        >
+                            <View style={styles.coverWrap}>
+                                <Cover
+                                    gameId={item.id}
+                                    fallbackUri={item.cover_image_url}
+                                    style={styles.cover}
+                                    placeholderChar={item.primary_name[0]}
+                                />
+                                {needsReview && (
+                                    <View style={styles.reviewBadge}>
+                                        <Text style={styles.reviewBadgeText}>⚠</Text>
+                                    </View>
+                                )}
+                                {item.is_ignored && (
+                                    <View style={styles.ignoredBadge}>
+                                        <Text style={styles.ignoredBadgeText}>UKRYTE</Text>
+                                    </View>
+                                )}
+                            </View>
+                            <Text style={styles.cellName} numberOfLines={2}>{item.primary_name}</Text>
+                        </TouchableOpacity>
+                    );
+                }}
                 onEndReached={loadMore}
                 onEndReachedThreshold={0.5}
                 refreshControl={
@@ -275,6 +283,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bg2,
     },
     cellReview: { borderColor: colors.warnBorder, backgroundColor: colors.warnTint },
+    cellIgnored: { opacity: 0.6 },
     coverWrap: { width: CELL_WIDTH, height: CELL_HEIGHT, position: 'relative' },
     cover: { width: CELL_WIDTH, height: CELL_HEIGHT, borderRadius: 3, backgroundColor: colors.bg3 },
     coverPlaceholder: {
@@ -291,6 +300,12 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
     },
     reviewBadgeText: { fontSize: 12, color: colors.warn, lineHeight: 14 },
+    ignoredBadge: {
+        position: 'absolute', top: 6, left: 6,
+        backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border,
+        borderRadius: 2, paddingHorizontal: 4, paddingVertical: 2,
+    },
+    ignoredBadgeText: { fontFamily: displayFont.bold, fontSize: 8, letterSpacing: 1, color: colors.text3 },
     cellName: {
         marginTop: 8, fontSize: 12, width: CELL_WIDTH,
         fontFamily: bodyFont.medium, color: colors.text, textAlign: 'center',
