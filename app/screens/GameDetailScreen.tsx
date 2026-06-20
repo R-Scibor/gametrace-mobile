@@ -41,7 +41,7 @@ const upgradeIgdbCover = (url: string | null): string | null =>
 export default function GameDetailScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'GameDetail'>>();
     const navigation = useNavigation();
-    const { gameId, gameName, enrichmentStatus, isAccepted: initialAccepted, isIgnored: initialIgnored } = route.params;
+    const { gameId, gameName, coverImageUrl, enrichmentStatus, isAccepted: initialAccepted, isIgnored: initialIgnored } = route.params;
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(false);
@@ -101,7 +101,7 @@ export default function GameDetailScreen() {
     const totalSeconds = stats?.total_seconds ?? 0;
     const sessionCount = stats?.session_count ?? 0;
     const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
-    const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? null);
+    const cover = upgradeIgdbCover(sessions[0]?.game?.cover_image_url ?? coverImageUrl ?? null);
 
     const localCover = useLocalCoversStore((s) => s.covers[gameId]);
     const setLocalCover = useLocalCoversStore((s) => s.setCover);

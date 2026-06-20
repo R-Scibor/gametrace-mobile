@@ -172,6 +172,7 @@ export default function LibraryScreen() {
                             onPress={() => navigation.navigate('GameDetail', {
                                 gameId: item.id,
                                 gameName: item.primary_name,
+                                coverImageUrl: item.cover_image_url,
                                 enrichmentStatus: item.enrichment_status,
                                 isAccepted: item.is_accepted,
                                 isIgnored: item.is_ignored,

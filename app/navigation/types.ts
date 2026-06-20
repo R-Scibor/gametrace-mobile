@@ -23,6 +23,7 @@ export type RootStackParamList = {
     GameDetail: {
         gameId: number;
         gameName?: string;
+        coverImageUrl?: string | null;
         enrichmentStatus?: EnrichmentStatus;
         isAccepted?: boolean | null;
         isIgnored?: boolean;
