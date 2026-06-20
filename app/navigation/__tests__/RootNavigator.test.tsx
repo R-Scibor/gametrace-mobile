@@ -4,6 +4,7 @@ import RootNavigator from '../RootNavigator';
 import { useServerStore } from '../../store/serverStore';
 import { useAuthStore } from '../../store/authStore';
 
+// silence axios fetch-adapter load via transitively imported API modules; not a behavior expectation
 jest.mock('axios', () => ({ __esModule: true, default: { get: jest.fn(), create: jest.fn(() => ({ interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } } })) } }));
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }) => children,

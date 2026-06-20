@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useServerStore } from '../store/serverStore';
 import { useChangeServer } from './useChangeServer';
-import { Alert } from 'react-native';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
@@ -44,12 +43,13 @@ export default function SettingsScreen() {
     const { user, logout } = useAuthStore();
     const { isDarkMode, timezone, toggleDarkMode, setTimezone } = useSettingsStore();
     const serverUrl = useServerStore((s) => s.serverUrl);
-    const { change, confirmInsecure } = useChangeServer();
+    const { change, confirmInsecure, loading: changeLoading } = useChangeServer();
     const [serverModalOpen, setServerModalOpen] = useState(false);
     const [serverInput, setServerInput] = useState('');
     const [serverError, setServerError] = useState<string | null>(null);
 
     const submitServerChange = async () => {
+        if (changeLoading) return;
         setServerError(null);
         const result = await change(serverInput);
         if (result.status === 'ok') {
@@ -221,8 +221,8 @@ export default function SettingsScreen() {
                             <TouchableOpacity onPress={() => setServerModalOpen(false)}>
                                 <Text style={styles.modalCancel}>ANULUJ</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={submitServerChange}>
-                                <Text style={styles.modalConfirm}>POŁĄCZ</Text>
+                            <TouchableOpacity onPress={submitServerChange} disabled={changeLoading}>
+                                <Text style={styles.modalConfirm}>{changeLoading ? 'ŁĄCZENIE...' : 'POŁĄCZ'}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
