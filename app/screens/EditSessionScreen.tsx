@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import Cover from '../components/Cover';
 import ConfirmSheet from '../components/ConfirmSheet';
+import AlertSheet from '../components/AlertSheet';
 import { formatDuration } from '../utils/duration';
 import { getSession, patchSession } from '../api/sessions';
 import { Session } from '../types/api';
@@ -30,6 +31,7 @@ export default function EditSessionScreen() {
     const [loadError, setLoadError] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
     const [discardVisible, setDiscardVisible] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
         if (status === 'ONGOING') return;
@@ -66,10 +68,10 @@ export default function EditSessionScreen() {
             useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
-            if (__DEV__) console.log('patchSession failed', e?.response?.status, e?.response?.data, e?.message);
+            if (__DEV__) console.log('[patchSession] save failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
             const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać zmian';
-            Alert.alert('Błąd', msg);
+            setErrorMsg(msg);
         }
         setLoading(false);
     };
@@ -86,13 +88,16 @@ export default function EditSessionScreen() {
         if (loading) return;
         setLoading(true);
         try {
-            await patchSession(sessionId, { discard: true });
+            if (__DEV__) console.log('[discard] PATCH /sessions/' + sessionId, { discard: true });
+            const res = await patchSession(sessionId, { discard: true });
+            if (__DEV__) console.log('[discard] success', res);
             useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
+            if (__DEV__) console.log('[discard] failed', e?.response?.status, JSON.stringify(e?.response?.data), e?.message);
             const detail = e?.response?.data?.detail;
             const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się odrzucić sesji';
-            Alert.alert('Błąd', msg);
+            setErrorMsg(msg);
         }
         setLoading(false);
     };
@@ -219,6 +224,12 @@ export default function EditSessionScreen() {
                 destructive
                 onConfirm={() => { setDiscardVisible(false); doDiscard(); }}
                 onCancel={() => setDiscardVisible(false)}
+            />
+
+            <AlertSheet
+                visible={errorMsg != null}
+                message={errorMsg ?? undefined}
+                onDismiss={() => setErrorMsg(null)}
             />
         </SafeAreaView>
     );
