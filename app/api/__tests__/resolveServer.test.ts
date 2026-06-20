@@ -1,6 +1,13 @@
 import axios from 'axios';
 import { resolveServer } from '../resolveServer';
 
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
+
 const mockedGet = axios.get as jest.Mock;
 
 const ok = { status: 200, data: { status: 'ok' } };

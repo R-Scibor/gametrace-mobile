@@ -7,10 +7,3 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
-
-jest.mock('axios', () => ({
-  __esModule: true,
-  default: {
-    get: jest.fn(),
-  },
-}));
