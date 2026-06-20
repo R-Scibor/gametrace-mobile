@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useServerStore } from '../store/serverStore';
+import { useChangeServer } from './useChangeServer';
+import { Alert } from 'react-native';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
@@ -40,6 +43,33 @@ export default function SettingsScreen() {
     const navigation = useNavigation();
     const { user, logout } = useAuthStore();
     const { isDarkMode, timezone, toggleDarkMode, setTimezone } = useSettingsStore();
+    const serverUrl = useServerStore((s) => s.serverUrl);
+    const { change, confirmInsecure } = useChangeServer();
+    const [serverModalOpen, setServerModalOpen] = useState(false);
+    const [serverInput, setServerInput] = useState('');
+    const [serverError, setServerError] = useState<string | null>(null);
+
+    const submitServerChange = async () => {
+        setServerError(null);
+        const result = await change(serverInput);
+        if (result.status === 'ok') {
+            setServerModalOpen(false);
+        } else if (result.status === 'insecure') {
+            Alert.alert(
+                'Połączenie nieszyfrowane',
+                'Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?',
+                [
+                    { text: 'Anuluj', style: 'cancel' },
+                    { text: 'Połącz mimo to', onPress: () => { confirmInsecure(result.baseUrl); setServerModalOpen(false); } },
+                ]
+            );
+        } else if (result.status === 'invalid') {
+            setServerError('Podaj adres serwera (host:port)');
+        } else {
+            setServerError('Nie można połączyć się z serwerem');
+        }
+    };
+
     const [loading, setLoading] = useState(false);
     const [tzPickerOpen, setTzPickerOpen] = useState(false);
     const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -127,6 +157,20 @@ export default function SettingsScreen() {
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
 
+                {/* Connection */}
+                <SectionHeaderLocal title="POŁĄCZENIE" />
+                <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => { setServerInput(''); setServerError(null); setServerModalOpen(true); }}
+                >
+                    <View style={styles.rowInfo}>
+                        <Text style={styles.rowLabel}>Serwer</Text>
+                        <Text style={styles.rowSubtext} numberOfLines={1}>{serverUrl ?? '—'}</Text>
+                    </View>
+                    <Text style={styles.chevron}>→</Text>
+                </TouchableOpacity>
+
                 {/* Logout */}
                 <TouchableOpacity
                     style={[common.secondaryButton, styles.logout]}
@@ -153,6 +197,37 @@ export default function SettingsScreen() {
                 onSelect={(z) => { setTimezone(z); setTzPickerOpen(false); }}
                 onClose={() => setTzPickerOpen(false)}
             />
+
+            <Modal visible={serverModalOpen} transparent animationType="fade" onRequestClose={() => setServerModalOpen(false)}>
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Zmień serwer</Text>
+                        <Text style={styles.modalHint}>Po zmianie serwera zostaniesz wylogowany.</Text>
+                        <View style={styles.inputWrapper}>
+                            <View style={styles.orangeBar} />
+                            <TextInput
+                                style={styles.modalInput}
+                                value={serverInput}
+                                onChangeText={setServerInput}
+                                placeholder="host:port"
+                                placeholderTextColor={colors.text3}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                keyboardType="url"
+                            />
+                        </View>
+                        {serverError ? <Text style={styles.modalError}>{serverError}</Text> : null}
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity onPress={() => setServerModalOpen(false)}>
+                                <Text style={styles.modalCancel}>ANULUJ</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={submitServerChange}>
+                                <Text style={styles.modalConfirm}>POŁĄCZ</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -260,4 +335,22 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
         paddingHorizontal: 16,
     },
+
+    inputWrapper: {
+        flexDirection: 'row', backgroundColor: colors.bg3, borderWidth: 1,
+        borderColor: colors.borderBright, borderRadius: 2, overflow: 'hidden', marginTop: 12,
+    },
+    orangeBar: { width: 2, backgroundColor: colors.orange },
+    modalInput: {
+        flex: 1, paddingHorizontal: 14, paddingVertical: 12,
+        fontFamily: bodyFont.regular, fontSize: 15, color: colors.text, borderWidth: 0,
+    },
+    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', paddingHorizontal: 28 },
+    modalCard: { backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.border, borderRadius: 4, padding: 20 },
+    modalTitle: { fontFamily: displayFont.bold, fontSize: 16, color: colors.text },
+    modalHint: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 6 },
+    modalError: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.orange, marginTop: 8 },
+    modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 24, marginTop: 18 },
+    modalCancel: { fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 1, color: colors.text3 },
+    modalConfirm: { fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 1, color: colors.orange },
 });
