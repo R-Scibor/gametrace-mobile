@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { TabParamList } from '../navigation/types';
@@ -12,6 +12,7 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
+import AlertSheet from '../components/AlertSheet';
 
 function combineDateTime(date?: string | null, time?: string | null): Date | null {
     if (!date || !time) return null;
@@ -32,6 +33,7 @@ export default function AddSessionScreen() {
     const [notes, setNotes] = useState(prefill?.note ?? '');
     const [loading, setLoading] = useState(false);
     const [gamesLoadError, setGamesLoadError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -63,7 +65,7 @@ export default function AddSessionScreen() {
     const handleSubmit = async () => {
         if (loading) return;
         if (!selectedGame || !startTime || !endTime) {
-            Alert.alert('Błąd', 'Wybierz grę oraz daty rozpoczęcia i zakończenia');
+            setErrorMsg('Wybierz grę oraz daty rozpoczęcia i zakończenia');
             return;
         }
         setLoading(true);
@@ -80,7 +82,7 @@ export default function AddSessionScreen() {
             if (__DEV__) console.log('createSession failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
             const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać sesji';
-            Alert.alert('Błąd', msg);
+            setErrorMsg(msg);
         }
         setLoading(false);
     };
@@ -184,6 +186,12 @@ export default function AddSessionScreen() {
                 </TouchableOpacity>
 
             </ScrollView>
+
+            <AlertSheet
+                visible={errorMsg != null}
+                message={errorMsg ?? undefined}
+                onDismiss={() => setErrorMsg(null)}
+            />
         </SafeAreaView>
     );
 }

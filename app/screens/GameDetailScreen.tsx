@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
@@ -16,6 +16,7 @@ import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
+import AlertSheet from '../components/AlertSheet';
 import { useLocalCoversStore } from '../store/localCoversStore';
 
 const COVER_WIDTH = 264;
@@ -54,6 +55,7 @@ export default function GameDetailScreen() {
     const [isAccepted, setIsAccepted] = useState<boolean | null>(initialAccepted ?? null);
     const [gameMenu, setGameMenu] = useState(false);
     const [prefBusy, setPrefBusy] = useState(false);
+    const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
     const invalidateGames = useGamesStore((s) => s.invalidate);
     const sessionsStale = useSessionsStore((s) => s.stale);
     const markSessionsFresh = useSessionsStore((s) => s.markFresh);
@@ -72,7 +74,7 @@ export default function GameDetailScreen() {
             invalidateGames();
             setGameMenu(false);
         } catch {
-            Alert.alert('Błąd', 'Nie udało się zapisać zmiany.');
+            setAlert({ title: 'Błąd', message: 'Nie udało się zapisać zmiany.' });
         } finally {
             setPrefBusy(false);
         }
@@ -146,7 +148,7 @@ export default function GameDetailScreen() {
         try {
             const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!perm.granted) {
-                Alert.alert('Brak uprawnień', 'Nie udało się uzyskać dostępu do zdjęć.');
+                setAlert({ title: 'Brak uprawnień', message: 'Nie udało się uzyskać dostępu do zdjęć.' });
                 return;
             }
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -157,7 +159,7 @@ export default function GameDetailScreen() {
             if (result.canceled || !result.assets?.[0]) return;
             await setLocalCover(gameId, result.assets[0].uri);
         } catch {
-            Alert.alert('Błąd', 'Nie udało się zapisać zdjęcia.');
+            setAlert({ title: 'Błąd', message: 'Nie udało się zapisać zdjęcia.' });
         }
     };
 
@@ -304,6 +306,13 @@ export default function GameDetailScreen() {
                     <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>Anuluj</Text>
                 </TouchableOpacity>
             </BottomSheet>
+
+            <AlertSheet
+                visible={alert != null}
+                title={alert?.title}
+                message={alert?.message}
+                onDismiss={() => setAlert(null)}
+            />
         </SafeAreaView>
     );
 }

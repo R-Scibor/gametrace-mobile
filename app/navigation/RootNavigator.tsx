@@ -9,6 +9,7 @@ import GameDetailScreen from '../screens/GameDetailScreen';
 import EditSessionScreen from '../screens/EditSessionScreen';
 import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
+import GlobalAlertHost from '../components/GlobalAlertHost';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -18,6 +19,7 @@ export default function RootNavigator() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
+    <>
     <NavigationContainer>
       <Stack.Navigator>
         {!serverUrl ? (
@@ -47,5 +49,7 @@ export default function RootNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    <GlobalAlertHost />
+    </>
   );
 }

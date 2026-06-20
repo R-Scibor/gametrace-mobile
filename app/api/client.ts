@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { Alert } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { useServerStore } from '../store/serverStore';
+import { useAlertStore } from '../store/alertStore';
 
 const client = axios.create({
     timeout: 5000,
@@ -27,7 +27,7 @@ client.interceptors.response.use(
             const wasAuthenticated = useAuthStore.getState().isAuthenticated;
             useAuthStore.getState().logout();
             if (wasAuthenticated) {
-                Alert.alert('Sesja wygasła', 'Zaloguj się ponownie.');
+                useAlertStore.getState().showAlert('Sesja wygasła', 'Zaloguj się ponownie.');
             }
         }
         return Promise.reject(error);

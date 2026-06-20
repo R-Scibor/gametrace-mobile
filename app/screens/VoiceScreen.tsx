@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useVoiceRecord } from '../hooks/useVoiceRecord';
 import { transcribeAudio } from '../api/voice';
 import { resolveGame } from '../api/games';
+import AlertSheet from '../components/AlertSheet';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -22,6 +23,7 @@ export default function VoiceScreen() {
     const { isRecording, start, stop } = useVoiceRecord();
     const [processing, setProcessing] = useState(false);
     const [elapsed, setElapsed] = useState(0);
+    const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
 
     const pulse = useRef(new Animated.Value(0)).current;
     const bars = useRef(Array.from({ length: BAR_COUNT }, () => new Animated.Value(0.2))).current;
@@ -72,9 +74,9 @@ export default function VoiceScreen() {
                 await start();
             } catch (e: any) {
                 if (e?.message === 'PERMISSION_DENIED') {
-                    Alert.alert('Brak dostępu', 'Zezwól na mikrofon w ustawieniach.');
+                    setAlert({ title: 'Brak dostępu', message: 'Zezwól na mikrofon w ustawieniach.' });
                 } else {
-                    Alert.alert('Błąd', 'Nagrywanie nie powiodło się.');
+                    setAlert({ title: 'Błąd', message: 'Nagrywanie nie powiodło się.' });
                 }
             }
             return;
@@ -84,7 +86,7 @@ export default function VoiceScreen() {
         try {
             uri = await stop();
         } catch {
-            Alert.alert('Błąd', 'Nagrywanie nie powiodło się.');
+            setAlert({ title: 'Błąd', message: 'Nagrywanie nie powiodło się.' });
             return;
         }
 
@@ -106,7 +108,7 @@ export default function VoiceScreen() {
             if (__DEV__) console.log('transcribe failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
             const msg = typeof detail === 'string' ? detail : 'Nie udało się wysłać nagrania.';
-            Alert.alert('Błąd', msg);
+            setAlert({ title: 'Błąd', message: msg });
         } finally {
             setProcessing(false);
         }
@@ -209,6 +211,13 @@ export default function VoiceScreen() {
                     Whisper rozpoznaje grę i wstępnie wypełnia formularz sesji.
                 </Text>
             </View>
+
+            <AlertSheet
+                visible={alert != null}
+                title={alert?.title}
+                message={alert?.message}
+                onDismiss={() => setAlert(null)}
+            />
         </SafeAreaView>
     );
 }
