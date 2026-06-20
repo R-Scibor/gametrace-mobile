@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
@@ -9,6 +9,7 @@ import { useChangeServer } from './useChangeServer';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
+import ConfirmSheet from '../components/ConfirmSheet';
 import TimezonePicker from '../components/TimezonePicker';
 import { formatUptime, botColor } from '../utils/bot';
 import { colors } from '../theme/colors';
@@ -47,6 +48,7 @@ export default function SettingsScreen() {
     const [serverModalOpen, setServerModalOpen] = useState(false);
     const [serverInput, setServerInput] = useState('');
     const [serverError, setServerError] = useState<string | null>(null);
+    const [insecureUrl, setInsecureUrl] = useState<string | null>(null);
 
     const submitServerChange = async () => {
         if (changeLoading) return;
@@ -55,14 +57,7 @@ export default function SettingsScreen() {
         if (result.status === 'ok') {
             setServerModalOpen(false);
         } else if (result.status === 'insecure') {
-            Alert.alert(
-                'Połączenie nieszyfrowane',
-                'Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?',
-                [
-                    { text: 'Anuluj', style: 'cancel' },
-                    { text: 'Połącz mimo to', onPress: () => { confirmInsecure(result.baseUrl); setServerModalOpen(false); } },
-                ]
-            );
+            setInsecureUrl(result.baseUrl);
         } else if (result.status === 'invalid') {
             setServerError('Podaj adres serwera (host:port)');
         } else {
@@ -228,6 +223,16 @@ export default function SettingsScreen() {
                     </View>
                 </View>
             </Modal>
+
+            <ConfirmSheet
+                visible={insecureUrl != null}
+                title="Połączenie nieszyfrowane"
+                message="Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?"
+                confirmLabel="Połącz mimo to"
+                destructive
+                onConfirm={() => { if (insecureUrl) confirmInsecure(insecureUrl); setInsecureUrl(null); setServerModalOpen(false); }}
+                onCancel={() => setInsecureUrl(null)}
+            />
         </SafeAreaView>
     );
 }

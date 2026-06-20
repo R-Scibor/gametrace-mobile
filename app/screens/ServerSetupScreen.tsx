@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resolveServer } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
+import ConfirmSheet from '../components/ConfirmSheet';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
@@ -10,6 +11,7 @@ export default function ServerSetupScreen() {
   const [host, setHost] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [insecureUrl, setInsecureUrl] = useState<string | null>(null);
   const setServerUrl = useServerStore((s) => s.setServerUrl);
 
   const canSubmit = host.trim().length > 0 && !loading;
@@ -23,14 +25,7 @@ export default function ServerSetupScreen() {
       if (result.status === 'ok') {
         setServerUrl(result.baseUrl);
       } else if (result.status === 'insecure') {
-        Alert.alert(
-          'Połączenie nieszyfrowane',
-          'Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?',
-          [
-            { text: 'Anuluj', style: 'cancel' },
-            { text: 'Połącz mimo to', onPress: () => setServerUrl(result.baseUrl) },
-          ]
-        );
+        setInsecureUrl(result.baseUrl);
       } else if (result.status === 'invalid') {
         setError('Podaj adres serwera (host:port)');
       } else {
@@ -93,6 +88,16 @@ export default function ServerSetupScreen() {
           </Text>
         </View>
       </View>
+
+      <ConfirmSheet
+        visible={insecureUrl != null}
+        title="Połączenie nieszyfrowane"
+        message="Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?"
+        confirmLabel="Połącz mimo to"
+        destructive
+        onConfirm={() => { if (insecureUrl) setServerUrl(insecureUrl); setInsecureUrl(null); }}
+        onCancel={() => setInsecureUrl(null)}
+      />
     </SafeAreaView>
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ServerSetupScreen from '../ServerSetupScreen';
 import { resolveServer } from '../../api/resolveServer';
@@ -34,20 +33,18 @@ test('ok result saves the base url', async () => {
   );
 });
 
-test('insecure result prompts before saving', async () => {
+test('insecure result shows a styled confirm sheet, and saves only on confirm', async () => {
   mockedResolve.mockResolvedValue({ status: 'insecure', baseUrl: 'http://h:8010/api/v1' });
-  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation((_t, _m, buttons) => {
-    // press the confirm button (second)
-    buttons?.[1]?.onPress?.();
-  });
-  const { getByPlaceholderText, getByText } = await renderScreen();
+  const { getByPlaceholderText, getByText, findByText } = await renderScreen();
   await fireEvent.changeText(getByPlaceholderText('host:port'), 'h:8010');
   await fireEvent.press(getByText('POŁĄCZ'));
+  // styled ConfirmSheet appears; nothing saved until the user confirms
+  const confirmBtn = await findByText('Połącz mimo to');
+  expect(useServerStore.getState().serverUrl).toBeNull();
+  await fireEvent.press(confirmBtn);
   await waitFor(() =>
     expect(useServerStore.getState().serverUrl).toBe('http://h:8010/api/v1')
   );
-  expect(alertSpy).toHaveBeenCalledTimes(1);
-  alertSpy.mockRestore();
 });
 
 test('unreachable shows an error and does not save', async () => {
