@@ -1,14 +1,18 @@
 import axios from 'axios';
 import { Alert } from 'react-native';
 import { useAuthStore } from '../store/authStore';
+import { useServerStore } from '../store/serverStore';
 
 const client = axios.create({
-    baseURL: 'http://homelab:8010/api/v1',
     timeout: 5000,
     headers: { 'Content-Type': 'application/json' },
 });
 
 client.interceptors.request.use((config) => {
+    const { serverUrl } = useServerStore.getState();
+    if (serverUrl) {
+        config.baseURL = serverUrl;
+    }
     const { token } = useAuthStore.getState();
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
