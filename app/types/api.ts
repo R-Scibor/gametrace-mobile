@@ -70,7 +70,6 @@ export interface SessionCreate {
 export interface SessionPatch {
   end_time?: string;
   notes?: string;
-  discard?: boolean;
 }
 
 export interface ConflictResponse {

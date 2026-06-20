@@ -33,3 +33,8 @@ export const patchSession = async (
     const response = await client.patch<Session>(`/sessions/${sessionId}`, payload);
     return response.data;
 };
+
+// Discard = soft-delete (moves to trash, restorable ~7 days). 204 No Content.
+export const deleteSession = async (sessionId: number): Promise<void> => {
+    await client.delete(`/sessions/${sessionId}`);
+};

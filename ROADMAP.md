@@ -45,11 +45,20 @@ Read-only context now ships on `EditSessionScreen`: game (cover + name), start t
 **Still pending:**
 
 - Start time edit — if API supports patch; required for fixing ERROR sessions.
-- Discard / void session — `SessionPatch.discard` exists in types but is not exposed in UI.
 - Created-at / “logged” timestamp in context where useful.
 - Confirm the source flip fires only when the backend actually reassigns source (currently warns on any save of a `BOT` session).
 
 **Touches:** `EditSessionScreen`, `SessionPatch` / API if `start_time` patch needed.
+
+> Discard/void shipped: "Odrzuć sesję" → `DELETE /sessions/{id}` (soft-delete). The `discard` PATCH field never existed server-side and was removed from `SessionPatch`.
+
+### Session trash / restore (Kosz)
+
+**Status:** decided · not implemented
+
+Discard is a **soft-delete** — the backend keeps trashed sessions ~7 days and exposes `GET /sessions/trash`, `POST /sessions/{id}/restore`, and `DELETE /sessions/{id}?hard=true`. Mobile has no surface for this yet: no way to view discarded sessions, restore one, or purge. Worth a "Kosz" view (likely under Settings or the session history) before the 7-day auto-purge makes accidental discards unrecoverable.
+
+**Touches:** new trash screen/list, `api/sessions` (trash list / restore / hard-delete), navigation.
 
 ---
 
@@ -77,3 +86,5 @@ Games can now be **ignored** (hidden from *Moje gry*, stats, and the *Inne* inbo
 | 2026-06-18 | Shipped game accept/ignore + un-ignore via `GameDetailScreen` OPCJE sheet with status tags; added *Ignored games — management surface* to the backlog. |
 | 2026-06-18 | Shipped edit-session read-only context (game / start / live duration / status / source), save-disable on invalid end, and styled bot-source-flip warning; trimmed the edit-session item to remaining editable-scope work. |
 | 2026-06-18 | Extracted shared `BottomSheet` / `ConfirmSheet` from the GameDetail menu styling. |
+| 2026-06-18 | Unified session duration formatting (floor) into `utils/duration`; fixed GameDetail rounding mismatch. |
+| 2026-06-18 | Shipped session discard via `DELETE /sessions/{id}` + styled `AlertSheet`; removed the non-existent `SessionPatch.discard`; added *Session trash / restore* to the backlog. |

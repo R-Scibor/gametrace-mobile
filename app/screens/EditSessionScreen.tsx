@@ -8,7 +8,8 @@ import Cover from '../components/Cover';
 import ConfirmSheet from '../components/ConfirmSheet';
 import AlertSheet from '../components/AlertSheet';
 import { formatDuration } from '../utils/duration';
-import { getSession, patchSession } from '../api/sessions';
+import { apiErrorMessage } from '../utils/apiError';
+import { getSession, patchSession, deleteSession } from '../api/sessions';
 import { Session } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
 import { colors } from '../theme/colors';
@@ -69,9 +70,7 @@ export default function EditSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('[patchSession] save failed', e?.response?.status, e?.response?.data, e?.message);
-            const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać zmian';
-            setErrorMsg(msg);
+            setErrorMsg(apiErrorMessage(e, 'Nie udało się zapisać zmian'));
         }
         setLoading(false);
     };
@@ -88,16 +87,12 @@ export default function EditSessionScreen() {
         if (loading) return;
         setLoading(true);
         try {
-            if (__DEV__) console.log('[discard] PATCH /sessions/' + sessionId, { discard: true });
-            const res = await patchSession(sessionId, { discard: true });
-            if (__DEV__) console.log('[discard] success', res);
+            await deleteSession(sessionId);
             useSessionsStore.getState().invalidate();
             navigation.goBack();
         } catch (e: any) {
-            if (__DEV__) console.log('[discard] failed', e?.response?.status, JSON.stringify(e?.response?.data), e?.message);
-            const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się odrzucić sesji';
-            setErrorMsg(msg);
+            if (__DEV__) console.log('[discard] DELETE failed', e?.response?.status, JSON.stringify(e?.response?.data), e?.message);
+            setErrorMsg(apiErrorMessage(e, 'Nie udało się odrzucić sesji'));
         }
         setLoading(false);
     };
