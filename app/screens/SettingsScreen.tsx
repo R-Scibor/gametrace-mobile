@@ -6,10 +6,12 @@ import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useServerStore } from '../store/serverStore';
 import { useChangeServer } from './useChangeServer';
+import { useTimezone } from './useTimezone';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
 import ConfirmSheet from '../components/ConfirmSheet';
+import AlertSheet from '../components/AlertSheet';
 import TimezonePicker from '../components/TimezonePicker';
 import { formatUptime, botColor } from '../utils/bot';
 import { colors } from '../theme/colors';
@@ -42,7 +44,8 @@ function SettingsRow({ label, subtext, children }: { label: string, subtext?: st
 export default function SettingsScreen() {
     const navigation = useNavigation();
     const { user, logout } = useAuthStore();
-    const { isDarkMode, timezone, toggleDarkMode, setTimezone } = useSettingsStore();
+    const { isDarkMode, toggleDarkMode } = useSettingsStore();
+    const { timezone, select: selectTimezone, sync: syncTimezone, error: tzError, clearError: clearTzError } = useTimezone();
     const serverUrl = useServerStore((s) => s.serverUrl);
     const { change, confirmInsecure, loading: changeLoading } = useChangeServer();
     const [serverModalOpen, setServerModalOpen] = useState(false);
@@ -77,6 +80,7 @@ export default function SettingsScreen() {
                 // TODO
             }
         })();
+        syncTimezone();
     }, []);
 
     const handleLogout = async () => {
@@ -189,8 +193,14 @@ export default function SettingsScreen() {
             <TimezonePicker
                 visible={tzPickerOpen}
                 currentValue={timezone}
-                onSelect={(z) => { setTimezone(z); setTzPickerOpen(false); }}
+                onSelect={(z) => { selectTimezone(z); setTzPickerOpen(false); }}
                 onClose={() => setTzPickerOpen(false)}
+            />
+
+            <AlertSheet
+                visible={tzError}
+                message="Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
+                onDismiss={clearTzError}
             />
 
             <Modal visible={serverModalOpen} transparent animationType="fade" onRequestClose={() => setServerModalOpen(false)}>

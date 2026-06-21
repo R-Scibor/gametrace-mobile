@@ -136,6 +136,13 @@ export type ProfileSettings = {
   notifications_enabled: boolean;
 };
 
+export interface ProfileMe {
+  discord_id: string;
+  username: string;
+  timezone: string;
+  notifications_enabled: boolean;
+}
+
 export type BotStatus = 'online' | 'offline' | 'unknown';
 
 export interface HealthResponse {

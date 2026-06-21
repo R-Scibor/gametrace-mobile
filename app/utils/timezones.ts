@@ -8,6 +8,16 @@ export const FALLBACK_ZONES = [
     'Africa/Cairo', 'Africa/Johannesburg',
 ];
 
+export function getDeviceTimezone(): string {
+    try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) return tz;
+    } catch {
+        // Intl unavailable — fall back to UTC.
+    }
+    return 'UTC';
+}
+
 export function getAllZones(): string[] {
     try {
         const fn = (Intl as any).supportedValuesOf;
