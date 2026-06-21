@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Modal, Pressable, Text, StyleSheet } from 'react-native';
+import { Modal, Pressable, View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
@@ -11,12 +11,15 @@ export function BottomSheet({ visible, onClose, title, children }: {
 }) {
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-            <Pressable style={sheetStyles.scrim} onPress={onClose}>
-                <Pressable style={sheetStyles.sheet} onPress={() => {}}>
+            <View style={sheetStyles.scrim}>
+                {/* Scrim sits BEHIND the sheet as a sibling so the sheet body is
+                    not wrapped in a Pressable (which would swallow child scroll gestures). */}
+                <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+                <View style={sheetStyles.sheet}>
                     <Text style={sheetStyles.title}>{title}</Text>
                     {children}
-                </Pressable>
-            </Pressable>
+                </View>
+            </View>
         </Modal>
     );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import DateTimeSheet from './DateTimeSheet';
 import { colors } from '../theme/colors';
 import { bodyFont } from '../theme/fonts';
 
@@ -10,42 +10,23 @@ type Props = {
     placeholder?: string;
 };
 
-type Picker = { mode: 'date' | 'time' | 'datetime'; base?: Date };
-
 export default function DateTimeField({ value, onChange, placeholder = 'Wybierz...' }: Props) {
-    const [picker, setPicker] = useState<Picker | null>(null);
-
-    const open = () => setPicker({ mode: Platform.OS === 'ios' ? 'datetime' : 'date' });
+    const [open, setOpen] = useState(false);
 
     return (
         <>
-            <TouchableOpacity style={styles.wrapper} onPress={open} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.wrapper} onPress={() => setOpen(true)} activeOpacity={0.8}>
                 <View style={styles.orangeBar} />
                 <Text style={[styles.value, !value && styles.placeholder]}>
                     {value ? value.toLocaleString('pl') : placeholder}
                 </Text>
             </TouchableOpacity>
-            {picker && (
-                <DateTimePicker
-                    value={picker.base ?? value ?? new Date()}
-                    mode={picker.mode}
-                    onChange={(event, d) => {
-                        if (event.type === 'dismissed' || !d) { setPicker(null); return; }
-                        if (picker.mode === 'date') {
-                            setPicker({ mode: 'time', base: d });
-                            return;
-                        }
-                        if (picker.mode === 'time') {
-                            const combined = new Date(picker.base ?? new Date());
-                            combined.setHours(d.getHours(), d.getMinutes(), 0, 0);
-                            onChange(combined);
-                        } else {
-                            onChange(d);
-                        }
-                        setPicker(null);
-                    }}
-                />
-            )}
+            <DateTimeSheet
+                visible={open}
+                value={value}
+                onConfirm={(d) => { onChange(d); setOpen(false); }}
+                onCancel={() => setOpen(false)}
+            />
         </>
     );
 }
