@@ -8,7 +8,6 @@ import {
     getHeatmap,
     getReleaseYears,
     getStatsSummary,
-    getStreak,
     getThemes,
     getWeeklyTrend,
 } from '../api/stats';
@@ -19,7 +18,6 @@ import {
     HeatmapResponse,
     ReleaseYearsResponse,
     StatsSummary,
-    StreakResponse,
     ThemesResponse,
     WeeklyTrendResponse,
 } from '../types/api';
@@ -68,7 +66,6 @@ export default function StatsScreen() {
 
     const [summary, setSummary] = useState<StatsSummary | null>(null);
     const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
-    const [streak, setStreak] = useState<StreakResponse | null>(null);
     const [trend, setTrend] = useState<WeeklyTrendResponse | null>(null);
     const [genres, setGenres] = useState<GenresResponse | null>(null);
     const [themes, setThemes] = useState<ThemesResponse | null>(null);
@@ -101,15 +98,13 @@ export default function StatsScreen() {
         let cancelled = false;
         (async () => {
             try {
-                const [st, wt, g, t, ry] = await Promise.all([
-                    getStreak(),
+                const [wt, g, t, ry] = await Promise.all([
                     getWeeklyTrend(),
                     getGenres(),
                     getThemes(),
                     getReleaseYears(),
                 ]);
                 if (cancelled) return;
-                setStreak(st);
                 setTrend(wt);
                 setGenres(g);
                 setThemes(t);
@@ -182,20 +177,6 @@ export default function StatsScreen() {
                 <Text style={common.label}>ŁĄCZNIE</Text>
                 <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
                 <Text style={styles.totalSub}>w ciągu ostatnich {days} dni</Text>
-
-                {/* Streak */}
-                <Text style={common.label}>PASSA</Text>
-                <View style={styles.streakRow}>
-                    <View style={styles.streakCell}>
-                        <Text style={styles.streakValue}>{streak ? streak.current_streak : '—'}</Text>
-                        <Text style={styles.streakSub}>obecna</Text>
-                    </View>
-                    <View style={styles.streakDivider} />
-                    <View style={styles.streakCell}>
-                        <Text style={styles.streakValue}>{streak ? streak.longest_streak : '—'}</Text>
-                        <Text style={styles.streakSub}>najdłuższa</Text>
-                    </View>
-                </View>
 
                 {/* Heatmap */}
                 <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × GODZINA</Text>
@@ -539,23 +520,6 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
 
-    streakRow: {
-        flexDirection: 'row',
-        backgroundColor: colors.bg3,
-        borderWidth: 1, borderColor: colors.borderBright,
-        borderRadius: 2,
-        paddingVertical: 16,
-    },
-    streakCell: { flex: 1, alignItems: 'center' },
-    streakDivider: { width: 1, backgroundColor: colors.border },
-    streakValue: {
-        fontFamily: displayFont.bold, fontSize: 32, letterSpacing: -0.5,
-        color: colors.orange,
-    },
-    streakSub: {
-        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2,
-        color: colors.text3, marginTop: 4,
-    },
 
     heatmap: {
         backgroundColor: colors.bg3,
