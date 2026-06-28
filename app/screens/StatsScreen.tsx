@@ -75,6 +75,10 @@ export default function StatsScreen() {
     const [companies, setCompanies] = useState<CompaniesResponse | null>(null);
     const [releaseYears, setReleaseYears] = useState<ReleaseYearsResponse | null>(null);
 
+    // Ranked lists are capped at TOP_N; these expand them to the full fetched set.
+    const [gamesExpanded, setGamesExpanded] = useState(false);
+    const [companiesExpanded, setCompaniesExpanded] = useState(false);
+
     // Period-bound: summary + heatmap share the user-selected window.
     useEffect(() => {
         let cancelled = false;
@@ -253,16 +257,29 @@ export default function StatsScreen() {
                 {!summary || summary.per_game.length === 0 ? (
                     <Text style={styles.empty}>Brak sesji w tym okresie</Text>
                 ) : (
-                    summary.per_game.map((item, i) => (
-                        <View
-                            key={item.game_id}
-                            style={[styles.row, i < summary.per_game.length - 1 && styles.rowBorder]}
-                        >
-                            <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
-                            <Text style={styles.gameName} numberOfLines={1}>{item.game_name}</Text>
-                            <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
-                        </View>
-                    ))
+                    (() => {
+                        const rows = gamesExpanded ? summary.per_game : summary.per_game.slice(0, TOP_N);
+                        return (
+                            <>
+                                {rows.map((item, i) => (
+                                    <View
+                                        key={item.game_id}
+                                        style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
+                                    >
+                                        <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
+                                        <Text style={styles.gameName} numberOfLines={1}>{item.game_name}</Text>
+                                        <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
+                                    </View>
+                                ))}
+                                {summary.per_game.length > TOP_N && (
+                                    <ShowMoreToggle
+                                        expanded={gamesExpanded}
+                                        onPress={() => setGamesExpanded(v => !v)}
+                                    />
+                                )}
+                            </>
+                        );
+                    })()
                 )}
 
                 {/* Genres — a game carries multiple genres, so each session counts
@@ -316,21 +333,34 @@ export default function StatsScreen() {
                 {!companies || companies.items.length === 0 ? (
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
-                    companies.items.map((item, i) => (
-                        <View
-                            key={item.name}
-                            style={[styles.row, i < companies.items.length - 1 && styles.rowBorder]}
-                        >
-                            <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
-                            <View style={styles.companyMain}>
-                                <Text style={styles.gameName} numberOfLines={1}>{item.name}</Text>
-                                <Text style={styles.companyMeta}>
-                                    {item.game_count} {item.game_count === 1 ? 'gra' : 'gier'}
-                                </Text>
-                            </View>
-                            <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
-                        </View>
-                    ))
+                    (() => {
+                        const rows = companiesExpanded ? companies.items : companies.items.slice(0, TOP_N);
+                        return (
+                            <>
+                                {rows.map((item, i) => (
+                                    <View
+                                        key={item.name}
+                                        style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
+                                    >
+                                        <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
+                                        <View style={styles.companyMain}>
+                                            <Text style={styles.gameName} numberOfLines={1}>{item.name}</Text>
+                                            <Text style={styles.companyMeta}>
+                                                {item.game_count} {item.game_count === 1 ? 'gra' : 'gier'}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
+                                    </View>
+                                ))}
+                                {companies.items.length > TOP_N && (
+                                    <ShowMoreToggle
+                                        expanded={companiesExpanded}
+                                        onPress={() => setCompaniesExpanded(v => !v)}
+                                    />
+                                )}
+                            </>
+                        );
+                    })()
                 )}
 
             </ScrollView>
@@ -428,6 +458,14 @@ function TagBar({ label, seconds, max, color }: { label: string; seconds: number
     );
 }
 
+function ShowMoreToggle({ expanded, onPress }: { expanded: boolean; onPress: () => void }) {
+    return (
+        <TouchableOpacity style={styles.showMore} onPress={onPress} activeOpacity={0.7}>
+            <Text style={styles.showMoreText}>{expanded ? 'Pokaż mniej' : 'Pokaż więcej'}</Text>
+        </TouchableOpacity>
+    );
+}
+
 const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 20 },
@@ -517,6 +555,11 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     rowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    showMore: { paddingVertical: 12, alignItems: 'center' },
+    showMoreText: {
+        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 1.5,
+        textTransform: 'uppercase', color: colors.orange,
+    },
     rank: {
         width: 32,
         fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1,
