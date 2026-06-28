@@ -62,7 +62,12 @@ function formatWeekStart(iso: string) {
 export default function StatsScreen() {
     const [days, setDays] = useState<Period>(7);
     const [role, setRole] = useState<CompanyRole>('developer');
-    const [loadError, setLoadError] = useState(false);
+    // One flag per fetch group so a partial failure can't be cleared by another
+    // group's success; the banner shows if any group failed.
+    const [summaryError, setSummaryError] = useState(false);
+    const [staticError, setStaticError] = useState(false);
+    const [companiesError, setCompaniesError] = useState(false);
+    const loadError = summaryError || staticError || companiesError;
 
     const [summary, setSummary] = useState<StatsSummary | null>(null);
     const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
@@ -85,9 +90,9 @@ export default function StatsScreen() {
                 if (cancelled) return;
                 setSummary(s);
                 setHeatmap(h);
-                setLoadError(false);
+                setSummaryError(false);
             } catch {
-                setLoadError(true);
+                if (!cancelled) setSummaryError(true);
             }
         })();
         return () => { cancelled = true; };
@@ -109,8 +114,9 @@ export default function StatsScreen() {
                 setGenres(g);
                 setThemes(t);
                 setReleaseYears(ry);
+                setStaticError(false);
             } catch {
-                // TODO
+                if (!cancelled) setStaticError(true);
             }
         })();
         return () => { cancelled = true; };
@@ -124,8 +130,9 @@ export default function StatsScreen() {
                 const c = await getCompanies(role, 10);
                 if (cancelled) return;
                 setCompanies(c);
+                setCompaniesError(false);
             } catch {
-                // TODO
+                if (!cancelled) setCompaniesError(true);
             }
         })();
         return () => { cancelled = true; };
