@@ -39,9 +39,8 @@ const ROLE_LABELS: Record<CompanyRole, string> = {
 
 const DOW_LABELS = ['PN', 'WT', 'ŚR', 'CZ', 'PT', 'SB', 'ND'];
 
-// 5 distinct warm tones + a muted neutral for "Other".
-const DONUT_PALETTE = ['#ff7a1a', '#ffb04d', '#dcb95c', '#b85a14', '#7a5230'];
-const DONUT_OTHER = '#3d362f';
+// Rank-as-heat: most-played tag is the hottest orange, fading to deep ember.
+const TAG_HEAT = ['#ff7a1a', '#f2691a', '#d9591b', '#b8491a', '#8f3a18'];
 
 const TOP_N = 5;
 
@@ -266,15 +265,17 @@ export default function StatsScreen() {
                     ))
                 )}
 
-                {/* Genres donut */}
+                {/* Genres — a game carries multiple genres, so each session counts
+                    toward every genre on its game. Bars are share-of-exposure (overlap
+                    allowed), not a partition; longest bar = most-played genre. */}
                 <Text style={common.label}>GATUNKI</Text>
-                <DonutSection
+                <BreakdownList
                     items={genres ? genres.items.map(g => ({ label: g.genre, seconds: g.total_seconds })) : null}
                 />
 
-                {/* Themes donut */}
+                {/* Themes — same overlap caveat as genres above. */}
                 <Text style={common.label}>MOTYWY</Text>
-                <DonutSection
+                <BreakdownList
                     items={themes ? themes.items.map(t => ({ label: t.theme, seconds: t.total_seconds })) : null}
                 />
 
@@ -337,10 +338,12 @@ export default function StatsScreen() {
     );
 }
 
-type DonutItem = { label: string; seconds: number };
-type DonutSlice = DonutItem & { color: string; pct: number };
+type BreakdownItem = { label: string; seconds: number };
 
-function DonutSection({ items }: { items: DonutItem[] | null }) {
+// Ranked hour bars for overlapping tags (genres/themes). Each session counts
+// toward every tag on its game, so these don't partition to 100% — the bars are
+// scaled to the top tag, read as "most-played", not "share of total".
+function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
     if (!items) {
         return <Text style={styles.empty}>—</Text>;
     }
@@ -348,111 +351,21 @@ function DonutSection({ items }: { items: DonutItem[] | null }) {
         return <Text style={styles.empty}>Brak danych</Text>;
     }
 
-    // Top N + aggregated "Inne" for the rest.
-    const sorted = [...items].sort((a, b) => b.seconds - a.seconds);
-    const top = sorted.slice(0, TOP_N);
-    const rest = sorted.slice(TOP_N);
-    const restTotal = rest.reduce((s, x) => s + x.seconds, 0);
-    const total = sorted.reduce((s, x) => s + x.seconds, 0);
+    const top = [...items].sort((a, b) => b.seconds - a.seconds).slice(0, TOP_N);
+    const max = top.length > 0 ? top[0].seconds : 0;
 
-    const slices: DonutSlice[] = top.map((item, i) => ({
-        ...item,
-        color: DONUT_PALETTE[i],
-        pct: total > 0 ? item.seconds / total : 0,
-    }));
-    if (restTotal > 0) {
-        slices.push({
-            label: 'Inne',
-            seconds: restTotal,
-            color: DONUT_OTHER,
-            pct: total > 0 ? restTotal / total : 0,
-        });
-    }
-
-    // TODO: a single game can carry multiple genres/themes — each session counts
-    // toward every tag on its game ("exposure", not a partition), so slice
-    // percentages don't sum to share-of-playtime. Rethink: normalize per-game,
-    // pick a primary tag per game, or relabel so the donut isn't misread.
     return (
-        <View style={styles.donutSection}>
-            <DonutChart slices={slices} />
-            <View style={styles.legend}>
-                {slices.map(s => (
-                    <View key={s.label} style={styles.legendRow}>
-                        <View style={[styles.legendDot, { backgroundColor: s.color }]} />
-                        <Text style={styles.legendLabel} numberOfLines={1}>{s.label}</Text>
-                        <Text style={styles.legendValue}>{Math.round(s.pct * 100)}%</Text>
-                    </View>
-                ))}
-            </View>
-        </View>
-    );
-}
-
-const DONUT_SIZE = 120;
-const DONUT_R_OUTER = 56;
-const DONUT_R_INNER = 36;
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-    const rad = ((angleDeg - 90) * Math.PI) / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-function arcPath(
-    cx: number, cy: number, rOuter: number, rInner: number,
-    startAngle: number, endAngle: number,
-) {
-    const startOuter = polarToCartesian(cx, cy, rOuter, endAngle);
-    const endOuter = polarToCartesian(cx, cy, rOuter, startAngle);
-    const startInner = polarToCartesian(cx, cy, rInner, startAngle);
-    const endInner = polarToCartesian(cx, cy, rInner, endAngle);
-    const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
-    return [
-        `M ${startOuter.x} ${startOuter.y}`,
-        `A ${rOuter} ${rOuter} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
-        `L ${startInner.x} ${startInner.y}`,
-        `A ${rInner} ${rInner} 0 ${largeArc} 1 ${endInner.x} ${endInner.y}`,
-        'Z',
-    ].join(' ');
-}
-
-function DonutChart({ slices }: { slices: DonutSlice[] }) {
-    const cx = DONUT_SIZE / 2;
-    const cy = DONUT_SIZE / 2;
-
-    // SVG arc can't draw a single 360° slice — render full ring as a Circle stroke.
-    const isFullCircle = slices.length === 1 && slices[0].pct >= 0.999;
-
-    let cursor = 0;
-    return (
-        <View style={styles.donutWrapper}>
-            <Svg width={DONUT_SIZE} height={DONUT_SIZE}>
-                {isFullCircle ? (
-                    <Circle
-                        cx={cx}
-                        cy={cy}
-                        r={(DONUT_R_OUTER + DONUT_R_INNER) / 2}
-                        stroke={slices[0].color}
-                        strokeWidth={DONUT_R_OUTER - DONUT_R_INNER}
-                        fill="none"
-                    />
-                ) : (
-                    slices.map((s) => {
-                        const start = cursor;
-                        const end = cursor + s.pct * 360;
-                        cursor = end;
-                        if (end - start <= 0) return null;
-                        return (
-                            <Path
-                                key={s.label}
-                                d={arcPath(cx, cy, DONUT_R_OUTER, DONUT_R_INNER, start, end)}
-                                fill={s.color}
-                            />
-                        );
-                    })
-                )}
-            </Svg>
-        </View>
+        <>
+            {top.map((item, i) => (
+                <TagBar
+                    key={item.label}
+                    label={item.label}
+                    seconds={item.seconds}
+                    max={max}
+                    color={TAG_HEAT[i]}
+                />
+            ))}
+        </>
     );
 }
 
@@ -494,6 +407,22 @@ function BreakdownBar({ label, seconds, max }: { label: string; seconds: number;
             </View>
             <View style={styles.breakdownTrack}>
                 <View style={[styles.breakdownFill, { width: `${widthPct}%` }]} />
+            </View>
+        </View>
+    );
+}
+
+// Thick colored bar with the tag name set on the fill. Short fills leave the name
+// over the dark track, so the text carries a dark halo to stay legible either way.
+function TagBar({ label, seconds, max, color }: { label: string; seconds: number; max: number; color: string }) {
+    // Floor at a sliver so a tiny tag still shows a colored stub under its name.
+    const widthPct = max > 0 ? Math.max((seconds / max) * 100, 8) : 0;
+    return (
+        <View style={styles.tagTrack}>
+            <View style={[styles.tagFill, { width: `${widthPct}%`, backgroundColor: color }]} />
+            <View style={styles.tagOverlay}>
+                <Text style={styles.tagLabel} numberOfLines={1}>{label}</Text>
+                <Text style={styles.tagValue}>{formatHoursShort(seconds)}</Text>
             </View>
         </View>
     );
@@ -602,28 +531,6 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
 
-    donutSection: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: colors.bg3,
-        borderWidth: 1, borderColor: colors.borderBright,
-        borderRadius: 2,
-        padding: 14, gap: 14,
-    },
-    donutWrapper: {
-        width: DONUT_SIZE, height: DONUT_SIZE,
-        alignItems: 'center', justifyContent: 'center',
-    },
-    legend: { flex: 1, gap: 6 },
-    legendRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    legendDot: { width: 8, height: 8, borderRadius: 4 },
-    legendLabel: {
-        flex: 1, fontFamily: bodyFont.medium, fontSize: 13, color: colors.text,
-    },
-    legendValue: {
-        fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 0.5,
-        color: colors.text2,
-    },
-
     breakdown: { marginBottom: 10 },
     breakdownHeader: {
         flexDirection: 'row', justifyContent: 'space-between',
@@ -640,6 +547,25 @@ const styles = StyleSheet.create({
         height: 4, backgroundColor: colors.bg3, borderRadius: 2, overflow: 'hidden',
     },
     breakdownFill: { height: '100%', backgroundColor: colors.orange },
+
+    tagTrack: {
+        height: 30, marginBottom: 8, borderRadius: 2,
+        backgroundColor: colors.bg3, overflow: 'hidden', justifyContent: 'center',
+    },
+    tagFill: { ...StyleSheet.absoluteFillObject, right: undefined, borderRadius: 2 },
+    tagOverlay: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    tagLabel: {
+        flex: 1, fontFamily: displayFont.bold, fontSize: 13, letterSpacing: 1,
+        color: '#fff', textTransform: 'uppercase',
+        textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 3,
+    },
+    tagValue: {
+        fontFamily: bodyFont.medium, fontSize: 12, color: '#fff', marginLeft: 8,
+        textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 3,
+    },
 
     empty: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.text3, marginTop: 8 },
     errorWrap: { marginTop: 16 },
