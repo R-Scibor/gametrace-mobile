@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import {
     getCompanies,
     getGenres,
@@ -399,31 +399,75 @@ function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
     );
 }
 
-// Card width = screen - screen padding (20*2) - card padding (12*2). Computed
+// Card width = screen - screen padding (20*2) - card padding (16*2). Computed
 // once from Dimensions; this app doesn't support rotation.
-const TREND_W = Dimensions.get('window').width - 40 - 24;
-const TREND_H = 90;
+const TREND_W = Dimensions.get('window').width - 40 - 32;
+const TREND_H = 140;
+// Insets so peaks/markers and the end points get room instead of touching the edges.
+const TREND_PAD_TOP = 14;
+const TREND_PAD_BOTTOM = 10;
+const TREND_PAD_X = 10;
+const TREND_BASE = TREND_H - TREND_PAD_BOTTOM;          // y of the zero line
+const TREND_PLOT = TREND_H - TREND_PAD_TOP - TREND_PAD_BOTTOM;
+const TREND_PLOT_W = TREND_W - TREND_PAD_X * 2;         // usable horizontal range
+
+// week_start (Monday) → "DD.MM–DD.MM" range covering the 7-day week.
+function weekRange(iso: string) {
+    const start = new Date(iso);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const f = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return `${f(start)}–${f(end)}`;
+}
 
 function TrendLine({ weeks, max }: { weeks: { week_start: string; total_seconds: number }[]; max: number }) {
+    // Hook before the guard so it's called unconditionally; null = "default to latest".
+    const [selected, setSelected] = useState<number | null>(null);
     if (weeks.length === 0 || max === 0) return null;
 
-    const stepX = weeks.length > 1 ? TREND_W / (weeks.length - 1) : 0;
+    const stepX = weeks.length > 1 ? TREND_PLOT_W / (weeks.length - 1) : 0;
     const points = weeks.map((w, i) => ({
-        x: i * stepX,
-        y: TREND_H - (w.total_seconds / max) * TREND_H,
+        x: TREND_PAD_X + i * stepX,
+        y: TREND_PAD_TOP + (1 - w.total_seconds / max) * TREND_PLOT,
     }));
 
+    const firstX = points[0].x;
+    const lastX = points[points.length - 1].x;
     const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-    const areaPath = `${linePath} L ${TREND_W} ${TREND_H} L 0 ${TREND_H} Z`;
+    const areaPath = `${linePath} L ${lastX.toFixed(1)} ${TREND_BASE} L ${firstX.toFixed(1)} ${TREND_BASE} Z`;
+
+    const sel = selected ?? weeks.length - 1;
+    const selWeek = weeks[sel];
+    const selPoint = points[sel];
+    const hitW = stepX || TREND_W;
 
     return (
-        <Svg width={TREND_W} height={TREND_H}>
-            <Path d={areaPath} fill="rgba(255, 122, 26, 0.15)" />
-            <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-            {points.map((p, i) => (
-                <Circle key={i} cx={p.x} cy={p.y} r={3} fill={colors.orange} />
-            ))}
-        </Svg>
+        <View>
+            <View style={styles.trendReadout}>
+                <Text style={styles.trendReadoutDate}>{weekRange(selWeek.week_start)}</Text>
+                <Text style={styles.trendReadoutValue}>{formatHours(selWeek.total_seconds)}</Text>
+            </View>
+            <Svg width={TREND_W} height={TREND_H}>
+                <Path d={areaPath} fill="rgba(255, 122, 26, 0.15)" />
+                <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                <Line
+                    x1={selPoint.x} y1={0} x2={selPoint.x} y2={TREND_BASE}
+                    stroke={colors.orange} strokeWidth={1} strokeDasharray="2 3" opacity={0.5}
+                />
+                {points.map((p, i) => (
+                    <Circle key={i} cx={p.x} cy={p.y} r={i === sel ? 5 : 3} fill={colors.orange} />
+                ))}
+                {/* Full-column tap targets so the whole width selects, not just the dot. */}
+                {points.map((p, i) => (
+                    <Rect
+                        key={`hit-${i}`}
+                        x={p.x - hitW / 2} y={0} width={hitW} height={TREND_H}
+                        fill="transparent"
+                        onPress={() => setSelected(i)}
+                    />
+                ))}
+            </Svg>
+        </View>
     );
 }
 
@@ -540,7 +584,17 @@ const styles = StyleSheet.create({
         backgroundColor: colors.bg3,
         borderWidth: 1, borderColor: colors.borderBright,
         borderRadius: 2,
-        padding: 12,
+        padding: 16,
+    },
+    trendReadout: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline',
+        marginBottom: 8,
+    },
+    trendReadoutDate: {
+        fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 1, color: colors.text2,
+    },
+    trendReadoutValue: {
+        fontFamily: displayFont.bold, fontSize: 16, letterSpacing: -0.3, color: colors.orange,
     },
     trendLabels: {
         flexDirection: 'row', justifyContent: 'space-between', marginTop: 8,
