@@ -28,7 +28,7 @@ import ErrorBanner from '../components/ErrorBanner';
 import Cover from '../components/Cover';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
 
-const PERIODS = [7, 30, 90] as const;
+const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
 
 const ROLES: readonly CompanyRole[] = ['developer', 'publisher'] as const;
@@ -76,9 +76,10 @@ export default function StatsScreen() {
     // One flag per fetch group so a partial failure can't be cleared by another
     // group's success; the banner shows if any group failed.
     const [summaryError, setSummaryError] = useState(false);
-    const [staticError, setStaticError] = useState(false);
+    const [trendError, setTrendError] = useState(false);
+    const [breakdownError, setBreakdownError] = useState(false);
     const [companiesError, setCompaniesError] = useState(false);
-    const loadError = summaryError || staticError || companiesError;
+    const loadError = summaryError || trendError || breakdownError || companiesError;
 
     const [summary, setSummary] = useState<StatsSummary | null>(null);
     const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
@@ -109,36 +110,50 @@ export default function StatsScreen() {
         return () => { cancelled = true; };
     }, [days]);
 
-    // Static breakdowns: fetched once.
+    // Weekly trend is all-time by nature — fetched once, ignores the period.
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const [wt, g, t, ry] = await Promise.all([
-                    getWeeklyTrend(),
-                    getGenres(),
-                    getThemes(),
-                    getReleaseYears(),
-                ]);
+                const wt = await getWeeklyTrend();
                 if (cancelled) return;
                 setTrend(wt);
-                setGenres(g);
-                setThemes(t);
-                setReleaseYears(ry);
-                setStaticError(false);
+                setTrendError(false);
             } catch {
-                if (!cancelled) setStaticError(true);
+                if (!cancelled) setTrendError(true);
             }
         })();
         return () => { cancelled = true; };
     }, []);
 
-    // Role-bound: companies refetches on toggle.
+    // Period-bound breakdowns: refetch on period change.
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const c = await getCompanies(role, 10);
+                const [g, t, ry] = await Promise.all([
+                    getGenres(days),
+                    getThemes(days),
+                    getReleaseYears(days),
+                ]);
+                if (cancelled) return;
+                setGenres(g);
+                setThemes(t);
+                setReleaseYears(ry);
+                setBreakdownError(false);
+            } catch {
+                if (!cancelled) setBreakdownError(true);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [days]);
+
+    // Companies: refetch on role or period change.
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const c = await getCompanies(role, 10, days);
                 if (cancelled) return;
                 setCompanies(c);
                 setCompaniesError(false);
@@ -147,7 +162,7 @@ export default function StatsScreen() {
             }
         })();
         return () => { cancelled = true; };
-    }, [role]);
+    }, [role, days]);
 
     const trendMax = trend
         ? trend.weeks.reduce((m, w) => Math.max(m, w.total_seconds), 0)
@@ -179,7 +194,7 @@ export default function StatsScreen() {
                                 activeOpacity={0.85}
                             >
                                 <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                                    {p} DNI
+                                    {p === 0 ? 'MAX' : `${p} DNI`}
                                 </Text>
                             </TouchableOpacity>
                         );
@@ -191,7 +206,9 @@ export default function StatsScreen() {
                 {/* Total */}
                 <Text style={common.label}>ŁĄCZNIE</Text>
                 <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
-                <Text style={styles.totalSub}>w ciągu ostatnich {days} dni</Text>
+                <Text style={styles.totalSub}>
+                    {days === 0 ? 'w całym okresie' : `w ciągu ostatnich ${days} dni`}
+                </Text>
                 {summary && (
                     <DeltaBadge total={summary.total_seconds} previous={summary.previous_total_seconds} days={days} />
                 )}

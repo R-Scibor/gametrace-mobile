@@ -37,27 +37,28 @@ export const getWeeklyTrend = async (weeks?: number): Promise<WeeklyTrendRespons
     return response.data;
 };
 
-export const getGenres = async (): Promise<GenresResponse> => {
-    const response = await client.get<GenresResponse>('/stats/genres');
+export const getGenres = async (days?: number): Promise<GenresResponse> => {
+    const response = await client.get<GenresResponse>('/stats/genres', { params: { days } });
     return response.data;
 };
 
-export const getThemes = async (): Promise<ThemesResponse> => {
-    const response = await client.get<ThemesResponse>('/stats/themes');
+export const getThemes = async (days?: number): Promise<ThemesResponse> => {
+    const response = await client.get<ThemesResponse>('/stats/themes', { params: { days } });
     return response.data;
 };
 
 export const getCompanies = async (
     role: CompanyRole,
     limit?: number,
+    days?: number,
 ): Promise<CompaniesResponse> => {
     const response = await client.get<CompaniesResponse>('/stats/companies', {
-        params: { role, limit },
+        params: { role, limit, days },
     });
     return response.data;
 };
 
-export const getReleaseYears = async (): Promise<ReleaseYearsResponse> => {
-    const response = await client.get<ReleaseYearsResponse>('/stats/release-years');
+export const getReleaseYears = async (days?: number): Promise<ReleaseYearsResponse> => {
+    const response = await client.get<ReleaseYearsResponse>('/stats/release-years', { params: { days } });
     return response.data;
 };
