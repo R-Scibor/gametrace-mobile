@@ -25,6 +25,7 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
+import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
 
 const PERIODS = [7, 30, 90] as const;
 type Period = typeof PERIODS[number];
@@ -36,6 +37,15 @@ const ROLE_LABELS: Record<CompanyRole, string> = {
 };
 
 const DOW_LABELS = ['PN', 'WT', 'ŚR', 'CZ', 'PT', 'SB', 'ND'];
+const DOW_FULL = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
+// Even 6h time-of-day buckets; `start` is the first hour each covers. Icon shows in
+// the column header; `label` is the full word used in the tap readout.
+const HEAT_BUCKETS = [
+    { label: 'Noc', start: 0, Icon: NightIcon },
+    { label: 'Rano', start: 6, Icon: MorningIcon },
+    { label: 'Popołudnie', start: 12, Icon: AfternoonIcon },
+    { label: 'Wieczór', start: 18, Icon: EveningIcon },
+];
 
 // Rank-as-heat: most-played tag is the hottest orange, fading to deep ember.
 const TAG_HEAT = ['#ff7a1a', '#f2691a', '#d9591b', '#b8491a', '#8f3a18'];
@@ -138,9 +148,6 @@ export default function StatsScreen() {
         return () => { cancelled = true; };
     }, [role]);
 
-    const heatmapMax = heatmap
-        ? heatmap.cells.reduce((m, c) => Math.max(m, c.seconds), 0)
-        : 0;
     const trendMax = trend
         ? trend.weeks.reduce((m, w) => Math.max(m, w.total_seconds), 0)
         : 0;
@@ -186,45 +193,8 @@ export default function StatsScreen() {
                 <Text style={styles.totalSub}>w ciągu ostatnich {days} dni</Text>
 
                 {/* Heatmap */}
-                <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × GODZINA</Text>
-                {!heatmap || heatmapMax === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
-                ) : (
-                    <View style={styles.heatmap}>
-                        {DOW_LABELS.map((label, dow) => (
-                            <View key={dow} style={styles.heatRow}>
-                                <Text style={styles.heatDow}>{label}</Text>
-                                <View style={styles.heatCells}>
-                                    {Array.from({ length: 24 }).map((_, hour) => {
-                                        const cell = heatmap.cells.find(c => c.dow === dow && c.hour === hour);
-                                        const seconds = cell ? cell.seconds : 0;
-                                        const intensity = heatmapMax > 0 ? seconds / heatmapMax : 0;
-                                        return (
-                                            <View
-                                                key={hour}
-                                                style={[
-                                                    styles.heatCell,
-                                                    {
-                                                        backgroundColor: intensity === 0
-                                                            ? colors.bg3
-                                                            : `rgba(255, 122, 26, ${0.15 + intensity * 0.85})`,
-                                                    },
-                                                ]}
-                                            />
-                                        );
-                                    })}
-                                </View>
-                            </View>
-                        ))}
-                        <View style={styles.heatHourRow}>
-                            <Text style={styles.heatHourLabel}>0</Text>
-                            <Text style={styles.heatHourLabel}>6</Text>
-                            <Text style={styles.heatHourLabel}>12</Text>
-                            <Text style={styles.heatHourLabel}>18</Text>
-                            <Text style={styles.heatHourLabel}>23</Text>
-                        </View>
-                    </View>
-                )}
+                <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
+                <Heatmap data={heatmap} />
 
                 {/* Weekly trend */}
                 <Text style={common.label}>TRENDY · TYGODNIOWO</Text>
@@ -387,6 +357,78 @@ function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
     );
 }
 
+// 7 day-rows × 4 time-of-day buckets. Tapping a cell shows its slot + hours in a
+// readout above the grid; defaults to the peak cell so it always reads something.
+function Heatmap({ data }: { data: HeatmapResponse | null }) {
+    const [selected, setSelected] = useState<{ dow: number; b: number } | null>(null);
+
+    // Sum each (dow, hour) cell into its 6h bucket → 7×4 matrix.
+    const grid: number[][] = Array.from({ length: 7 }, () => [0, 0, 0, 0]);
+    if (data) {
+        for (const c of data.cells) {
+            grid[c.dow][Math.floor(c.hour / 6)] += c.seconds;
+        }
+    }
+    let max = 0;
+    let peak = { dow: 0, b: 0 };
+    for (let d = 0; d < 7; d++) {
+        for (let b = 0; b < 4; b++) {
+            if (grid[d][b] > max) { max = grid[d][b]; peak = { dow: d, b }; }
+        }
+    }
+
+    if (!data || max === 0) {
+        return <Text style={styles.empty}>Brak danych</Text>;
+    }
+
+    const sel = selected ?? peak;
+
+    return (
+        <View style={styles.heatmap}>
+            <View style={styles.heatReadout}>
+                <Text style={styles.heatReadoutSlot} numberOfLines={1}>
+                    {DOW_FULL[sel.dow]} · {HEAT_BUCKETS[sel.b].label}
+                </Text>
+                <Text style={styles.heatReadoutValue}>{formatHours(grid[sel.dow][sel.b])}</Text>
+            </View>
+            <View style={styles.heatHeaderRow}>
+                <View style={styles.heatDowSpacer} />
+                <View style={styles.heatCells}>
+                    {HEAT_BUCKETS.map(bk => (
+                        <View key={bk.label} style={styles.heatColIcon}>
+                            <bk.Icon color={colors.text2} size={16} />
+                        </View>
+                    ))}
+                </View>
+            </View>
+            {DOW_LABELS.map((label, dow) => (
+                <View key={dow} style={styles.heatRow}>
+                    <Text style={styles.heatDow}>{label}</Text>
+                    <View style={styles.heatCells}>
+                        {HEAT_BUCKETS.map((bk, b) => {
+                            const seconds = grid[dow][b];
+                            const intensity = seconds / max;
+                            const isSel = sel.dow === dow && sel.b === b;
+                            return (
+                                <TouchableOpacity
+                                    key={b}
+                                    activeOpacity={0.8}
+                                    onPress={() => setSelected({ dow, b })}
+                                    style={[
+                                        styles.heatCell,
+                                        { backgroundColor: seconds === 0 ? colors.bg3 : `rgba(255, 122, 26, ${0.15 + intensity * 0.85})` },
+                                        isSel && styles.heatCellSelected,
+                                    ]}
+                                />
+                            );
+                        })}
+                    </View>
+                </View>
+            ))}
+        </View>
+    );
+}
+
 // Card width = screen - screen padding (20*2) - card padding (16*2). Computed
 // once from Dimensions; this app doesn't support rotation.
 const TREND_W = Dimensions.get('window').width - 40 - 32;
@@ -534,22 +576,30 @@ const styles = StyleSheet.create({
         borderRadius: 2,
         padding: 10,
     },
-    heatRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
+    heatReadout: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline',
+        marginBottom: 12,
+    },
+    heatReadoutSlot: {
+        flex: 1, fontFamily: displayFont.bold, fontSize: 12, letterSpacing: 1,
+        color: colors.text2,
+    },
+    heatReadoutValue: {
+        fontFamily: displayFont.bold, fontSize: 16, letterSpacing: -0.3,
+        color: colors.orange, marginLeft: 8,
+    },
+    heatHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+    heatDowSpacer: { width: 26 },
+    heatColIcon: { flex: 1, alignItems: 'center' },
+    heatRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 3 },
     heatDow: {
         width: 26,
         fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 1,
         color: colors.text3,
     },
-    heatCells: { flex: 1, flexDirection: 'row', gap: 1 },
-    heatCell: { flex: 1, height: 14, borderRadius: 1 },
-    heatHourRow: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        marginLeft: 26, marginTop: 4,
-    },
-    heatHourLabel: {
-        fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 1,
-        color: colors.text3,
-    },
+    heatCells: { flex: 1, flexDirection: 'row', gap: 3 },
+    heatCell: { flex: 1, height: 28, borderRadius: 2 },
+    heatCellSelected: { borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.9)' },
 
     trend: {
         backgroundColor: colors.bg3,
