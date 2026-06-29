@@ -25,6 +25,7 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
+import Cover from '../components/Cover';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
 
 const PERIODS = [7, 30, 90] as const;
@@ -191,6 +192,47 @@ export default function StatsScreen() {
                 <Text style={common.label}>ŁĄCZNIE</Text>
                 <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
                 <Text style={styles.totalSub}>w ciągu ostatnich {days} dni</Text>
+                {summary && (
+                    <DeltaBadge total={summary.total_seconds} previous={summary.previous_total_seconds} days={days} />
+                )}
+
+                {/* Record: longest single session — mirrors the dashboard active-session card */}
+                {summary && summary.longest_session_seconds > 0 && (
+                    <View style={styles.recordCard}>
+                        <View style={styles.recordRow}>
+                            <View style={styles.recordCoverWrap}>
+                                <Cover
+                                    gameId={summary.longest_session_game_id}
+                                    fallbackUri={summary.per_game.find(g => g.game_id === summary.longest_session_game_id)?.cover_image_url}
+                                    style={styles.recordCover}
+                                    placeholderChar={summary.longest_session_game_name?.[0]}
+                                />
+                            </View>
+                            <View style={styles.recordMeta}>
+                                <Text style={styles.recordLabel}>REKORD · NAJDŁUŻSZA SESJA</Text>
+                                {summary.longest_session_game_name && (
+                                    <Text style={styles.recordGame} numberOfLines={2}>{summary.longest_session_game_name}</Text>
+                                )}
+                                <Text style={styles.recordValue}>{formatHours(summary.longest_session_seconds)}</Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                {/* Avg session + new games */}
+                {summary && (
+                    <View style={styles.statRow}>
+                        <View style={styles.statCell}>
+                            <Text style={styles.statValue}>{formatHours(summary.avg_session_seconds)}</Text>
+                            <Text style={styles.statSub}>średnia sesja</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statCell}>
+                            <Text style={styles.statValue}>{summary.new_games_count}</Text>
+                            <Text style={styles.statSub}>nowe gry</Text>
+                        </View>
+                    </View>
+                )}
 
                 {/* Heatmap */}
                 <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
@@ -354,6 +396,19 @@ function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
                 />
             ))}
         </>
+    );
+}
+
+// "↑23% vs poprzednie N dni" — hidden when there's no prior window to compare
+// (previous=0), which also covers all-time. Up = orange, down = muted; arrow signs it.
+function DeltaBadge({ total, previous, days }: { total: number; previous: number; days: number }) {
+    if (previous <= 0) return null;
+    const delta = (total - previous) / previous;
+    const up = delta >= 0;
+    return (
+        <Text style={[styles.delta, { color: up ? colors.orange : colors.text2 }]}>
+            {up ? '↑' : '↓'} {Math.abs(Math.round(delta * 100))}% vs poprzednie {days} dni
+        </Text>
     );
 }
 
@@ -567,6 +622,44 @@ const styles = StyleSheet.create({
     totalSub: {
         fontFamily: bodyFont.regular, fontSize: 13, color: colors.text3,
         marginTop: 2,
+    },
+    delta: { fontFamily: bodyFont.medium, fontSize: 13, marginTop: 6 },
+
+    recordCard: {
+        marginTop: 16,
+        backgroundColor: colors.bg2, borderRadius: 4, overflow: 'hidden',
+        borderWidth: 1, borderColor: colors.borderBright,
+    },
+    recordRow: { flexDirection: 'row' },
+    recordCoverWrap: { alignSelf: 'stretch', aspectRatio: 264 / 362, backgroundColor: colors.bg3 },
+    recordCover: { width: '100%', height: '100%' },
+    recordMeta: { flex: 1, paddingHorizontal: 14, paddingVertical: 12, gap: 4, justifyContent: 'center' },
+    recordLabel: {
+        fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 2, color: colors.orange,
+    },
+    recordGame: {
+        fontFamily: displayFont.bold, fontSize: 15, color: colors.text, lineHeight: 18,
+    },
+    recordValue: {
+        fontFamily: displayFont.bold, fontSize: 22, letterSpacing: 1, color: colors.orange,
+        marginTop: 2,
+    },
+
+    statRow: {
+        flexDirection: 'row',
+        backgroundColor: colors.bg3,
+        borderWidth: 1, borderColor: colors.borderBright,
+        borderRadius: 2,
+        paddingVertical: 16, marginTop: 10,
+    },
+    statCell: { flex: 1, alignItems: 'center' },
+    statDivider: { width: 1, backgroundColor: colors.border },
+    statValue: {
+        fontFamily: displayFont.bold, fontSize: 22, letterSpacing: -0.5, color: colors.text,
+    },
+    statSub: {
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2,
+        color: colors.text3, marginTop: 4,
     },
 
 

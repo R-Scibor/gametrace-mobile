@@ -107,9 +107,15 @@ export interface PendingErrorEntry {
 
 export interface StatsSummary {
   days: number;
-  window_start: string;
+  window_start: string | null;   // null for all-time (days=0)
   window_end: string;
   total_seconds: number;
+  previous_total_seconds: number; // COMPLETED total over the preceding equal window; 0 for all-time
+  avg_session_seconds: number;
+  longest_session_seconds: number;
+  longest_session_game_id: number | null;
+  longest_session_game_name: string | null;
+  new_games_count: number;
   per_game: GameStatEntry[];
   pending_errors: PendingErrorEntry[];
 }
