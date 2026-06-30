@@ -203,14 +203,28 @@ export default function StatsScreen() {
 
                 {loadError && <ErrorBanner message="Nie udało się pobrać statystyk." style={styles.errorWrap} />}
 
-                {/* Total */}
-                <Text style={common.label}>ŁĄCZNIE</Text>
-                <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
-                <Text style={styles.totalSub}>
-                    {days === 0 ? 'w całym okresie' : `w ciągu ostatnich ${days} dni`}
-                </Text>
+                {/* ── PRZEGLĄD ── */}
+                <SectionHeader label="PRZEGLĄD" />
+                <View style={styles.totalCard}>
+                    <View style={styles.totalRule} />
+                    <View style={styles.totalBody}>
+                        <Text style={styles.totalLabel}>ŁĄCZNIE</Text>
+                        <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
+                        <View style={styles.totalMeta}>
+                            {summary && (
+                                <DeltaMetric total={summary.total_seconds} previous={summary.previous_total_seconds} />
+                            )}
+                            <Text style={styles.totalSub}>
+                                {days === 0 ? 'w całym okresie' : `w ciągu ostatnich ${days} dni`}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
                 {summary && (
-                    <DeltaBadge total={summary.total_seconds} previous={summary.previous_total_seconds} days={days} />
+                    <View style={styles.tilesRow}>
+                        <Tile label="ŚR. SESJA" value={formatHours(summary.avg_session_seconds)} />
+                        <Tile label="NOWE GRY" value={String(summary.new_games_count)} />
+                    </View>
                 )}
 
                 {/* Record: longest single session — mirrors the dashboard active-session card */}
@@ -236,41 +250,8 @@ export default function StatsScreen() {
                     </View>
                 )}
 
-                {/* Avg session + new games */}
-                {summary && (
-                    <View style={styles.statRow}>
-                        <View style={styles.statCell}>
-                            <Text style={styles.statValue}>{formatHours(summary.avg_session_seconds)}</Text>
-                            <Text style={styles.statSub}>średnia sesja</Text>
-                        </View>
-                        <View style={styles.statDivider} />
-                        <View style={styles.statCell}>
-                            <Text style={styles.statValue}>{summary.new_games_count}</Text>
-                            <Text style={styles.statSub}>nowe gry</Text>
-                        </View>
-                    </View>
-                )}
-
-                {/* Heatmap */}
-                <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
-                <Heatmap data={heatmap} />
-
-                {/* Weekly trend */}
-                <Text style={common.label}>TRENDY · TYGODNIOWO</Text>
-                {!trend || trendMax === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
-                ) : (
-                    <View style={styles.trend}>
-                        <TrendLine weeks={trend.weeks} max={trendMax} />
-                        <View style={styles.trendLabels}>
-                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[0].week_start)}</Text>
-                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[trend.weeks.length - 1].week_start)}</Text>
-                        </View>
-                    </View>
-                )}
-
-                {/* Per-game ranking */}
-                <Text style={common.label}>RANKING GIER</Text>
+                {/* ── GRY ── */}
+                <SectionHeader label="GRY" />
                 {!summary || summary.per_game.length === 0 ? (
                     <Text style={styles.empty}>Brak sesji w tym okresie</Text>
                 ) : (
@@ -299,6 +280,25 @@ export default function StatsScreen() {
                     })()
                 )}
 
+                {/* ── KIEDY GRASZ ── */}
+                <SectionHeader label="KIEDY GRASZ" />
+                <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
+                <Heatmap data={heatmap} />
+                <Text style={common.label}>TRENDY · TYGODNIOWO</Text>
+                {!trend || trendMax === 0 ? (
+                    <Text style={styles.empty}>Brak danych</Text>
+                ) : (
+                    <View style={styles.trend}>
+                        <TrendLine weeks={trend.weeks} max={trendMax} />
+                        <View style={styles.trendLabels}>
+                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[0].week_start)}</Text>
+                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[trend.weeks.length - 1].week_start)}</Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* ── TWÓJ GUST ── */}
+                <SectionHeader label="TWÓJ GUST" />
                 {/* Genres — a game carries multiple genres, so each session counts
                     toward every genre on its game. Bars are share-of-exposure (overlap
                     allowed), not a partition; longest bar = most-played genre. */}
@@ -328,8 +328,8 @@ export default function StatsScreen() {
                     ))
                 )}
 
-                {/* Companies (role toggle) — at the bottom */}
-                <Text style={common.label}>STUDIA</Text>
+                {/* ── TWÓRCY ── */}
+                <SectionHeader label="TWÓRCY" />
                 <View style={styles.pillRow}>
                     {ROLES.map(r => {
                         const active = role === r;
@@ -416,16 +416,49 @@ function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
     );
 }
 
-// "↑23% vs poprzednie N dni" — hidden when there's no prior window to compare
-// (previous=0), which also covers all-time. Up = orange, down = muted; arrow signs it.
-function DeltaBadge({ total, previous, days }: { total: number; previous: number; days: number }) {
+// Group divider — small caps label + hairline rule, mirrors the dashboard's section
+// headers. Brighter than the per-stat sub-labels (common.label) to read as a tier above.
+function SectionHeader({ label }: { label: string }) {
+    return (
+        <View style={styles.sectionHeader}>
+            <View style={styles.sectionRule} />
+            <Text style={styles.sectionLabel}>{label}</Text>
+            <View style={styles.sectionRule} />
+        </View>
+    );
+}
+
+// Short "↑23%" delta + trailing dot for the inline metrics row. Renders nothing when
+// there's no prior window to compare (previous=0), which also covers all-time.
+// Up = orange, down = muted; arrow signs it.
+function DeltaMetric({ total, previous }: { total: number; previous: number }) {
     if (previous <= 0) return null;
     const delta = (total - previous) / previous;
     const up = delta >= 0;
     return (
-        <Text style={[styles.delta, { color: up ? colors.orange : colors.text2 }]}>
-            {up ? '↑' : '↓'} {Math.abs(Math.round(delta * 100))}% vs poprzednie {days} dni
-        </Text>
+        <>
+            <Text style={[styles.metricItem, { color: up ? colors.orange : colors.text2 }]}>
+                {up ? '↑' : '↓'}{Math.abs(Math.round(delta * 100))}%
+            </Text>
+            <Text style={styles.metricDot}>·</Text>
+        </>
+    );
+}
+
+// Compact stat tile (orange left rule, caps label, big orange value) — matches the
+// dashboard's StatTile. Kept local for now; extract to shared if reused further.
+function Tile({ label, value, unit }: { label: string; value: string; unit?: string }) {
+    return (
+        <View style={styles.tile}>
+            <View style={styles.tileRule} />
+            <View style={styles.tileBody}>
+                <Text style={styles.tileLabel}>{label}</Text>
+                <View style={styles.tileValueRow}>
+                    <Text style={styles.tileValue}>{value}</Text>
+                    {!!unit && <Text style={styles.tileUnit}>{unit}</Text>}
+                </View>
+            </View>
+        </View>
     );
 }
 
@@ -533,10 +566,7 @@ function TrendLine({ weeks, max }: { weeks: { week_start: string; total_seconds:
         y: TREND_PAD_TOP + (1 - w.total_seconds / max) * TREND_PLOT,
     }));
 
-    const firstX = points[0].x;
-    const lastX = points[points.length - 1].x;
     const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-    const areaPath = `${linePath} L ${lastX.toFixed(1)} ${TREND_BASE} L ${firstX.toFixed(1)} ${TREND_BASE} Z`;
 
     const sel = selected ?? weeks.length - 1;
     const selWeek = weeks[sel];
@@ -550,14 +580,22 @@ function TrendLine({ weeks, max }: { weeks: { week_start: string; total_seconds:
                 <Text style={styles.trendReadoutValue}>{formatHours(selWeek.total_seconds)}</Text>
             </View>
             <Svg width={TREND_W} height={TREND_H}>
-                <Path d={areaPath} fill="rgba(255, 122, 26, 0.15)" />
+                {/* Neon glow: stacked strokes — wide+faint halo underneath, bright core,
+                    then a near-white hot inner line on top. (RN-svg has no blur filter.) */}
+                <Path d={linePath} stroke={colors.orange} strokeWidth={10} opacity={0.07} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                <Path d={linePath} stroke={colors.orange} strokeWidth={6} opacity={0.13} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                <Path d={linePath} stroke={colors.orange} strokeWidth={3.5} opacity={0.35} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                 <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                <Path d={linePath} stroke="#ffd9b3" strokeWidth={1} opacity={0.9} fill="none" strokeLinejoin="round" strokeLinecap="round" />
                 <Line
                     x1={selPoint.x} y1={0} x2={selPoint.x} y2={TREND_BASE}
                     stroke={colors.orange} strokeWidth={1} strokeDasharray="2 3" opacity={0.5}
                 />
+                {/* selected node gets an orange glow halo so it pops */}
+                <Circle cx={selPoint.x} cy={selPoint.y} r={8} fill={colors.orange} opacity={0.3} />
+                {/* lit nodes: bright near-white dots on the orange line */}
                 {points.map((p, i) => (
-                    <Circle key={i} cx={p.x} cy={p.y} r={i === sel ? 5 : 3} fill={colors.orange} />
+                    <Circle key={`pt${i}`} cx={p.x} cy={p.y} r={i === sel ? 3.5 : 2} fill="#ffe2c2" />
                 ))}
                 {/* Full-column tap targets so the whole width selects, not just the dot. */}
                 {points.map((p, i) => (
@@ -616,6 +654,16 @@ const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 20 },
 
+    sectionHeader: {
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        marginTop: 28, marginBottom: 8,
+    },
+    sectionLabel: {
+        fontFamily: displayFont.bold, fontSize: 13, letterSpacing: 2, color: colors.text,
+        paddingLeft: 2, // offset letterSpacing's trailing space so the glyphs truly center
+    },
+    sectionRule: { flex: 1, height: 1, backgroundColor: colors.text },
+
     pillRow: { flexDirection: 'row', gap: 8 },
     pill: {
         flex: 1,
@@ -632,15 +680,48 @@ const styles = StyleSheet.create({
     },
     pillTextActive: { color: colors.buttonTextOnOrange },
 
+    totalCard: {
+        flexDirection: 'row',
+        backgroundColor: colors.bg2, borderRadius: 4,
+        borderWidth: 1, borderColor: colors.borderBright,
+        overflow: 'hidden',
+    },
+    totalRule: { width: 3, backgroundColor: colors.orange, opacity: 0.7 },
+    totalBody: { flex: 1, paddingHorizontal: 14, paddingVertical: 14 },
+    totalLabel: {
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2, color: colors.text3,
+        marginBottom: 6,
+    },
     totalValue: {
         fontFamily: displayFont.bold, fontSize: 44, letterSpacing: -1,
         color: colors.orange,
     },
-    totalSub: {
-        fontFamily: bodyFont.regular, fontSize: 13, color: colors.text3,
-        marginTop: 2,
+    totalMeta: {
+        flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline',
+        gap: 6, marginTop: 8,
     },
-    delta: { fontFamily: bodyFont.medium, fontSize: 13, marginTop: 6 },
+    totalSub: { fontFamily: bodyFont.regular, fontSize: 13, color: colors.text3 },
+    metricItem: { fontFamily: bodyFont.medium, fontSize: 13, color: colors.text },
+    metricDot: { fontFamily: bodyFont.medium, fontSize: 13, color: colors.text3 },
+
+    tilesRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+    tile: {
+        flex: 1, flexDirection: 'row',
+        backgroundColor: colors.bg2, borderRadius: 4,
+        borderWidth: 1, borderColor: colors.border,
+        overflow: 'hidden',
+    },
+    tileRule: { width: 3, backgroundColor: colors.orange, opacity: 0.7 },
+    tileBody: { flex: 1, paddingHorizontal: 10, paddingVertical: 10 },
+    tileLabel: {
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2, color: colors.text3,
+        marginBottom: 6,
+    },
+    tileValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
+    tileValue: {
+        fontFamily: displayFont.bold, fontSize: 32, letterSpacing: -1, color: colors.orange, lineHeight: 34,
+    },
+    tileUnit: { fontFamily: displayFont.regular, fontSize: 14, color: colors.text3 },
 
     recordCard: {
         marginTop: 16,
@@ -662,28 +743,10 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
 
-    statRow: {
-        flexDirection: 'row',
-        backgroundColor: colors.bg3,
-        borderWidth: 1, borderColor: colors.borderBright,
-        borderRadius: 2,
-        paddingVertical: 16, marginTop: 10,
-    },
-    statCell: { flex: 1, alignItems: 'center' },
-    statDivider: { width: 1, backgroundColor: colors.border },
-    statValue: {
-        fontFamily: displayFont.bold, fontSize: 22, letterSpacing: -0.5, color: colors.text,
-    },
-    statSub: {
-        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2,
-        color: colors.text3, marginTop: 4,
-    },
-
-
     heatmap: {
-        backgroundColor: colors.bg3,
+        backgroundColor: colors.bg2,
         borderWidth: 1, borderColor: colors.borderBright,
-        borderRadius: 2,
+        borderRadius: 4,
         padding: 10,
     },
     heatReadout: {
@@ -712,9 +775,9 @@ const styles = StyleSheet.create({
     heatCellSelected: { borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.9)' },
 
     trend: {
-        backgroundColor: colors.bg3,
+        backgroundColor: colors.bg2,
         borderWidth: 1, borderColor: colors.borderBright,
-        borderRadius: 2,
+        borderRadius: 4,
         padding: 16,
     },
     trendReadout: {
