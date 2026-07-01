@@ -28,7 +28,15 @@ import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
 import Cover from '../components/Cover';
+import { InfoLabel } from '../components/InfoButton';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
+
+// Explanatory copy for the per-stat ⓘ affordances.
+const INFO_ACTIVITY = 'Kiedy w tygodniu grasz. Doba podzielona na 4 pory po 6 h: Noc (0–6), Rano (6–12), Popołudnie (12–18), Wieczór (18–24). Jaśniejsze pole = więcej czasu. Dotknij pola, by zobaczyć szczegóły.';
+const INFO_TREND = 'Czas gry w kolejnych okresach. Podziałka zależy od wybranego okresu: dziennie / tygodniowo / miesięcznie. Dotknij punktu, by zobaczyć wartość.';
+const INFO_GENRES = 'Gra ma zwykle kilka gatunków, więc każda sesja liczy się do każdego z nich. Słupki pokazują, w co grasz najwięcej — nie sumują się do 100%.';
+const INFO_THEMES = 'Jak przy gatunkach: gra ma wiele motywów, więc sesje liczą się do każdego. To ranking najczęstszych motywów, nie podział procentowy.';
+const INFO_DECADES = 'Czas gry pogrupowany według dekady premiery gry — z jakich epok są gry, w które grasz.';
 
 const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
@@ -286,11 +294,13 @@ export default function StatsScreen() {
 
                 {/* ── KIEDY GRASZ ── */}
                 <SectionHeader label="KIEDY GRASZ" />
-                <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
+                <InfoLabel label="AKTYWNOŚĆ · DZIEŃ × PORA DNIA" title="AKTYWNOŚĆ" body={INFO_ACTIVITY} />
                 <Heatmap data={heatmap} />
-                <Text style={common.label}>
-                    TRENDY{trend ? ` · ${GRANULARITY_LABEL[trend.granularity]}` : ''}
-                </Text>
+                <InfoLabel
+                    label={`TRENDY${trend ? ` · ${GRANULARITY_LABEL[trend.granularity]}` : ''}`}
+                    title="TRENDY"
+                    body={INFO_TREND}
+                />
                 {!trend || trendMax === 0 ? (
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
@@ -304,19 +314,19 @@ export default function StatsScreen() {
                 {/* Genres — a game carries multiple genres, so each session counts
                     toward every genre on its game. Bars are share-of-exposure (overlap
                     allowed), not a partition; longest bar = most-played genre. */}
-                <Text style={common.label}>GATUNKI</Text>
+                <InfoLabel label="GATUNKI" body={INFO_GENRES} />
                 <BreakdownList
                     items={genres ? genres.items.map(g => ({ label: g.genre, seconds: g.total_seconds })) : null}
                 />
 
                 {/* Themes — same overlap caveat as genres above. */}
-                <Text style={common.label}>MOTYWY</Text>
+                <InfoLabel label="MOTYWY" body={INFO_THEMES} />
                 <BreakdownList
                     items={themes ? themes.items.map(t => ({ label: t.theme, seconds: t.total_seconds })) : null}
                 />
 
                 {/* Release years */}
-                <Text style={common.label}>DEKADY WYDANIA</Text>
+                <InfoLabel label="DEKADY WYDANIA" body={INFO_DECADES} />
                 {!releaseYears || releaseYears.items.length === 0 ? (
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
