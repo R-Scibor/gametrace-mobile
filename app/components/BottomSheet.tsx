@@ -1,24 +1,35 @@
 import { ReactNode } from 'react';
-import { Modal, Pressable, View, Text, StyleSheet } from 'react-native';
+import { Modal, Pressable, View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
-export function BottomSheet({ visible, onClose, title, children }: {
+export function BottomSheet({ visible, onClose, title, children, keyboardAware = false }: {
     visible: boolean;
     onClose: () => void;
     title: string;
     children: ReactNode;
+    keyboardAware?: boolean;
 }) {
+    const body = (
+        <View style={sheetStyles.sheet}>
+            <Text style={sheetStyles.title}>{title}</Text>
+            {children}
+        </View>
+    );
+
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <View style={sheetStyles.scrim}>
                 {/* Scrim sits BEHIND the sheet as a sibling so the sheet body is
                     not wrapped in a Pressable (which would swallow child scroll gestures). */}
                 <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-                <View style={sheetStyles.sheet}>
-                    <Text style={sheetStyles.title}>{title}</Text>
-                    {children}
-                </View>
+                {keyboardAware ? (
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                        {body}
+                    </KeyboardAvoidingView>
+                ) : (
+                    body
+                )}
             </View>
         </Modal>
     );
