@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useServerStore } from '../store/serverStore';
+import { useReportStore } from '../store/reportStore';
 import { useChangeServer } from './useChangeServer';
 import { useTimezone } from './useTimezone';
 import { logout as logoutApi } from '../api/profile';
@@ -44,6 +45,7 @@ function SettingsRow({ label, subtext, children }: { label: string, subtext?: st
 export default function SettingsScreen() {
     const navigation = useNavigation();
     const { user, logout } = useAuthStore();
+    const openReport = useReportStore((s) => s.open);
     const { isDarkMode, toggleDarkMode } = useSettingsStore();
     const { timezone, select: selectTimezone, sync: syncTimezone, error: tzError, clearError: clearTzError } = useTimezone();
     const serverUrl = useServerStore((s) => s.serverUrl);
@@ -166,6 +168,16 @@ export default function SettingsScreen() {
                     <View style={styles.rowInfo}>
                         <Text style={styles.rowLabel}>Serwer</Text>
                         <Text style={styles.rowSubtext} numberOfLines={1}>{serverUrl ?? '—'}</Text>
+                    </View>
+                    <Text style={styles.chevron}>→</Text>
+                </TouchableOpacity>
+
+                {/* Feedback */}
+                <SectionHeaderLocal title="OPINIE" />
+                <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={openReport}>
+                    <View style={styles.rowInfo}>
+                        <Text style={styles.rowLabel}>Wyślij opinię</Text>
+                        <Text style={styles.rowSubtext}>Zgłoś błąd lub pomysł</Text>
                     </View>
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
