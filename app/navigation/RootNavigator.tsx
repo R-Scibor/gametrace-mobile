@@ -1,5 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { useServerStore } from '../store/serverStore';
 import ServerSetupScreen from '../screens/ServerSetupScreen';
@@ -10,6 +11,10 @@ import EditSessionScreen from '../screens/EditSessionScreen';
 import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
 import GlobalAlertHost from '../components/GlobalAlertHost';
+import ReportSheet from '../components/ReportSheet';
+import ReportFab from '../components/ReportFab';
+import { navigationRef } from './navigationRef';
+import { DEV_REPORT_FAB } from '../config';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,8 +24,8 @@ export default function RootNavigator() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
-    <>
-    <NavigationContainer>
+    <SafeAreaProvider>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         {!serverUrl ? (
           <Stack.Screen
@@ -49,7 +54,13 @@ export default function RootNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    {serverUrl && isAuthenticated && (
+      <>
+        {DEV_REPORT_FAB && <ReportFab />}
+        <ReportSheet />
+      </>
+    )}
     <GlobalAlertHost />
-    </>
+    </SafeAreaProvider>
   );
 }
