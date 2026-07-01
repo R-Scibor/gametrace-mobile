@@ -153,13 +153,16 @@ export interface StreakResponse {
   longest_streak: number;
 }
 
-export interface WeeklyTrendEntry {
-  week_start: string;
+export type TrendGranularity = 'day' | 'week' | 'month';
+
+export interface TrendBucket {
+  bucket_start: string;   // the day / the Monday / the 1st, in user tz
   total_seconds: number;
 }
 
-export interface WeeklyTrendResponse {
-  weeks: WeeklyTrendEntry[];
+export interface TrendResponse {
+  granularity: TrendGranularity;
+  buckets: TrendBucket[];  // contiguous, zero-filled, chronological
 }
 
 export interface GenreEntry {

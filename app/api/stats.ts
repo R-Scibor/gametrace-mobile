@@ -9,7 +9,7 @@ import {
     StatsSummary,
     StreakResponse,
     ThemesResponse,
-    WeeklyTrendResponse,
+    TrendResponse,
 } from '../types/api';
 
 export const getStatsSummary = async (days?: number): Promise<StatsSummary> => {
@@ -32,8 +32,8 @@ export const getStreak = async (): Promise<StreakResponse> => {
     return response.data;
 };
 
-export const getWeeklyTrend = async (weeks?: number): Promise<WeeklyTrendResponse> => {
-    const response = await client.get<WeeklyTrendResponse>('/stats/weekly-trend', { params: { weeks } });
+export const getTrend = async (days?: number): Promise<TrendResponse> => {
+    const response = await client.get<TrendResponse>('/stats/trend', { params: { days } });
     return response.data;
 };
 

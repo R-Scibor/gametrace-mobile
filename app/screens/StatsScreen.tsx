@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
@@ -9,7 +9,7 @@ import {
     getReleaseYears,
     getStatsSummary,
     getThemes,
-    getWeeklyTrend,
+    getTrend,
 } from '../api/stats';
 import {
     CompaniesResponse,
@@ -19,7 +19,9 @@ import {
     ReleaseYearsResponse,
     StatsSummary,
     ThemesResponse,
-    WeeklyTrendResponse,
+    TrendBucket,
+    TrendGranularity,
+    TrendResponse,
 } from '../types/api';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -30,6 +32,12 @@ import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../component
 
 const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
+
+const GRANULARITY_LABEL: Record<TrendGranularity, string> = {
+    day: 'DZIENNIE',
+    week: 'TYGODNIOWO',
+    month: 'MIESIĘCZNIE',
+};
 
 const ROLES: readonly CompanyRole[] = ['developer', 'publisher'] as const;
 const ROLE_LABELS: Record<CompanyRole, string> = {
@@ -65,10 +73,6 @@ function formatHoursShort(seconds: number) {
     return `${h.toFixed(1)}h`;
 }
 
-function formatWeekStart(iso: string) {
-    const d = new Date(iso);
-    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
 
 export default function StatsScreen() {
     const [days, setDays] = useState<Period>(7);
@@ -83,7 +87,7 @@ export default function StatsScreen() {
 
     const [summary, setSummary] = useState<StatsSummary | null>(null);
     const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
-    const [trend, setTrend] = useState<WeeklyTrendResponse | null>(null);
+    const [trend, setTrend] = useState<TrendResponse | null>(null);
     const [genres, setGenres] = useState<GenresResponse | null>(null);
     const [themes, setThemes] = useState<ThemesResponse | null>(null);
     const [companies, setCompanies] = useState<CompaniesResponse | null>(null);
@@ -110,21 +114,21 @@ export default function StatsScreen() {
         return () => { cancelled = true; };
     }, [days]);
 
-    // Weekly trend is all-time by nature — fetched once, ignores the period.
+    // Trend buckets by the selected period (server-derived granularity).
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const wt = await getWeeklyTrend();
+                const t = await getTrend(days);
                 if (cancelled) return;
-                setTrend(wt);
+                setTrend(t);
                 setTrendError(false);
             } catch {
                 if (!cancelled) setTrendError(true);
             }
         })();
         return () => { cancelled = true; };
-    }, []);
+    }, [days]);
 
     // Period-bound breakdowns: refetch on period change.
     useEffect(() => {
@@ -165,7 +169,7 @@ export default function StatsScreen() {
     }, [role, days]);
 
     const trendMax = trend
-        ? trend.weeks.reduce((m, w) => Math.max(m, w.total_seconds), 0)
+        ? trend.buckets.reduce((m, b) => Math.max(m, b.total_seconds), 0)
         : 0;
     const decadeMax = releaseYears
         ? releaseYears.items.reduce((m, r) => Math.max(m, r.total_seconds), 0)
@@ -284,16 +288,14 @@ export default function StatsScreen() {
                 <SectionHeader label="KIEDY GRASZ" />
                 <Text style={common.label}>AKTYWNOŚĆ · DZIEŃ × PORA DNIA</Text>
                 <Heatmap data={heatmap} />
-                <Text style={common.label}>TRENDY · TYGODNIOWO</Text>
+                <Text style={common.label}>
+                    TRENDY{trend ? ` · ${GRANULARITY_LABEL[trend.granularity]}` : ''}
+                </Text>
                 {!trend || trendMax === 0 ? (
                     <Text style={styles.empty}>Brak danych</Text>
                 ) : (
                     <View style={styles.trend}>
-                        <TrendLine weeks={trend.weeks} max={trendMax} />
-                        <View style={styles.trendLabels}>
-                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[0].week_start)}</Text>
-                            <Text style={styles.trendLabel}>{formatWeekStart(trend.weeks[trend.weeks.length - 1].week_start)}</Text>
-                        </View>
+                        <TrendLine key={days} buckets={trend.buckets} granularity={trend.granularity} max={trendMax} />
                     </View>
                 )}
 
@@ -546,67 +548,86 @@ const TREND_BASE = TREND_H - TREND_PAD_BOTTOM;          // y of the zero line
 const TREND_PLOT = TREND_H - TREND_PAD_TOP - TREND_PAD_BOTTOM;
 const TREND_PLOT_W = TREND_W - TREND_PAD_X * 2;         // usable horizontal range
 
-// week_start (Monday) → "DD.MM–DD.MM" range covering the 7-day week.
-function weekRange(iso: string) {
-    const start = new Date(iso);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    const f = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
-    return `${f(start)}–${f(end)}`;
+const TREND_MIN_SPACING = 30; // px between points; below this we scroll instead of crowd
+
+const PL_MONTHS = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
+
+// bucket_start → axis label per granularity: day "DD.MM", week "DD.MM–DD.MM", month "mmm YYYY".
+function formatBucket(granularity: TrendGranularity, iso: string) {
+    const d = new Date(iso);
+    const f = (x: Date) => `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}`;
+    if (granularity === 'day') return f(d);
+    if (granularity === 'week') {
+        const end = new Date(d);
+        end.setDate(d.getDate() + 6);
+        return `${f(d)}–${f(end)}`;
+    }
+    return `${PL_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function TrendLine({ weeks, max }: { weeks: { week_start: string; total_seconds: number }[]; max: number }) {
-    // Hook before the guard so it's called unconditionally; null = "default to latest".
+function TrendLine({ buckets, granularity, max }: { buckets: TrendBucket[]; granularity: TrendGranularity; max: number }) {
     const [selected, setSelected] = useState<number | null>(null);
-    if (weeks.length === 0 || max === 0) return null;
+    const scrollRef = useRef<ScrollView>(null);
 
-    const stepX = weeks.length > 1 ? TREND_PLOT_W / (weeks.length - 1) : 0;
-    const points = weeks.map((w, i) => ({
-        x: TREND_PAD_X + i * stepX,
-        y: TREND_PAD_TOP + (1 - w.total_seconds / max) * TREND_PLOT,
+    const n = buckets.length;
+    // Fill the card when points are few; drop to a min spacing (overflow → scroll) when many.
+    const fitSpacing = n > 1 ? TREND_PLOT_W / (n - 1) : 0;
+    const spacing = Math.max(TREND_MIN_SPACING, fitSpacing);
+    const chartW = Math.max(TREND_W, TREND_PAD_X * 2 + (n - 1) * spacing);
+
+    // Land on the most recent bucket first.
+    useEffect(() => {
+        scrollRef.current?.scrollToEnd({ animated: false });
+    }, [chartW]);
+
+    if (n === 0 || max === 0) return null;
+
+    const points = buckets.map((b, i) => ({
+        x: TREND_PAD_X + i * spacing,
+        y: TREND_PAD_TOP + (1 - b.total_seconds / max) * TREND_PLOT,
     }));
-
     const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
-    const sel = selected ?? weeks.length - 1;
-    const selWeek = weeks[sel];
+    const sel = selected ?? n - 1;
+    const selBucket = buckets[sel];
     const selPoint = points[sel];
-    const hitW = stepX || TREND_W;
 
     return (
         <View>
             <View style={styles.trendReadout}>
-                <Text style={styles.trendReadoutDate}>{weekRange(selWeek.week_start)}</Text>
-                <Text style={styles.trendReadoutValue}>{formatHours(selWeek.total_seconds)}</Text>
+                <Text style={styles.trendReadoutDate}>{formatBucket(granularity, selBucket.bucket_start)}</Text>
+                <Text style={styles.trendReadoutValue}>{formatHours(selBucket.total_seconds)}</Text>
             </View>
-            <Svg width={TREND_W} height={TREND_H}>
-                {/* Neon glow: stacked strokes — wide+faint halo underneath, bright core,
-                    then a near-white hot inner line on top. (RN-svg has no blur filter.) */}
-                <Path d={linePath} stroke={colors.orange} strokeWidth={10} opacity={0.07} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                <Path d={linePath} stroke={colors.orange} strokeWidth={6} opacity={0.13} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                <Path d={linePath} stroke={colors.orange} strokeWidth={3.5} opacity={0.35} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                <Path d={linePath} stroke="#ffd9b3" strokeWidth={1} opacity={0.9} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-                <Line
-                    x1={selPoint.x} y1={0} x2={selPoint.x} y2={TREND_BASE}
-                    stroke={colors.orange} strokeWidth={1} strokeDasharray="2 3" opacity={0.5}
-                />
-                {/* selected node gets an orange glow halo so it pops */}
-                <Circle cx={selPoint.x} cy={selPoint.y} r={8} fill={colors.orange} opacity={0.3} />
-                {/* lit nodes: bright near-white dots on the orange line */}
-                {points.map((p, i) => (
-                    <Circle key={`pt${i}`} cx={p.x} cy={p.y} r={i === sel ? 3.5 : 2} fill="#ffe2c2" />
-                ))}
-                {/* Full-column tap targets so the whole width selects, not just the dot. */}
-                {points.map((p, i) => (
-                    <Rect
-                        key={`hit-${i}`}
-                        x={p.x - hitW / 2} y={0} width={hitW} height={TREND_H}
-                        fill="transparent"
-                        onPress={() => setSelected(i)}
+            <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} style={{ width: TREND_W }}>
+                <Svg width={chartW} height={TREND_H}>
+                    {/* Neon glow: stacked strokes — wide+faint halo underneath, bright core,
+                        then a near-white hot inner line on top. (RN-svg has no blur filter.) */}
+                    <Path d={linePath} stroke={colors.orange} strokeWidth={10} opacity={0.07} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                    <Path d={linePath} stroke={colors.orange} strokeWidth={6} opacity={0.13} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                    <Path d={linePath} stroke={colors.orange} strokeWidth={3.5} opacity={0.35} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                    <Path d={linePath} stroke={colors.orange} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                    <Path d={linePath} stroke="#ffd9b3" strokeWidth={1} opacity={0.9} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+                    <Line
+                        x1={selPoint.x} y1={0} x2={selPoint.x} y2={TREND_BASE}
+                        stroke={colors.orange} strokeWidth={1} strokeDasharray="2 3" opacity={0.5}
                     />
-                ))}
-            </Svg>
+                    {/* selected node gets an orange glow halo so it pops */}
+                    <Circle cx={selPoint.x} cy={selPoint.y} r={8} fill={colors.orange} opacity={0.3} />
+                    {/* lit nodes: bright near-white dots on the orange line */}
+                    {points.map((p, i) => (
+                        <Circle key={`pt${i}`} cx={p.x} cy={p.y} r={i === sel ? 3.5 : 2} fill="#ffe2c2" />
+                    ))}
+                    {/* Full-column tap targets so the whole width selects, not just the dot. */}
+                    {points.map((p, i) => (
+                        <Rect
+                            key={`hit-${i}`}
+                            x={p.x - spacing / 2} y={0} width={spacing} height={TREND_H}
+                            fill="transparent"
+                            onPress={() => setSelected(i)}
+                        />
+                    ))}
+                </Svg>
+            </ScrollView>
         </View>
     );
 }
@@ -789,13 +810,6 @@ const styles = StyleSheet.create({
     },
     trendReadoutValue: {
         fontFamily: displayFont.bold, fontSize: 16, letterSpacing: -0.3, color: colors.orange,
-    },
-    trendLabels: {
-        flexDirection: 'row', justifyContent: 'space-between', marginTop: 8,
-    },
-    trendLabel: {
-        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 1,
-        color: colors.text3,
     },
 
     row: {
