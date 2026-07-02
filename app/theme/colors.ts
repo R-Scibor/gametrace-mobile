@@ -15,4 +15,7 @@ export const colors = {
   warn:         '#dcb95c',
   warnTint:     'rgba(220, 185, 92, 0.10)',
   warnBorder:   'rgba(220, 185, 92, 0.40)',
+  danger:       '#ff2020',
+  dangerTint:   'rgba(255, 32, 32, 0.14)',
+  dangerBorder: 'rgba(255, 32, 32, 0.55)',
 };

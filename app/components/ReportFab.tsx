@@ -1,8 +1,8 @@
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReportStore } from '../store/reportStore';
 import { colors } from '../theme/colors';
-import { displayFont } from '../theme/fonts';
 
 // Assumes the bottom tab bar is present; on tab-less pushed screens the FAB
 // sits ~TAB_BAR_HEIGHT higher than strictly needed (acceptable dev-only tradeoff).
@@ -18,16 +18,26 @@ export default function ReportFab() {
             activeOpacity={0.8}
             accessibilityLabel="Wyślij opinię"
         >
-            <Text style={styles.glyph}>✎</Text>
+            {/* Solid red disc with a light warning triangle; evenodd cuts the
+                exclamation so the red fill shows through it. */}
+            <Svg width={26} height={26} viewBox="0 0 24 24" style={styles.glyph}>
+                <Path
+                    d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
+                    fill={colors.text}
+                    fillRule="evenodd"
+                />
+            </Svg>
         </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
     fab: {
-        position: 'absolute', right: 16, width: 52, height: 52, borderRadius: 26,
-        backgroundColor: colors.bg2, borderWidth: 1, borderColor: colors.borderBright,
-        alignItems: 'center', justifyContent: 'center', opacity: 0.92,
+        position: 'absolute', right: 16, width: 54, height: 54, borderRadius: 27,
+        backgroundColor: colors.danger, borderWidth: 2, borderColor: colors.text,
+        alignItems: 'center', justifyContent: 'center',
     },
-    glyph: { fontFamily: displayFont.bold, fontSize: 20, color: colors.orange },
+    // Nudge the triangle up so it reads optically centered (its visual mass
+    // sits low relative to the geometric center).
+    glyph: { marginBottom: 3 },
 });

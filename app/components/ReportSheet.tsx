@@ -44,6 +44,10 @@ export default function ReportSheet() {
 
     return (
         <BottomSheet visible={isOpen} onClose={handleClose} title="OPINIA" keyboardAware>
+            <Text style={sheetStyles.message}>
+                Znalazłeś błąd? Coś nie działa, brakuje funkcji albo masz pomysł? Opisz to
+                poniżej, a trafi prosto do twórcy aplikacji. Im więcej szczegółów, tym lepiej.
+            </Text>
             <View style={styles.inputWrapper}>
                 <View style={styles.orangeBar} />
                 <TextInput
