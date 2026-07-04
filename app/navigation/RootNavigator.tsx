@@ -11,6 +11,7 @@ import EditSessionScreen from '../screens/EditSessionScreen';
 import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
 import GlobalAlertHost from '../components/GlobalAlertHost';
+import ServerJoinHost from '../components/ServerJoinHost';
 import ReportSheet from '../components/ReportSheet';
 import ReportFab from '../components/ReportFab';
 import { navigationRef } from './navigationRef';
@@ -61,6 +62,7 @@ export default function RootNavigator() {
       </>
     )}
     <GlobalAlertHost />
+    <ServerJoinHost />
     </SafeAreaProvider>
   );
 }
