@@ -7,27 +7,35 @@ jest.mock('react-native-safe-area-context', () => require('react-native-safe-are
 
 const mockHandleLinkLogin = jest.fn();
 const mockHandleLogin = jest.fn();
+const mockHandleDiscordLogin = jest.fn();
 const mockAuthState: { loading: boolean; error: string | null } = { loading: false, error: null };
 jest.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({
     handleLinkLogin: mockHandleLinkLogin,
     handleLogin: mockHandleLogin,
+    handleDiscordLogin: mockHandleDiscordLogin,
+    discordReady: true,
     loading: mockAuthState.loading,
     error: mockAuthState.error,
   }),
 }));
 
 let mockDevUsernameLogin = true;
+let mockDiscordOAuth = true;
 jest.mock('../../config', () => ({
   get DEV_USERNAME_LOGIN() { return mockDevUsernameLogin; },
+  get DISCORD_OAUTH_LOGIN() { return mockDiscordOAuth; },
+  DISCORD_CLIENT_ID: 'cid',
 }));
 
 beforeEach(() => {
   mockHandleLinkLogin.mockReset();
   mockHandleLogin.mockReset();
+  mockHandleDiscordLogin.mockReset();
   mockAuthState.loading = false;
   mockAuthState.error = null;
   mockDevUsernameLogin = true;
+  mockDiscordOAuth = true;
 });
 
 function renderScreen() {
@@ -85,4 +93,21 @@ test('an error from the hook is rendered', async () => {
   mockAuthState.error = 'Nieprawidłowy lub wygasły kod.';
   const { getByText } = await renderScreen();
   expect(getByText('Nieprawidłowy lub wygasły kod.')).toBeTruthy();
+});
+
+test('the Discord button is shown when the OAuth flag is on', async () => {
+  const { getByText } = await renderScreen();
+  expect(getByText(/przez Discord/i)).toBeTruthy();
+});
+
+test('the Discord button is hidden when the OAuth flag is off', async () => {
+  mockDiscordOAuth = false;
+  const { queryByText } = await renderScreen();
+  expect(queryByText(/przez Discord/i)).toBeNull();
+});
+
+test('tapping the Discord button calls the OAuth handler', async () => {
+  const { getByText } = await renderScreen();
+  await fireEvent.press(getByText(/przez Discord/i));
+  expect(mockHandleDiscordLogin).toHaveBeenCalled();
 });

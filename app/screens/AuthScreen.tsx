@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { formatLinkCode, normalizeLinkCode, isCompleteLinkCode } from '../utils/linkCode';
-import { DEV_USERNAME_LOGIN } from '../config';
+import { DEV_USERNAME_LOGIN, DISCORD_OAUTH_LOGIN, DISCORD_CLIENT_ID } from '../config';
 
 type Mode = 'link' | 'username';
 
@@ -13,7 +13,7 @@ export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>('link');
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
-  const { handleLinkLogin, handleLogin, loading, error } = useAuth();
+  const { handleLinkLogin, handleLogin, handleDiscordLogin, discordReady, loading, error } = useAuth();
 
   const canSubmit =
     !loading && (mode === 'link' ? isCompleteLinkCode(code) : username.trim().length > 0);
@@ -92,6 +92,23 @@ export default function AuthScreen() {
               {loading ? 'ŁĄCZENIE...' : 'ZALOGUJ SIĘ'}
             </Text>
           </TouchableOpacity>
+
+          {DISCORD_OAUTH_LOGIN && DISCORD_CLIENT_ID ? (
+            <>
+              <View style={styles.orDivider}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>LUB</Text>
+                <View style={styles.orLine} />
+              </View>
+              <TouchableOpacity
+                style={[styles.discordButton, (!discordReady || loading) && styles.buttonDisabled]}
+                onPress={handleDiscordLogin}
+                disabled={!discordReady || loading}
+              >
+                <Text style={styles.discordButtonText}>ZALOGUJ PRZEZ DISCORD</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
         </View>
 
         <View style={styles.helper}>
@@ -186,6 +203,18 @@ const styles = StyleSheet.create({
     color: colors.buttonTextOnOrange,
   },
   buttonTextDisabled: { color: colors.text3 },
+  orDivider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.borderBright },
+  orText: {
+    fontFamily: displayFont.regular, fontSize: 10, letterSpacing: 2, color: colors.text3,
+  },
+  discordButton: {
+    borderWidth: 1, borderColor: colors.orange, borderRadius: 2,
+    paddingVertical: 14, alignItems: 'center',
+  },
+  discordButtonText: {
+    fontFamily: displayFont.bold, fontSize: 13, letterSpacing: 2, color: colors.orange,
+  },
   errorText: {
     fontFamily: bodyFont.regular, fontSize: 12, lineHeight: 18, color: colors.orange,
     textAlign: 'center',
