@@ -92,14 +92,14 @@ export const useAuth = () => {
 
   const handleDiscordLogin = async () => {
     setError(null);
-    const result = await promptDiscord();
-    if (result.type === 'cancel') return false;
-    if (result.type === 'error') {
-      setError('Logowanie przez Discord nie powiodło się. Spróbuj ponownie.');
-      return false;
-    }
     setLoading(true);
     try {
+      const result = await promptDiscord();
+      if (result.type === 'cancel') return false;
+      if (result.type === 'error') {
+        setError('Logowanie przez Discord nie powiodło się. Spróbuj ponownie.');
+        return false;
+      }
       const data = await discordLogin(result.code, result.codeVerifier, result.redirectUri);
       seedSession(data);
       if (data.needs_server_join) useServerJoinStore.getState().show();
