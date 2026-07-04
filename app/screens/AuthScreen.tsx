@@ -4,16 +4,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import { formatLinkCode, normalizeLinkCode, isCompleteLinkCode } from '../utils/linkCode';
+import { DEV_USERNAME_LOGIN } from '../config';
+
+type Mode = 'link' | 'username';
 
 export default function AuthScreen() {
-  const [discordName, setDiscordName] = useState('');
-  const { handleLogin, loading, error } = useAuth();
+  const [mode, setMode] = useState<Mode>('link');
+  const [code, setCode] = useState('');
+  const [username, setUsername] = useState('');
+  const { handleLinkLogin, handleLogin, loading, error } = useAuth();
 
-  const canSubmit = discordName.trim().length > 0 && !loading;
+  const canSubmit =
+    !loading && (mode === 'link' ? isCompleteLinkCode(code) : username.trim().length > 0);
 
   const onPress = async () => {
     if (!canSubmit) return;
-    await handleLogin(discordName);
+    if (mode === 'link') {
+      await handleLinkLogin(code);
+    } else {
+      await handleLogin(username.trim());
+    }
   };
 
   return (
@@ -29,29 +40,48 @@ export default function AuthScreen() {
 
         <View style={styles.errorSlot}>
           {error && (
-            <Text style={styles.errorText} numberOfLines={1}>
+            <Text style={styles.errorText} numberOfLines={2}>
               {error}
             </Text>
           )}
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>NAZWA UŻYTKOWNIKA DISCORD</Text>
-          
-          {/* UPDATED: Wrapper approach for the input */}
-          <View style={styles.inputWrapper}>
-            <View style={styles.orangeBar} />
-            <TextInput
-              style={styles.input}
-              value={discordName}
-              onChangeText={setDiscordName}
-              placeholder="Your Discord username"
-              placeholderTextColor={colors.text3}
-              autoCapitalize="none"
-              autoCorrect={false}
-              onSubmitEditing={onPress}
-            />
-          </View>
+          {mode === 'link' ? (
+            <>
+              <Text style={styles.label}>KOD LOGOWANIA</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.orangeBar} />
+                <TextInput
+                  style={styles.input}
+                  value={formatLinkCode(code)}
+                  onChangeText={(t) => setCode(normalizeLinkCode(t))}
+                  placeholder="231 996"
+                  placeholderTextColor={colors.text3}
+                  keyboardType="number-pad"
+                  maxLength={7}
+                  onSubmitEditing={onPress}
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>NAZWA UŻYTKOWNIKA DISCORD</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.orangeBar} />
+                <TextInput
+                  style={styles.input}
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Your Discord username"
+                  placeholderTextColor={colors.text3}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onSubmitEditing={onPress}
+                />
+              </View>
+            </>
+          )}
 
           <TouchableOpacity
             style={[styles.button, !canSubmit && styles.buttonDisabled]}
@@ -65,10 +95,27 @@ export default function AuthScreen() {
         </View>
 
         <View style={styles.helper}>
-          <Text style={styles.helperLine}>Uwierzytelnianie przez bota Discord</Text>
-          <Text style={[styles.helperLine, styles.helperAccent]}>
-            Brak hasła — tylko token sesji
-          </Text>
+          {mode === 'link' ? (
+            <>
+              <Text style={styles.helperLine}>
+                Uruchom <Text style={styles.helperAccent}>/login</Text> na Discordzie
+              </Text>
+              <Text style={styles.helperLine}>i wpisz 6-cyfrowy kod (ważny 5 minut)</Text>
+            </>
+          ) : (
+            <Text style={styles.helperLine}>Logowanie nazwą — tylko do testów</Text>
+          )}
+
+          {DEV_USERNAME_LOGIN && (
+            <TouchableOpacity
+              style={styles.switcher}
+              onPress={() => setMode(mode === 'link' ? 'username' : 'link')}
+            >
+              <Text style={styles.switcherText}>
+                {mode === 'link' ? 'Zaloguj się nazwą (dev)' : '← Wróć do kodu'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -90,7 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   wordmark: { alignItems: 'center', marginBottom: 20 },
-  errorSlot: { height: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
+  errorSlot: { minHeight: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
   title: {
     fontFamily: displayFont.bold, fontSize: 38, letterSpacing: -1,
     color: colors.text, lineHeight: 38,
@@ -108,30 +155,27 @@ const styles = StyleSheet.create({
     fontFamily: displayFont.regular, fontSize: 11, letterSpacing: 1,
     color: colors.text3,
   },
-  
-  // UPDATED: Separated wrapper, bar, and input styles
   inputWrapper: {
     flexDirection: 'row',
     backgroundColor: colors.bg3,
-    borderWidth: 1, 
-    borderColor: colors.borderBright, 
+    borderWidth: 1,
+    borderColor: colors.borderBright,
     borderRadius: 2,
-    overflow: 'hidden', // Prevents the orange bar from bleeding past the border radius
+    overflow: 'hidden',
   },
   orangeBar: {
     width: 2,
     backgroundColor: colors.orange,
   },
   input: {
-    flex: 1, // Ensures the input takes up the remaining space next to the bar
-    paddingHorizontal: 16, 
+    flex: 1,
+    paddingHorizontal: 16,
     paddingVertical: 14,
-    fontFamily: bodyFont.regular, 
-    fontSize: 16, 
+    fontFamily: bodyFont.regular,
+    fontSize: 16,
     color: colors.text,
-    borderWidth: 0, // Strips any borders from the actual TextInput to prevent bugs
+    borderWidth: 0,
   },
-  
   button: {
     backgroundColor: colors.orange, borderRadius: 2,
     paddingVertical: 15, alignItems: 'center', marginTop: 4,
@@ -152,6 +196,11 @@ const styles = StyleSheet.create({
     lineHeight: 18, textAlign: 'center',
   },
   helperAccent: { color: colors.orangeDim },
+  switcher: { marginTop: 16, paddingVertical: 6 },
+  switcherText: {
+    fontFamily: displayFont.regular, fontSize: 11, letterSpacing: 1,
+    color: colors.text3, textDecorationLine: 'underline',
+  },
   footer: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingBottom: 16,
