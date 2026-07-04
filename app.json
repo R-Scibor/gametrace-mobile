@@ -2,6 +2,7 @@
   "expo": {
     "name": "gametrace-app",
     "slug": "gametrace-app",
+    "scheme": "gametrace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -42,7 +43,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-image"
+      "expo-image",
+      "expo-web-browser"
     ]
   }
 }
