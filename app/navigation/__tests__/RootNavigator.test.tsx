@@ -12,6 +12,9 @@ jest.mock('../../screens/GameDetailScreen', () => () => null);
 jest.mock('../../screens/EditSessionScreen', () => () => null);
 jest.mock('../../screens/TrashScreen', () => () => null);
 jest.mock('../../screens/VoiceScreen', () => () => null);
+// AuthScreen renders for real here; stub the OAuth hook so its expo-auth-session
+// import chain (ESM) is never loaded in this suite.
+jest.mock('../../hooks/useDiscordOAuth', () => ({ useDiscordOAuth: () => ({ ready: true, promptDiscord: jest.fn() }) }));
 
 test('shows server setup when no serverUrl', async () => {
   useServerStore.setState({ serverUrl: null });
