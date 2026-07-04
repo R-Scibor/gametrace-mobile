@@ -9,6 +9,8 @@ export interface LoginResponse {
   discord_id: string;
   username: string;
   timezone: string;
+  is_admin: boolean;
+  needs_server_join?: boolean; // OAuth only; absent/false for link + username login
 }
 
 // Games
