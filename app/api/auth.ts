@@ -16,3 +16,19 @@ export const linkLogin = async (code: string, timezone = 'UTC'): Promise<LoginRe
     });
     return response.data;
 };
+
+// Complete the Discord OAuth2 flow. The backend does the confidential token
+// exchange (client secret stays server-side); we only forward the auth code,
+// the PKCE verifier, and the exact redirect_uri used in the authorize request.
+export const discordLogin = async (
+    code: string,
+    codeVerifier: string,
+    redirectUri: string,
+): Promise<LoginResponse> => {
+    const response = await client.post<LoginResponse>('/auth/discord', {
+        code,
+        code_verifier: codeVerifier,
+        redirect_uri: redirectUri,
+    });
+    return response.data;
+};

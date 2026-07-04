@@ -1,7 +1,7 @@
 jest.mock('../client', () => ({ __esModule: true, default: { post: jest.fn() } }));
 
 import client from '../client';
-import { linkLogin } from '../auth';
+import { linkLogin, discordLogin } from '../auth';
 
 const mockPost = client.post as jest.Mock;
 
@@ -31,4 +31,23 @@ test('linkLogin returns the response body', async () => {
   mockPost.mockResolvedValue({ data: body });
 
   await expect(linkLogin('231996', 'UTC')).resolves.toEqual(body);
+});
+
+test('discordLogin posts code, code_verifier and redirect_uri to /auth/discord', async () => {
+  mockPost.mockResolvedValue({ data: { token: 't' } });
+
+  await discordLogin('the-code', 'the-verifier', 'gametrace://oauth');
+
+  expect(client.post).toHaveBeenCalledWith('/auth/discord', {
+    code: 'the-code',
+    code_verifier: 'the-verifier',
+    redirect_uri: 'gametrace://oauth',
+  });
+});
+
+test('discordLogin returns the response body', async () => {
+  const body = { token: 't', discord_id: '1', username: 'u', timezone: 'UTC', is_admin: false, needs_server_join: true };
+  mockPost.mockResolvedValue({ data: body });
+
+  await expect(discordLogin('c', 'v', 'r')).resolves.toEqual(body);
 });
