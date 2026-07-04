@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { login, linkLogin } from '../api/auth';
+import { login, linkLogin, discordLogin } from '../api/auth';
 import { LoginResponse } from '../types/api';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { getDeviceTimezone } from '../utils/timezones';
+import { useDiscordOAuth } from './useDiscordOAuth';
+import { useServerJoinStore } from '../store/serverJoinStore';
 
 // Turn a link-code redemption failure into a Polish message keyed off the
 // backend's status codes (see docs/api.md → Auth → POST /auth/link).
@@ -22,6 +24,21 @@ const linkErrorMessage = (e: any): string => {
     }
     case 503:
       return 'Logowanie kodem jest chwilowo niedostępne. Spróbuj później.';
+    default:
+      return e?.response ? 'Nie udało się zalogować. Spróbuj ponownie.' : 'Błąd połączenia z serwerem';
+  }
+};
+
+// Map a Discord OAuth failure to Polish copy (see docs/api.md → POST /auth/discord).
+const discordErrorMessage = (e: any): string => {
+  const status = e?.response?.status;
+  switch (status) {
+    case 400:
+      return 'Nie można zalogować przez Discord (błąd przekierowania).';
+    case 401:
+      return 'Logowanie przez Discord nie powiodło się. Spróbuj ponownie.';
+    case 502:
+      return 'Discord jest chwilowo niedostępny. Spróbuj później.';
     default:
       return e?.response ? 'Nie udało się zalogować. Spróbuj ponownie.' : 'Błąd połączenia z serwerem';
   }
@@ -71,5 +88,29 @@ export const useAuth = () => {
     }
   };
 
-  return { loading, error, isAuthenticated, user, handleLogin, handleLinkLogin, logout };
+  const { ready: discordReady, promptDiscord } = useDiscordOAuth();
+
+  const handleDiscordLogin = async () => {
+    setError(null);
+    const result = await promptDiscord();
+    if (result.type === 'cancel') return false;
+    if (result.type === 'error') {
+      setError('Logowanie przez Discord nie powiodło się. Spróbuj ponownie.');
+      return false;
+    }
+    setLoading(true);
+    try {
+      const data = await discordLogin(result.code, result.codeVerifier, result.redirectUri);
+      seedSession(data);
+      if (data.needs_server_join) useServerJoinStore.getState().show();
+      return true;
+    } catch (e: any) {
+      setError(discordErrorMessage(e));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { loading, error, isAuthenticated, user, handleLogin, handleLinkLogin, handleDiscordLogin, discordReady, logout };
 };

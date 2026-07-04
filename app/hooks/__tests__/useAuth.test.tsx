@@ -1,13 +1,20 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useAuth } from '../useAuth';
-import { login, linkLogin } from '../../api/auth';
+import { login, linkLogin, discordLogin } from '../../api/auth';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuthStore } from '../../store/authStore';
+import { useServerJoinStore } from '../../store/serverJoinStore';
 
 jest.mock('axios', () => ({ __esModule: true, default: { create: () => ({ interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } } }) } }));
 jest.mock('../../api/auth');
 const mockedLogin = login as jest.Mock;
 const mockedLinkLogin = linkLogin as jest.Mock;
+
+const mockPromptDiscord = jest.fn();
+jest.mock('../useDiscordOAuth', () => ({
+  useDiscordOAuth: () => ({ ready: true, promptDiscord: mockPromptDiscord }),
+}));
+const mockedDiscordLogin = discordLogin as jest.Mock;
 
 beforeEach(() => {
   mockedLogin.mockReset();
@@ -109,5 +116,66 @@ describe('handleLinkLogin', () => {
     await act(async () => { await result.current.handleLinkLogin('231996'); });
 
     expect(result.current.error).toMatch(/połączenia/i);
+  });
+});
+
+describe('handleDiscordLogin', () => {
+  beforeEach(() => {
+    mockedDiscordLogin.mockReset();
+    mockPromptDiscord.mockReset();
+    useServerJoinStore.setState({ visible: false });
+  });
+
+  test('a successful OAuth login seeds the session', async () => {
+    mockPromptDiscord.mockResolvedValue({ type: 'success', code: 'c', codeVerifier: 'v', redirectUri: 'r' });
+    mockedDiscordLogin.mockResolvedValue({ token: 't', discord_id: '1', username: 'u', timezone: 'UTC', is_admin: false });
+    const { result } = await renderHook(() => useAuth());
+
+    await act(async () => { await result.current.handleDiscordLogin(); });
+
+    expect(mockedDiscordLogin).toHaveBeenCalledWith('c', 'v', 'r');
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(useServerJoinStore.getState().visible).toBe(false);
+  });
+
+  test('needs_server_join opens the server-join prompt', async () => {
+    mockPromptDiscord.mockResolvedValue({ type: 'success', code: 'c', codeVerifier: 'v', redirectUri: 'r' });
+    mockedDiscordLogin.mockResolvedValue({ token: 't', discord_id: '1', username: 'u', timezone: 'UTC', is_admin: false, needs_server_join: true });
+    const { result } = await renderHook(() => useAuth());
+
+    await act(async () => { await result.current.handleDiscordLogin(); });
+
+    expect(useServerJoinStore.getState().visible).toBe(true);
+  });
+
+  test('a cancelled prompt is a silent no-op', async () => {
+    mockPromptDiscord.mockResolvedValue({ type: 'cancel' });
+    const { result } = await renderHook(() => useAuth());
+
+    await act(async () => { await result.current.handleDiscordLogin(); });
+
+    expect(mockedDiscordLogin).not.toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  test('401 maps to a Discord failure message', async () => {
+    mockPromptDiscord.mockResolvedValue({ type: 'success', code: 'c', codeVerifier: 'v', redirectUri: 'r' });
+    mockedDiscordLogin.mockRejectedValue({ response: { status: 401 } });
+    const { result } = await renderHook(() => useAuth());
+
+    await act(async () => { await result.current.handleDiscordLogin(); });
+
+    expect(result.current.error).toMatch(/nie powiodło się/i);
+  });
+
+  test('502 maps to a Discord-unavailable message', async () => {
+    mockPromptDiscord.mockResolvedValue({ type: 'success', code: 'c', codeVerifier: 'v', redirectUri: 'r' });
+    mockedDiscordLogin.mockRejectedValue({ response: { status: 502 } });
+    const { result } = await renderHook(() => useAuth());
+
+    await act(async () => { await result.current.handleDiscordLogin(); });
+
+    expect(result.current.error).toMatch(/niedostępny/i);
   });
 });
