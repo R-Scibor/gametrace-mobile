@@ -43,17 +43,45 @@ export const sheetStyles = StyleSheet.create({
         paddingHorizontal: 20, paddingTop: 18, paddingBottom: 28,
     },
     title: {
-        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
-        color: colors.text3, marginBottom: 6,
+        fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1,
+        color: colors.text, marginBottom: 8,
+        textAlign: 'center',
     },
     message: {
         fontFamily: bodyFont.regular, fontSize: 13, color: colors.text2,
         marginTop: 4, marginBottom: 8, lineHeight: 18,
+        textAlign: 'center',
     },
-    row: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+    row: {
+        paddingVertical: 10,
+        borderBottomWidth: 1, borderBottomColor: colors.border,
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
     rowLast: { borderBottomWidth: 0 },
-    rowText: { fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.text },
-    rowDesc: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 4 },
+    rowText: {
+        fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.text,
+        textAlign: 'center',
+    },
+    rowDesc: {
+        fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 4,
+        textAlign: 'center',
+    },
     rowWarn: { color: colors.warn },
     rowMuted: { color: colors.text3 },
+
+    // Tinted primary action (for main action in alerts/confirms)
+    primaryRow: {
+        paddingVertical: 10,
+        backgroundColor: 'rgba(255,122,26,0.12)',
+        borderWidth: 1,
+        borderColor: colors.orange,
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    primaryRowText: {
+        fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 1, color: colors.orange,
+        textAlign: 'center',
+    },
 });

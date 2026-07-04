@@ -22,9 +22,9 @@ export default function ConfirmSheet({
 }) {
     return (
         <BottomSheet visible={visible} onClose={onCancel} title={title}>
-            {message ? <Text style={sheetStyles.message}>{message}</Text> : null}
-            <TouchableOpacity style={sheetStyles.row} onPress={onConfirm} activeOpacity={0.7}>
-                <Text style={[sheetStyles.rowText, destructive && sheetStyles.rowWarn]}>{confirmLabel}</Text>
+            {message ? <Text style={[sheetStyles.message, { marginBottom: 24 }]}>{message}</Text> : null}
+            <TouchableOpacity style={sheetStyles.primaryRow} onPress={onConfirm} activeOpacity={0.7}>
+                <Text style={[sheetStyles.primaryRowText, destructive && sheetStyles.rowWarn]}>{confirmLabel}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={onCancel} activeOpacity={0.7}>
                 <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{cancelLabel}</Text>

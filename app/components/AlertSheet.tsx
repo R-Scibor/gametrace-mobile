@@ -16,9 +16,9 @@ export default function AlertSheet({
 }) {
     return (
         <BottomSheet visible={visible} onClose={onDismiss} title={title}>
-            {message ? <Text style={sheetStyles.message}>{message}</Text> : null}
-            <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={onDismiss} activeOpacity={0.7}>
-                <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{dismissLabel}</Text>
+            {message ? <Text style={[sheetStyles.message, { marginBottom: 24 }]}>{message}</Text> : null}
+            <TouchableOpacity style={sheetStyles.primaryRow} onPress={onDismiss} activeOpacity={0.7}>
+                <Text style={sheetStyles.primaryRowText}>{dismissLabel}</Text>
             </TouchableOpacity>
         </BottomSheet>
     );
