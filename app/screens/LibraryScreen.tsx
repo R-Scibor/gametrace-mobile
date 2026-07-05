@@ -117,12 +117,13 @@ export default function LibraryScreen() {
         }, [route.params?.filter, navigation])
     );
 
-    // Ephemeral reset: stable deps → this callback's identity never changes, so its
-    // cleanup runs only on a real blur/unmount, resetting the drill-down view.
+    // Ephemeral filter reset: stable deps → this callback's identity never changes,
+    // so its cleanup runs only on a real blur/unmount, clearing the drill-down filter.
+    // Sort is intentionally NOT reset here — a user-chosen (or drill-forced) sort
+    // persists across leaving and returning to the Library.
     useFocusEffect(
         useCallback(() => () => {
             setFilter(null);
-            setSort('name');
         }, [])
     );
 
