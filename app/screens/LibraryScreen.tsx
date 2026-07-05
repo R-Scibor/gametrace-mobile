@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshC
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getGames } from '../api/games';
-import { Game } from '../types/api';
+import { Game, GameSort } from '../types/api';
 import { useGamesStore } from '../store/gamesStore';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -11,6 +11,11 @@ import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
 
 const PAGE_SIZE = 20;
+const SORTS: { key: GameSort; label: string }[] = [
+    { key: 'name', label: 'NAZWA' },
+    { key: 'playtime', label: 'CZAS GRY' },
+    { key: 'last_played', label: 'OSTATNIO GRANE' },
+];
 const GRID_COLUMNS = 2;
 const GRID_PADDING = 14;
 const CELL_MARGIN = 6;
@@ -33,6 +38,7 @@ export default function LibraryScreen() {
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [loadError, setLoadError] = useState(false);
     const [reloadNonce, setReloadNonce] = useState(0);
+    const [sort, setSort] = useState<GameSort>('name');
 
     const gamesStale = useGamesStore((s) => s.stale);
     const markGamesFresh = useGamesStore((s) => s.markFresh);
@@ -54,7 +60,7 @@ export default function LibraryScreen() {
         (async () => {
             setLoading(true);
             try {
-                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
+                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
                 if (cancelled) return;
                 setGames(res.items);
                 setTotal(res.total);
@@ -66,7 +72,7 @@ export default function LibraryScreen() {
             }
         })();
         return () => { cancelled = true; };
-    }, [inLibrary, debouncedQuery, reloadNonce]);
+    }, [inLibrary, debouncedQuery, reloadNonce, sort]);
 
     // Refresh on focus if a game's accept/ignore state changed on another screen
     useFocusEffect(
@@ -82,7 +88,7 @@ export default function LibraryScreen() {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
+            const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
             setGames(prev => [...prev, ...res.items]);
             setTotal(res.total);
             setLoadError(false);
@@ -95,7 +101,7 @@ export default function LibraryScreen() {
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary });
+            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
             setGames(res.items);
             setTotal(res.total);
             setLoadError(false);
@@ -142,6 +148,23 @@ export default function LibraryScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                 />
+            </View>
+
+            {/* Sort */}
+            <View style={styles.sortRow}>
+                {SORTS.map(({ key, label }) => {
+                    const active = sort === key;
+                    return (
+                        <TouchableOpacity
+                            key={key}
+                            style={[styles.sortPill, active && styles.sortPillActive]}
+                            onPress={() => setSort(key)}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={[styles.sortPillText, active && styles.sortPillTextActive]}>{label}</Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
 
             {loadError && (
@@ -273,6 +296,22 @@ const styles = StyleSheet.create({
         flex: 1, paddingHorizontal: 12, paddingVertical: 10,
         fontFamily: bodyFont.regular, fontSize: 14, color: colors.text,
     },
+
+    // Sort
+    sortRow: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginBottom: 8 },
+    sortPill: {
+        flex: 1,
+        backgroundColor: colors.bg3,
+        borderWidth: 1, borderColor: colors.borderBright,
+        borderRadius: 2,
+        paddingVertical: 8,
+        alignItems: 'center',
+    },
+    sortPillActive: { backgroundColor: colors.orange, borderColor: colors.orange },
+    sortPillText: {
+        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 1, color: colors.text3,
+    },
+    sortPillTextActive: { color: colors.buttonTextOnOrange },
 
     // Grid
     gridContent: { paddingHorizontal: GRID_PADDING, paddingTop: 8, paddingBottom: 24 },
