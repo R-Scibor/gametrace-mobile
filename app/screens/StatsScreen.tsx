@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import {
     getCompanies,
@@ -25,6 +27,7 @@ import {
     TrendGranularity,
     TrendResponse,
 } from '../types/api';
+import { TabParamList, RootStackParamList } from '../navigation/types';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -84,8 +87,13 @@ function formatHoursShort(seconds: number) {
 }
 
 
+type StatsNavigationProp = CompositeNavigationProp<
+    BottomTabNavigationProp<TabParamList, 'Stats'>,
+    NativeStackNavigationProp<RootStackParamList>
+>;
+
 export default function StatsScreen() {
-    const navigation = useNavigation();
+    const navigation = useNavigation<StatsNavigationProp>();
     const drill = (type: LibraryFilter['type'], value: string) => {
         navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
     };
