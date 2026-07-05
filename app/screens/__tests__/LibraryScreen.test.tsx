@@ -40,3 +40,28 @@ test('tapping the playtime sort pill refetches sorted by playtime', async () => 
 
   expect(getGames).toHaveBeenCalledWith(expect.objectContaining({ sort: 'playtime', skip: 0 }));
 });
+
+test('arriving with a filter param shows the chip and sorts by playtime', async () => {
+  mockRouteParams = { filter: { type: 'genre', value: 'Role-playing (RPG)' } };
+
+  const { getByText } = await renderScreen();
+
+  expect(getByText('Gatunek: Role-playing (RPG)')).toBeTruthy();
+  expect(getGames).toHaveBeenCalledWith(expect.objectContaining({
+    sort: 'playtime',
+    filter: { type: 'genre', value: 'Role-playing (RPG)' },
+  }));
+  expect(mockSetParams).toHaveBeenCalledWith({ filter: undefined });
+});
+
+test('dismissing the chip refetches without the filter', async () => {
+  mockRouteParams = { filter: { type: 'developer', value: 'FromSoftware' } };
+
+  const { getByText, queryByText } = await renderScreen();
+  (getGames as jest.Mock).mockClear();
+
+  await fireEvent.press(getByText('✕'));
+
+  expect(queryByText('Deweloper: FromSoftware')).toBeNull();
+  expect(getGames).toHaveBeenCalledWith(expect.objectContaining({ filter: undefined }));
+});

@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp, CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getGames } from '../api/games';
-import { Game, GameSort } from '../types/api';
+import { Game, GameSort, LibraryFilter } from '../types/api';
+import { TabParamList, RootStackParamList } from '../navigation/types';
 import { useGamesStore } from '../store/gamesStore';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -16,6 +19,13 @@ const SORTS: { key: GameSort; label: string }[] = [
     { key: 'playtime', label: 'CZAS GRY' },
     { key: 'last_played', label: 'OSTATNIO GRANE' },
 ];
+const FILTER_PREFIX: Record<LibraryFilter['type'], string> = {
+    genre: 'Gatunek',
+    theme: 'Motyw',
+    developer: 'Deweloper',
+    publisher: 'Wydawca',
+    release_decade: 'Dekada',
+};
 const GRID_COLUMNS = 2;
 const GRID_PADDING = 14;
 const CELL_MARGIN = 6;
@@ -27,8 +37,14 @@ const CELL_HEIGHT = Math.round(CELL_WIDTH * 362 / 264); // IGDB cover aspect
 
 type Tab = 'all' | 'other';
 
+type LibraryNavigationProp = CompositeNavigationProp<
+    BottomTabNavigationProp<TabParamList, 'Library'>,
+    NativeStackNavigationProp<RootStackParamList>
+>;
+
 export default function LibraryScreen() {
-    const navigation = useNavigation();
+    const navigation = useNavigation<LibraryNavigationProp>();
+    const route = useRoute<RouteProp<TabParamList, 'Library'>>();
     const [activeTab, setActiveTab] = useState<Tab>('all');
     const [games, setGames] = useState<Game[]>([]);
     const [total, setTotal] = useState(0);
@@ -39,6 +55,7 @@ export default function LibraryScreen() {
     const [loadError, setLoadError] = useState(false);
     const [reloadNonce, setReloadNonce] = useState(0);
     const [sort, setSort] = useState<GameSort>('name');
+    const [filter, setFilter] = useState<LibraryFilter | null>(null);
 
     const gamesStale = useGamesStore((s) => s.stale);
     const markGamesFresh = useGamesStore((s) => s.markFresh);
@@ -60,7 +77,7 @@ export default function LibraryScreen() {
         (async () => {
             setLoading(true);
             try {
-                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
+                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
                 if (cancelled) return;
                 setGames(res.items);
                 setTotal(res.total);
@@ -72,7 +89,7 @@ export default function LibraryScreen() {
             }
         })();
         return () => { cancelled = true; };
-    }, [inLibrary, debouncedQuery, reloadNonce, sort]);
+    }, [inLibrary, debouncedQuery, reloadNonce, sort, filter]);
 
     // Refresh on focus if a game's accept/ignore state changed on another screen
     useFocusEffect(
@@ -84,11 +101,28 @@ export default function LibraryScreen() {
         }, [gamesStale, markGamesFresh])
     );
 
+    // Drill-down intake: apply an incoming facet once (forcing playtime sort), then
+    // clear the route param so it doesn't re-fire. On blur, reset to the default view.
+    useFocusEffect(
+        useCallback(() => {
+            const incoming = route.params?.filter;
+            if (incoming) {
+                setFilter(incoming);
+                setSort('playtime');
+                navigation.setParams({ filter: undefined });
+            }
+            return () => {
+                setFilter(null);
+                setSort('name');
+            };
+        }, [route.params?.filter, navigation])
+    );
+
     const loadMore = async () => {
         if (loading || !hasMore) return;
         setLoading(true);
         try {
-            const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
+            const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
             setGames(prev => [...prev, ...res.items]);
             setTotal(res.total);
             setLoadError(false);
@@ -101,7 +135,7 @@ export default function LibraryScreen() {
     const onRefresh = async () => {
         setRefreshing(true);
         try {
-            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort });
+            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
             setGames(res.items);
             setTotal(res.total);
             setLoadError(false);
@@ -149,6 +183,19 @@ export default function LibraryScreen() {
                     autoCorrect={false}
                 />
             </View>
+
+            {filter && (
+                <View style={styles.chipRow}>
+                    <View style={styles.chip}>
+                        <Text style={styles.chipText} numberOfLines={1}>
+                            {FILTER_PREFIX[filter.type]}: {filter.value}
+                        </Text>
+                        <TouchableOpacity onPress={() => setFilter(null)} hitSlop={8} accessibilityLabel="Wyczyść filtr">
+                            <Text style={styles.chipClear}>✕</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
 
             {/* Sort */}
             <View style={styles.sortRow}>
@@ -312,6 +359,23 @@ const styles = StyleSheet.create({
         fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 1, color: colors.text3,
     },
     sortPillTextActive: { color: colors.buttonTextOnOrange },
+
+    // Filter chip
+    chipRow: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 8 },
+    chip: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        alignSelf: 'flex-start', maxWidth: '100%',
+        backgroundColor: colors.orange,
+        borderRadius: 2, paddingHorizontal: 10, paddingVertical: 6,
+    },
+    chipText: {
+        flexShrink: 1,
+        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 0.5,
+        color: colors.buttonTextOnOrange,
+    },
+    chipClear: {
+        fontFamily: displayFont.bold, fontSize: 12, color: colors.buttonTextOnOrange,
+    },
 
     // Grid
     gridContent: { paddingHorizontal: GRID_PADDING, paddingTop: 8, paddingBottom: 24 },

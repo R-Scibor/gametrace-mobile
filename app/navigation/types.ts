@@ -1,5 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { EnrichmentStatus, SessionStatus } from '../types/api';
+import type { EnrichmentStatus, LibraryFilter, SessionStatus } from '../types/api';
 
 export type AddSessionParams = {
     gameId?: number;
@@ -11,7 +11,7 @@ export type AddSessionParams = {
 
 export type TabParamList = {
     Dashboard: undefined;
-    Library: undefined;
+    Library: { filter?: LibraryFilter } | undefined;
     AddSession: AddSessionParams | undefined;
     Stats: undefined;
     Settings: undefined;
