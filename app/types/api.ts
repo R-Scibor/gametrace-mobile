@@ -31,12 +31,21 @@ export interface Game {
   enrichment_status: EnrichmentStatus;
   is_ignored: boolean;
   is_accepted: boolean | null;
+  total_seconds: number;
+  last_played: string | null;
 }
 
 export interface GameListResponse {
   total: number;
   items: Game[];
 }
+
+export type GameSort = 'name' | 'playtime' | 'last_played';
+
+export type LibraryFilter = {
+  type: 'genre' | 'theme' | 'developer' | 'publisher' | 'release_decade';
+  value: string;
+};
 
 export interface UserPreference {
   game_id: number;
