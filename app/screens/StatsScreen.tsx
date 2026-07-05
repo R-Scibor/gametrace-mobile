@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import {
     getCompanies,
@@ -16,6 +17,7 @@ import {
     CompanyRole,
     GenresResponse,
     HeatmapResponse,
+    LibraryFilter,
     ReleaseYearsResponse,
     StatsSummary,
     ThemesResponse,
@@ -83,6 +85,11 @@ function formatHoursShort(seconds: number) {
 
 
 export default function StatsScreen() {
+    const navigation = useNavigation();
+    const drill = (type: LibraryFilter['type'], value: string) => {
+        navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
+    };
+
     const [days, setDays] = useState<Period>(7);
     const [role, setRole] = useState<CompanyRole>('developer');
     // One flag per fetch group so a partial failure can't be cleared by another
@@ -317,12 +324,14 @@ export default function StatsScreen() {
                 <InfoLabel label="GATUNKI" body={INFO_GENRES} />
                 <BreakdownList
                     items={genres ? genres.items.map(g => ({ label: g.genre, seconds: g.total_seconds })) : null}
+                    onItemPress={(label) => drill('genre', label)}
                 />
 
                 {/* Themes — same overlap caveat as genres above. */}
                 <InfoLabel label="MOTYWY" body={INFO_THEMES} />
                 <BreakdownList
                     items={themes ? themes.items.map(t => ({ label: t.theme, seconds: t.total_seconds })) : null}
+                    onItemPress={(label) => drill('theme', label)}
                 />
 
                 {/* Release years */}
@@ -336,6 +345,7 @@ export default function StatsScreen() {
                             label={item.decade}
                             seconds={item.total_seconds}
                             max={decadeMax}
+                            onPress={() => drill('release_decade', item.decade)}
                         />
                     ))
                 )}
@@ -367,8 +377,10 @@ export default function StatsScreen() {
                         return (
                             <>
                                 {rows.map((item, i) => (
-                                    <View
+                                    <TouchableOpacity
                                         key={item.name}
+                                        activeOpacity={0.7}
+                                        onPress={() => drill(role, item.name)}
                                         style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
                                     >
                                         <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
@@ -379,7 +391,8 @@ export default function StatsScreen() {
                                             </Text>
                                         </View>
                                         <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
-                                    </View>
+                                        <Text style={styles.chevron}>›</Text>
+                                    </TouchableOpacity>
                                 ))}
                                 {companies.items.length > TOP_N && (
                                     <ShowMoreToggle
@@ -402,7 +415,7 @@ type BreakdownItem = { label: string; seconds: number };
 // Ranked hour bars for overlapping tags (genres/themes). Each session counts
 // toward every tag on its game, so these don't partition to 100% — the bars are
 // scaled to the top tag, read as "most-played", not "share of total".
-function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
+function BreakdownList({ items, onItemPress }: { items: BreakdownItem[] | null; onItemPress?: (label: string) => void }) {
     if (!items) {
         return <Text style={styles.empty}>—</Text>;
     }
@@ -422,6 +435,7 @@ function BreakdownList({ items }: { items: BreakdownItem[] | null }) {
                     seconds={item.seconds}
                     max={max}
                     color={TAG_HEAT[i]}
+                    onPress={onItemPress ? () => onItemPress(item.label) : undefined}
                 />
             ))}
         </>
@@ -642,35 +656,43 @@ function TrendLine({ buckets, granularity, max }: { buckets: TrendBucket[]; gran
     );
 }
 
-function BreakdownBar({ label, seconds, max }: { label: string; seconds: number; max: number }) {
+function BreakdownBar({ label, seconds, max, onPress }: { label: string; seconds: number; max: number; onPress?: () => void }) {
     const widthPct = max > 0 ? (seconds / max) * 100 : 0;
-    return (
+    const body = (
         <View style={styles.breakdown}>
             <View style={styles.breakdownHeader}>
                 <Text style={styles.breakdownLabel} numberOfLines={1}>{label}</Text>
-                <Text style={styles.breakdownValue}>{formatHoursShort(seconds)}</Text>
+                <View style={styles.breakdownRight}>
+                    <Text style={styles.breakdownValue}>{formatHoursShort(seconds)}</Text>
+                    {onPress && <Text style={styles.chevron}>›</Text>}
+                </View>
             </View>
             <View style={styles.breakdownTrack}>
                 <View style={[styles.breakdownFill, { width: `${widthPct}%` }]} />
             </View>
         </View>
     );
+    return onPress ? <TouchableOpacity activeOpacity={0.7} onPress={onPress}>{body}</TouchableOpacity> : body;
 }
 
 // Thick colored bar with the tag name set on the fill. Short fills leave the name
 // over the dark track, so the text carries a dark halo to stay legible either way.
-function TagBar({ label, seconds, max, color }: { label: string; seconds: number; max: number; color: string }) {
+function TagBar({ label, seconds, max, color, onPress }: { label: string; seconds: number; max: number; color: string; onPress?: () => void }) {
     // Floor at a sliver so a tiny tag still shows a colored stub under its name.
     const widthPct = max > 0 ? Math.max((seconds / max) * 100, 8) : 0;
-    return (
+    const body = (
         <View style={styles.tagTrack}>
             <View style={[styles.tagFill, { width: `${widthPct}%`, backgroundColor: color }]} />
             <View style={styles.tagOverlay}>
                 <Text style={styles.tagLabel} numberOfLines={1}>{label}</Text>
-                <Text style={styles.tagValue}>{formatHoursShort(seconds)}</Text>
+                <View style={styles.tagRight}>
+                    <Text style={styles.tagValue}>{formatHoursShort(seconds)}</Text>
+                    {onPress && <Text style={styles.tagChevron}>›</Text>}
+                </View>
             </View>
         </View>
     );
+    return onPress ? <TouchableOpacity activeOpacity={0.8} onPress={onPress}>{body}</TouchableOpacity> : body;
 }
 
 function ShowMoreToggle({ expanded, onPress }: { expanded: boolean; onPress: () => void }) {
@@ -862,6 +884,8 @@ const styles = StyleSheet.create({
         height: 4, backgroundColor: colors.bg3, borderRadius: 2, overflow: 'hidden',
     },
     breakdownFill: { height: '100%', backgroundColor: colors.orange },
+    breakdownRight: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+    chevron: { fontFamily: displayFont.bold, fontSize: 14, color: colors.text3 },
 
     tagTrack: {
         height: 30, marginBottom: 8, borderRadius: 2,
@@ -878,9 +902,11 @@ const styles = StyleSheet.create({
         textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 3,
     },
     tagValue: {
-        fontFamily: bodyFont.medium, fontSize: 12, color: '#fff', marginLeft: 8,
+        fontFamily: bodyFont.medium, fontSize: 12, color: '#fff',
         textShadowColor: 'rgba(0,0,0,0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 3,
     },
+    tagRight: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
+    tagChevron: { fontFamily: displayFont.bold, fontSize: 15, color: '#fff', opacity: 0.85 },
 
     empty: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.text3, marginTop: 8 },
     errorWrap: { marginTop: 16 },

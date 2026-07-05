@@ -1,5 +1,5 @@
 import client from './client';
-import { EnrichmentStatus, GameListResponse, GameResolveResponse, GameStats, Session, UserPreference } from '../types/api';
+import { EnrichmentStatus, GameListResponse, GameResolveResponse, GameSort, GameStats, LibraryFilter, Session, UserPreference } from '../types/api';
 
 export const getGames = async (opts: {
     skip?: number;
@@ -7,11 +7,13 @@ export const getGames = async (opts: {
     status?: EnrichmentStatus;
     q?: string;
     inLibrary?: boolean;
+    sort?: GameSort;
+    filter?: LibraryFilter;
 } = {}): Promise<GameListResponse> => {
-    const { skip = 0, limit = 20, status, q, inLibrary } = opts;
-    const response = await client.get<GameListResponse>('/games', {
-        params: { skip, limit, status, q, in_library: inLibrary },
-    });
+    const { skip = 0, limit = 20, status, q, inLibrary, sort, filter } = opts;
+    const params: Record<string, unknown> = { skip, limit, status, q, in_library: inLibrary, sort };
+    if (filter) params[filter.type] = filter.value;
+    const response = await client.get<GameListResponse>('/games', { params });
     return response.data;
 };
 
