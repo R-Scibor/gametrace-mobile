@@ -16,6 +16,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 export default function TabNavigator() {
   return (
     <Tab.Navigator
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.orange,
