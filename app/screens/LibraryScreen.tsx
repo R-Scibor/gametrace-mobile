@@ -102,7 +102,10 @@ export default function LibraryScreen() {
     );
 
     // Drill-down intake: apply an incoming facet once (forcing playtime sort), then
-    // clear the route param so it doesn't re-fire. On blur, reset to the default view.
+    // clear the route param so it doesn't re-apply on a later plain re-focus.
+    // No cleanup here — see the separate reset effect below. (A cleanup here would
+    // fire when setParams changes this callback's identity, wiping the filter we
+    // just applied.)
     useFocusEffect(
         useCallback(() => {
             const incoming = route.params?.filter;
@@ -111,11 +114,16 @@ export default function LibraryScreen() {
                 setSort('playtime');
                 navigation.setParams({ filter: undefined });
             }
-            return () => {
-                setFilter(null);
-                setSort('name');
-            };
         }, [route.params?.filter, navigation])
+    );
+
+    // Ephemeral reset: stable deps → this callback's identity never changes, so its
+    // cleanup runs only on a real blur/unmount, resetting the drill-down view.
+    useFocusEffect(
+        useCallback(() => () => {
+            setFilter(null);
+            setSort('name');
+        }, [])
     );
 
     const loadMore = async () => {
