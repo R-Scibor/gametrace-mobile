@@ -57,3 +57,37 @@ test('tapping a genre bar drills into the Library filtered by that genre', async
     params: { filter: { type: 'genre', value: 'Adventure' } },
   });
 });
+
+test('tapping a top-games row opens that game detail', async () => {
+  (getStatsSummary as jest.Mock).mockResolvedValue({
+    days: 7, window_start: null, window_end: '', total_seconds: 3600, previous_total_seconds: 0,
+    avg_session_seconds: 3600, longest_session_seconds: 0, longest_session_game_id: null,
+    longest_session_game_name: null, new_games_count: 1, pending_errors: [],
+    per_game: [{ game_id: 42, game_name: 'Hollow Knight', cover_image_url: '/covers/42.png', total_seconds: 3600 }],
+  });
+
+  const { getByText } = await renderScreen();
+
+  await fireEvent.press(getByText('Hollow Knight'));
+
+  expect(mockNavigate).toHaveBeenCalledWith('GameDetail', {
+    gameId: 42, gameName: 'Hollow Knight', coverImageUrl: '/covers/42.png',
+  });
+});
+
+test('tapping the longest-session record card opens that game detail', async () => {
+  (getStatsSummary as jest.Mock).mockResolvedValue({
+    days: 7, window_start: null, window_end: '', total_seconds: 7200, previous_total_seconds: 0,
+    avg_session_seconds: 3600, longest_session_seconds: 7200, longest_session_game_id: 7,
+    longest_session_game_name: 'Celeste', new_games_count: 1, pending_errors: [],
+    per_game: [{ game_id: 7, game_name: 'Celeste', cover_image_url: '/covers/7.png', total_seconds: 7200 }],
+  });
+
+  const { getByText } = await renderScreen();
+
+  await fireEvent.press(getByText('REKORD · NAJDŁUŻSZA SESJA'));
+
+  expect(mockNavigate).toHaveBeenCalledWith('GameDetail', {
+    gameId: 7, gameName: 'Celeste', coverImageUrl: '/covers/7.png',
+  });
+});

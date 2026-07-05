@@ -89,6 +89,9 @@ export default function StatsScreen() {
     const drill = (type: LibraryFilter['type'], value: string) => {
         navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
     };
+    const openGame = (gameId: number, gameName: string | null, coverImageUrl: string | null | undefined) => {
+        navigation.navigate('GameDetail', { gameId, gameName: gameName ?? undefined, coverImageUrl: coverImageUrl ?? null });
+    };
 
     const [days, setDays] = useState<Period>(7);
     const [role, setRole] = useState<CompanyRole>('developer');
@@ -246,9 +249,19 @@ export default function StatsScreen() {
                     </View>
                 )}
 
-                {/* Record: longest single session — mirrors the dashboard active-session card */}
+                {/* Record: longest single session — mirrors the dashboard active-session card.
+                    Tap opens the game's detail screen. */}
                 {summary && summary.longest_session_seconds > 0 && (
-                    <View style={styles.recordCard}>
+                    <TouchableOpacity
+                        style={styles.recordCard}
+                        activeOpacity={0.7}
+                        disabled={summary.longest_session_game_id == null}
+                        onPress={() => summary.longest_session_game_id != null && openGame(
+                            summary.longest_session_game_id,
+                            summary.longest_session_game_name,
+                            summary.per_game.find(g => g.game_id === summary.longest_session_game_id)?.cover_image_url,
+                        )}
+                    >
                         <View style={styles.recordRow}>
                             <View style={styles.recordCoverWrap}>
                                 <Cover
@@ -266,7 +279,7 @@ export default function StatsScreen() {
                                 <Text style={styles.recordValue}>{formatHours(summary.longest_session_seconds)}</Text>
                             </View>
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 )}
 
                 {/* ── GRY ── */}
@@ -279,14 +292,16 @@ export default function StatsScreen() {
                         return (
                             <>
                                 {rows.map((item, i) => (
-                                    <View
+                                    <TouchableOpacity
                                         key={item.game_id}
+                                        activeOpacity={0.7}
+                                        onPress={() => openGame(item.game_id, item.game_name, item.cover_image_url)}
                                         style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
                                     >
                                         <Text style={styles.rank}>{String(i + 1).padStart(2, '0')}</Text>
                                         <Text style={styles.gameName} numberOfLines={1}>{item.game_name}</Text>
                                         <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 ))}
                                 {summary.per_game.length > TOP_N && (
                                     <ShowMoreToggle
