@@ -1,9 +1,14 @@
 import client from './client';
 import { LoginResponse } from '../types/api';
 import { normalizeLinkCode } from '../utils/linkCode';
+import { DEV_LOGIN_SECRET } from '../config';
 
 export const login = async (username: string, timezone = 'UTC'): Promise<LoginResponse> => {
-    const response = await client.post<LoginResponse>('/auth/login', { username, timezone });
+    const response = await client.post<LoginResponse>(
+        '/auth/login',
+        { username, timezone },
+        DEV_LOGIN_SECRET ? { headers: { 'X-Dev-Login-Secret': DEV_LOGIN_SECRET } } : undefined,
+    );
     return response.data;
 };
 

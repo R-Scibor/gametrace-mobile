@@ -1,11 +1,46 @@
 jest.mock('../client', () => ({ __esModule: true, default: { post: jest.fn() } }));
 
+let mockDevLoginSecret = '';
+jest.mock('../../config', () => ({
+  get DEV_LOGIN_SECRET() {
+    return mockDevLoginSecret;
+  },
+}));
+
 import client from '../client';
-import { linkLogin, discordLogin } from '../auth';
+import { login, linkLogin, discordLogin } from '../auth';
 
 const mockPost = client.post as jest.Mock;
 
-beforeEach(() => mockPost.mockReset());
+beforeEach(() => {
+  mockPost.mockReset();
+  mockDevLoginSecret = '';
+});
+
+test('login omits the dev-secret header when no secret is configured', async () => {
+  mockPost.mockResolvedValue({ data: { token: 't' } });
+
+  await login('ada', 'Europe/Warsaw');
+
+  expect(client.post).toHaveBeenCalledWith(
+    '/auth/login',
+    { username: 'ada', timezone: 'Europe/Warsaw' },
+    undefined,
+  );
+});
+
+test('login sends the X-Dev-Login-Secret header when a secret is configured', async () => {
+  mockDevLoginSecret = 's3cret';
+  mockPost.mockResolvedValue({ data: { token: 't' } });
+
+  await login('ada');
+
+  expect(client.post).toHaveBeenCalledWith(
+    '/auth/login',
+    { username: 'ada', timezone: 'UTC' },
+    { headers: { 'X-Dev-Login-Secret': 's3cret' } },
+  );
+});
 
 test('linkLogin posts the space-stripped code and timezone to /auth/link', async () => {
   mockPost.mockResolvedValue({ data: { token: 't' } });

@@ -2,10 +2,17 @@
 // testing push; the Settings "Wyślij opinię" row remains either way.
 export const DEV_REPORT_FAB = true;
 
+// Shared secret gating the dev-only POST /auth/login. Sent as the
+// X-Dev-Login-Secret header; the backend returns 404 without a matching value.
+// Sourced from EXPO_PUBLIC_DEV_LOGIN_SECRET (gitignored .env); inlined at build
+// time. Empty in tester/prod builds whose env doesn't set it — see .env.example.
+export const DEV_LOGIN_SECRET = process.env.EXPO_PUBLIC_DEV_LOGIN_SECRET ?? '';
+
 // Dev-only username login (POST /auth/login) on the sign-in screen. The primary
-// path is the Discord link code; flip to false to hide the username fallback in
-// prod builds once link (and later OAuth) login has shipped.
-export const DEV_USERNAME_LOGIN = true;
+// path is the Discord link code. Gated on the secret: a build without one gets a
+// bare 404 from the endpoint anyway, so the username fallback stays hidden unless
+// EXPO_PUBLIC_DEV_LOGIN_SECRET is set.
+export const DEV_USERNAME_LOGIN = !!DEV_LOGIN_SECRET;
 
 // Discord OAuth2 sign-in on the auth screen. Flip to false to hide the button in
 // a build where OAuth's redirect URI isn't registered (Discord portal + backend
