@@ -12,17 +12,10 @@ import { common } from '../theme/styles';
 
 const BAR_COUNT = 9;
 
-function formatElapsed(s: number) {
-    const m = Math.floor(s / 60).toString().padStart(2, '0');
-    const r = (s % 60).toString().padStart(2, '0');
-    return `${m}:${r}`;
-}
-
 export default function VoiceScreen() {
     const navigation = useNavigation();
     const { isRecording, start, stop } = useVoiceRecord();
     const [processing, setProcessing] = useState(false);
-    const [elapsed, setElapsed] = useState(0);
     const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
 
     const pulse = useRef(new Animated.Value(0)).current;
@@ -33,7 +26,6 @@ export default function VoiceScreen() {
         if (!isRecording) {
             pulse.setValue(0);
             bars.forEach(b => b.setValue(0.2));
-            setElapsed(0);
             return;
         }
 
@@ -49,11 +41,9 @@ export default function VoiceScreen() {
         ])));
         barLoops.forEach(a => a.start());
 
-        const t = setInterval(() => setElapsed(e => e + 1), 1000);
         return () => {
             pulseLoop.stop();
             barLoops.forEach(a => a.stop());
-            clearInterval(t);
         };
     }, [isRecording]);
 
@@ -114,8 +104,6 @@ export default function VoiceScreen() {
         }
     };
 
-    const status = processing ? 'PRZETWARZANIE' : isRecording ? 'NAGRYWANIE' : 'GOTOWY';
-    const statusColor = processing ? colors.warn : isRecording ? colors.orange : colors.text2;
     const cta = processing ? 'ANALIZA NAGRANIA...' : isRecording ? 'ZATRZYMAJ' : 'ROZPOCZNIJ NAGRYWANIE';
 
     return (
@@ -131,14 +119,6 @@ export default function VoiceScreen() {
                         <Text style={common.eyebrow}>◈ GAMETRACE</Text>
                     </View>
                     <Text style={common.title}>Sesja głosowa</Text>
-                </View>
-
-                {/* Status strip */}
-                <View style={styles.statusRow}>
-                    <Text style={styles.statusLabel}>STATUS</Text>
-                    <View style={styles.statusDivider} />
-                    <Text style={[styles.statusValue, { color: statusColor }]}>{status}</Text>
-                    {isRecording && <Text style={styles.statusElapsed}>{formatElapsed(elapsed)}</Text>}
                 </View>
 
                 {/* Hero record control */}
@@ -225,25 +205,6 @@ export default function VoiceScreen() {
 const styles = StyleSheet.create({
     content: { flex: 1, paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 16, paddingBottom: 16 },
-
-    statusRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 12,
-        paddingHorizontal: 12, paddingVertical: 10,
-        backgroundColor: colors.bg2,
-        borderWidth: 1, borderColor: colors.border,
-        borderLeftWidth: 2, borderLeftColor: colors.orange,
-    },
-    statusLabel: {
-        fontFamily: displayFont.bold, fontSize: 10, letterSpacing: 2.5, color: colors.text3,
-    },
-    statusDivider: { width: 1, height: 10, backgroundColor: colors.border },
-    statusValue: {
-        fontFamily: displayFont.bold, fontSize: 11, letterSpacing: 2,
-    },
-    statusElapsed: {
-        marginLeft: 'auto',
-        fontFamily: displayFont.bold, fontSize: 13, color: colors.orange, letterSpacing: 1,
-    },
 
     hero: {
         alignItems: 'center', justifyContent: 'center',
