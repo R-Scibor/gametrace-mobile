@@ -12,8 +12,13 @@
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1486092367072334014",
+        "EXPO_PUBLIC_DISCORD_INVITE_URL": "https://discord.com/oauth2/authorize?client_id=1486092367072334014&permissions=2048&integration_type=0&scope=bot+applications.commands"
       }
     },
     "production": {
