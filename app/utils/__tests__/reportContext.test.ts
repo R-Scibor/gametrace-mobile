@@ -4,12 +4,13 @@ jest.mock('../../navigation/navigationRef', () => ({
 
 import { navigationRef } from '../../navigation/navigationRef';
 import { buildReportContext } from '../reportContext';
+import appJson from '../../../app.json';
 
 test('buildReportContext includes current screen name', () => {
   (navigationRef.getCurrentRoute as jest.Mock).mockReturnValue({ name: 'Dashboard' });
   const ctx = buildReportContext();
   expect(ctx.screen).toBe('Dashboard');
-  expect(ctx.appVersion).toBe('1.0.0');
+  expect(ctx.appVersion).toBe(appJson.expo.version);
   expect(typeof ctx.platform).toBe('string');
   expect(typeof ctx.osVersion).toBe('string');
 });
