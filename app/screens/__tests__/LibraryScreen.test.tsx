@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import LibraryScreen from '../LibraryScreen';
+import LibraryScreen, { computeGrid } from '../LibraryScreen';
 import { getGames } from '../../api/games';
 
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
@@ -37,6 +37,27 @@ function renderScreen() {
     </SafeAreaProvider>
   );
 }
+
+describe('computeGrid', () => {
+  test('keeps 2 columns across the phone width range', () => {
+    expect(computeGrid(320).columns).toBe(2); // small Android
+    expect(computeGrid(390).columns).toBe(2); // typical phone
+    expect(computeGrid(440).columns).toBe(2); // large phone
+  });
+
+  test('adds columns on tablet-width viewports', () => {
+    expect(computeGrid(768).columns).toBe(3);
+    expect(computeGrid(1024).columns).toBe(5);
+  });
+
+  test('cover fills its share of the row width and keeps IGDB aspect', () => {
+    const { columns, cellWidth, cellHeight } = computeGrid(390);
+    // 390 - 28 padding = 362 available, /2 cols = 181 outer, -24 margin+pad = 157
+    expect(cellWidth).toBe(157);
+    expect(cellHeight).toBe(Math.round(157 * 362 / 264));
+    expect(columns).toBe(2);
+  });
+});
 
 test('tapping the playtime sort pill refetches sorted by playtime', async () => {
   const { getByText } = await renderScreen();

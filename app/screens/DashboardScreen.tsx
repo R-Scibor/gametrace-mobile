@@ -238,7 +238,7 @@ function StatTile({ label, value, unit }: { label: string; value: string; unit: 
             <View style={styles.tileBody}>
                 <Text style={styles.tileLabel}>{label}</Text>
                 <View style={styles.tileValueRow}>
-                    <Text style={styles.tileValue}>{value}</Text>
+                    <Text style={styles.tileValue} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
                     <Text style={styles.tileUnit}>{unit}</Text>
                 </View>
             </View>
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     },
     tileValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
     tileValue: {
-        fontFamily: displayFont.bold, fontSize: 32, letterSpacing: -1, color: colors.orange, lineHeight: 34,
+        flexShrink: 1, fontFamily: displayFont.bold, fontSize: 32, letterSpacing: -1, color: colors.orange, lineHeight: 34,
     },
     tileUnit: {
         fontFamily: displayFont.regular, fontSize: 14, color: colors.text3,

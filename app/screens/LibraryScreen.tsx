@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute, RouteProp, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -26,14 +26,21 @@ const FILTER_PREFIX: Record<LibraryFilter['type'], string> = {
     publisher: 'Wydawca',
     release_decade: 'Dekada',
 };
-const GRID_COLUMNS = 2;
 const GRID_PADDING = 14;
 const CELL_MARGIN = 6;
 const CELL_PADDING = 6;
-const SCREEN_W = Dimensions.get('window').width;
-const CELL_OUTER = (SCREEN_W - GRID_PADDING * 2) / GRID_COLUMNS;
-const CELL_WIDTH = CELL_OUTER - (CELL_MARGIN + CELL_PADDING) * 2;
-const CELL_HEIGHT = Math.round(CELL_WIDTH * 362 / 264); // IGDB cover aspect
+const TARGET_CELL_WIDTH = 190; // desired outer cell width; column count derived from it
+
+// Pure grid math: derive column count + cover size from the live window width so
+// the grid tracks phone size / orientation instead of a stale module constant.
+export function computeGrid(width: number) {
+    const available = width - GRID_PADDING * 2;
+    const columns = Math.max(2, Math.floor(available / TARGET_CELL_WIDTH));
+    const cellOuter = available / columns;
+    const cellWidth = cellOuter - (CELL_MARGIN + CELL_PADDING) * 2;
+    const cellHeight = Math.round(cellWidth * 362 / 264); // IGDB cover aspect
+    return { columns, cellWidth, cellHeight };
+}
 
 type Tab = 'all' | 'other';
 
@@ -45,6 +52,8 @@ type LibraryNavigationProp = CompositeNavigationProp<
 export default function LibraryScreen() {
     const navigation = useNavigation<LibraryNavigationProp>();
     const route = useRoute<RouteProp<TabParamList, 'Library'>>();
+    const { width } = useWindowDimensions();
+    const grid = computeGrid(width);
     const [activeTab, setActiveTab] = useState<Tab>('all');
     const [games, setGames] = useState<Game[]>([]);
     const [total, setTotal] = useState(0);
@@ -231,8 +240,9 @@ export default function LibraryScreen() {
 
             <FlatList
                 data={games}
+                key={grid.columns}
                 keyExtractor={(item) => item.id.toString()}
-                numColumns={GRID_COLUMNS}
+                numColumns={grid.columns}
                 contentContainerStyle={styles.gridContent}
                 columnWrapperStyle={styles.gridRow}
                 ListEmptyComponent={
@@ -257,11 +267,11 @@ export default function LibraryScreen() {
                                 isIgnored: item.is_ignored,
                             })}
                         >
-                            <View style={styles.coverWrap}>
+                            <View style={[styles.coverWrap, { width: grid.cellWidth, height: grid.cellHeight }]}>
                                 <Cover
                                     gameId={item.id}
                                     fallbackUri={item.cover_image_url}
-                                    style={styles.cover}
+                                    style={[styles.cover, { width: grid.cellWidth, height: grid.cellHeight }]}
                                     placeholderChar={item.primary_name[0]}
                                 />
                                 {needsReview && (
@@ -275,7 +285,7 @@ export default function LibraryScreen() {
                                     </View>
                                 )}
                             </View>
-                            <Text style={styles.cellName} numberOfLines={2}>{item.primary_name}</Text>
+                            <Text style={[styles.cellName, { width: grid.cellWidth }]} numberOfLines={2}>{item.primary_name}</Text>
                         </TouchableOpacity>
                     );
                 }}
@@ -397,8 +407,8 @@ const styles = StyleSheet.create({
     },
     cellReview: { borderColor: colors.warnBorder, backgroundColor: colors.warnTint },
     cellIgnored: { opacity: 0.6 },
-    coverWrap: { width: CELL_WIDTH, height: CELL_HEIGHT, position: 'relative' },
-    cover: { width: CELL_WIDTH, height: CELL_HEIGHT, borderRadius: 3, backgroundColor: colors.bg3 },
+    coverWrap: { position: 'relative' },
+    cover: { borderRadius: 3, backgroundColor: colors.bg3 },
     coverPlaceholder: {
         backgroundColor: colors.bg3,
         alignItems: 'center', justifyContent: 'center',
@@ -420,7 +430,7 @@ const styles = StyleSheet.create({
     },
     ignoredBadgeText: { fontFamily: displayFont.bold, fontSize: 8, letterSpacing: 1, color: colors.text3 },
     cellName: {
-        marginTop: 8, fontSize: 12, width: CELL_WIDTH,
+        marginTop: 8, fontSize: 12,
         fontFamily: bodyFont.medium, color: colors.text, textAlign: 'center',
     },
 
