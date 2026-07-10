@@ -25,7 +25,7 @@ test('https reachable resolves ok with /api/v1 base', async () => {
   mockedGet.mockResolvedValueOnce(ok); // https
   const result = await resolveServer('host:8010');
   expect(result).toEqual({ status: 'ok', baseUrl: 'https://host:8010/api/v1' });
-  expect(mockedGet).toHaveBeenCalledWith('https://host:8010/health', { timeout: 3000 });
+  expect(mockedGet).toHaveBeenCalledWith('https://host:8010/api/v1/health', { timeout: 3000 });
 });
 
 test('http-only fallback resolves insecure', async () => {
@@ -45,7 +45,7 @@ test('explicit http is honored as ok (no insecure prompt)', async () => {
   const result = await resolveServer('http://host:8010');
   expect(result).toEqual({ status: 'ok', baseUrl: 'http://host:8010/api/v1' });
   expect(mockedGet).toHaveBeenCalledTimes(1);
-  expect(mockedGet).toHaveBeenCalledWith('http://host:8010/health', { timeout: 3000 });
+  expect(mockedGet).toHaveBeenCalledWith('http://host:8010/api/v1/health', { timeout: 3000 });
 });
 
 test('2xx without status ok is treated as unreachable', async () => {

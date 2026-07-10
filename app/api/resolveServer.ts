@@ -11,7 +11,7 @@ const PROBE_TIMEOUT_MS = 3000;
 
 async function probe(scheme: string, hostPort: string): Promise<boolean> {
     try {
-        const res = await axios.get(`${scheme}://${hostPort}/health`, { timeout: PROBE_TIMEOUT_MS });
+        const res = await axios.get(`${scheme}://${hostPort}/api/v1/health`, { timeout: PROBE_TIMEOUT_MS });
         return res.status >= 200 && res.status < 300 && res.data?.status === 'ok';
     } catch {
         return false;
