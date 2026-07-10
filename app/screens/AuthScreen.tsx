@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { formatLinkCode, normalizeLinkCode, isCompleteLinkCode } from '../utils/linkCode';
-import { DEV_USERNAME_LOGIN, DISCORD_OAUTH_LOGIN, DISCORD_CLIENT_ID } from '../config';
+import { DEV_USERNAME_LOGIN, DISCORD_OAUTH_LOGIN, DISCORD_CLIENT_ID, APP_VERSION } from '../config';
 
 type Mode = 'link' | 'username';
 
@@ -31,6 +32,11 @@ export default function AuthScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.center}>
         <View style={styles.wordmark}>
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={styles.logo}
+            contentFit="contain"
+          />
           <Text style={styles.title}>
             Game<Text style={styles.titleAccent}>Trace</Text>
           </Text>
@@ -141,7 +147,7 @@ export default function AuthScreen() {
           <View style={styles.footerDot} />
           <Text style={styles.footerText}>LINK STABLE</Text>
         </View>
-        <Text style={styles.footerText}>v0.4.2</Text>
+        <Text style={styles.footerText}>v{APP_VERSION}</Text>
       </View>
     </SafeAreaView>
   );
@@ -154,6 +160,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   wordmark: { alignItems: 'center', marginBottom: 20 },
+  logo: { width: 168, height: 168},
   errorSlot: { minHeight: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
   title: {
     fontFamily: displayFont.bold, fontSize: 38, letterSpacing: -1,
