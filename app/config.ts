@@ -1,3 +1,9 @@
+import Constants from 'expo-constants';
+
+// Single source of truth for the version shown in-app: expo.version in app.json.
+// Bump there (and package.json to match) on release; everything else reads this.
+export const APP_VERSION = Constants.expoConfig?.version ?? '0.0.0';
+
 // Dev-only floating feedback button. Flip to false to retire the FAB after the
 // testing push; the Settings "Wyślij opinię" row remains either way.
 export const DEV_REPORT_FAB = true;

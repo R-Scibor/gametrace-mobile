@@ -1,6 +1,6 @@
 {
   "name": "gametrace-app",
-  "version": "1.0.0",
+  "version": "0.4.3",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -20,6 +20,7 @@
     "expo": "~55.0.8",
     "expo-audio": "~55.0.14",
     "expo-auth-session": "~55.0.17",
+    "expo-constants": "~55.0.16",
     "expo-crypto": "~55.0.16",
     "expo-dev-client": "~55.0.36",
     "expo-file-system": "~55.0.22",
