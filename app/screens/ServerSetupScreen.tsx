@@ -8,7 +8,7 @@ import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
 export default function ServerSetupScreen() {
-  const [host, setHost] = useState('');
+  const [host, setHost] = useState('gametrace.rscibor.dev');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insecureUrl, setInsecureUrl] = useState<string | null>(null);
