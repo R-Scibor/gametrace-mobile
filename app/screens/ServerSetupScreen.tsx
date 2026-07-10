@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { resolveServer } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
@@ -40,6 +41,11 @@ export default function ServerSetupScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.center}>
         <View style={styles.wordmark}>
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={styles.logo}
+            contentFit="contain"
+          />
           <Text style={styles.title}>
             Game<Text style={styles.titleAccent}>Trace</Text>
           </Text>
@@ -106,6 +112,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   wordmark: { alignItems: 'center', marginBottom: 20 },
+  logo: { width: 168, height: 168 },
   errorSlot: { height: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
   title: { fontFamily: displayFont.bold, fontSize: 38, letterSpacing: -1, color: colors.text, lineHeight: 38 },
   titleAccent: { color: colors.orange },
