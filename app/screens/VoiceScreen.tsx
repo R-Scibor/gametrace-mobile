@@ -204,7 +204,7 @@ export default function VoiceScreen() {
 
 const styles = StyleSheet.create({
     content: { flex: 1, paddingHorizontal: 20, paddingBottom: 40 },
-    header: { paddingTop: 16, paddingBottom: 16 },
+    header: { paddingTop: 0, paddingBottom: 16 },
 
     hero: {
         alignItems: 'center', justifyContent: 'center',

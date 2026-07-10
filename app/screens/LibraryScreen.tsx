@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.bg },
 
     header: {
-        paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
+        paddingHorizontal: 20, paddingTop: 0, paddingBottom: 12,
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end',
     },
     eyebrow: {

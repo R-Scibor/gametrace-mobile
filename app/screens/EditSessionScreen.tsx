@@ -232,7 +232,7 @@ export default function EditSessionScreen() {
 
 const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
-    header: { paddingTop: 16, paddingBottom: 20 },
+    header: { paddingTop: 0, paddingBottom: 20 },
     textArea: { height: 80, paddingTop: 12 },
     errorWrap: { marginBottom: 4 },
 

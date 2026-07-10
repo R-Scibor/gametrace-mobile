@@ -319,7 +319,7 @@ export default function GameDetailScreen() {
 
 const styles = StyleSheet.create({
     listContent: { paddingBottom: 40 },
-    headerWrap: { paddingHorizontal: 20, paddingTop: 16 },
+    headerWrap: { paddingHorizontal: 20, paddingTop: 0 },
 
     coverWrap: { alignItems: 'center', paddingTop: 20, paddingBottom: 16 },
     cover: { width: COVER_WIDTH, height: COVER_HEIGHT, borderRadius: 2, backgroundColor: colors.bg3 },

@@ -261,7 +261,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
-    header: { paddingTop: 16, paddingBottom: 20 },
+    header: { paddingTop: 0, paddingBottom: 20 },
 
     sectionHeader: {
         flexDirection: 'row',

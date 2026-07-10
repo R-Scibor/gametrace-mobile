@@ -187,7 +187,7 @@ export default function TrashScreen() {
 }
 
 const styles = StyleSheet.create({
-    header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
+    header: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 12 },
     subtitle: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3, marginTop: 8 },
     errorWrap: { marginHorizontal: 20, marginBottom: 4 },
     listContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 4 },
