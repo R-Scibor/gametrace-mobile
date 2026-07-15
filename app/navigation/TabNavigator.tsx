@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DashboardScreen from '../screens/DashboardScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import AddSessionScreen from '../screens/AddSessionScreen';
@@ -14,6 +15,8 @@ import { TabParamList } from './types';
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       backBehavior="history"
@@ -25,9 +28,9 @@ export default function TabNavigator() {
           backgroundColor: colors.bg2,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 72,
+          height: 72 + insets.bottom,
           paddingTop: 8,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontFamily: bodyFont.regular,
