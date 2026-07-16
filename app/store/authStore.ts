@@ -20,6 +20,7 @@ type AuthState = {
     isAdmin: boolean;
     isAuthenticated: boolean;
     login: (token: string, user: User, isAdmin?: boolean) => void;
+    setIsAdmin: (isAdmin: boolean) => void;
     logout: () => void;
 };
 
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
 
             login: (token, user, isAdmin = false) => set({ token, user, isAdmin, isAuthenticated: true }),
+            setIsAdmin: (isAdmin) => set({ isAdmin }),
             logout: () => set({ token: null, user: null, isAdmin: false, isAuthenticated: false }),
         }),
         {

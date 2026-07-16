@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ImageStyle, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalCoversStore } from '../store/localCoversStore';
+import { resolveCoverUrl } from '../utils/coverUrl';
 import { colors } from '../theme/colors';
 import { displayFont } from '../theme/fonts';
 
@@ -24,7 +25,7 @@ export default function Cover({
     const localUri = useLocalCoversStore((s) =>
         gameId != null ? s.covers[gameId] : undefined
     );
-    const uri = localUri ?? fallbackUri ?? null;
+    const uri = localUri ?? resolveCoverUrl(fallbackUri);
 
     if (uri) {
         return <Image source={{ uri }} style={style} cachePolicy="memory-disk" />;

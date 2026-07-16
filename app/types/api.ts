@@ -226,6 +226,7 @@ export interface ProfileMe {
   username: string;
   timezone: string;
   notifications_enabled: boolean;
+  is_admin: boolean;
 }
 
 export type BotStatus = 'online' | 'offline' | 'unknown';

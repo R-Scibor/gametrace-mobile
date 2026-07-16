@@ -44,7 +44,7 @@ function SettingsRow({ label, subtext, children }: { label: string, subtext?: st
 
 export default function SettingsScreen() {
     const navigation = useNavigation();
-    const { user, logout } = useAuthStore();
+    const { user, isAdmin, logout } = useAuthStore();
     const openReport = useReportStore((s) => s.open);
     const { isDarkMode, toggleDarkMode } = useSettingsStore();
     const { timezone, select: selectTimezone, sync: syncTimezone, error: tzError, clearError: clearTzError } = useTimezone();
@@ -111,6 +111,13 @@ export default function SettingsScreen() {
                 <SettingsRow label="Użytkownik" subtext={user?.discordId ? `ID: ${user.discordId}` : undefined}>
                     <Text style={styles.rowValue}>{user?.username ?? '—'}</Text>
                 </SettingsRow>
+                {isAdmin && (
+                    <SettingsRow label="Uprawnienia">
+                        <View style={styles.adminBadge}>
+                            <Text style={styles.adminBadgeText}>ADMIN</Text>
+                        </View>
+                    </SettingsRow>
+                )}
 
                 {/* Appearance */}
                 <SectionHeaderLocal title="PREFERENCJE" />
@@ -312,6 +319,21 @@ const styles = StyleSheet.create({
         fontFamily: bodyFont.medium,
         fontSize: 14,
         color: colors.text,
+    },
+
+    adminBadge: {
+        backgroundColor: colors.orangeDim,
+        borderWidth: 1,
+        borderColor: colors.orange,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 2,
+    },
+    adminBadgeText: {
+        fontFamily: displayFont.bold,
+        fontSize: 10,
+        letterSpacing: 1,
+        color: colors.orange,
     },
 
     tzButton: {

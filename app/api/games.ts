@@ -41,10 +41,6 @@ export const updateGamePreference = async (
     return response.data;
 };
 
-export const mergeGame = async (gameId: number, targetId: number): Promise<void> => {
-    await client.post(`/games/${gameId}/merge/${targetId}`);
-};
-
 export const resolveGame = async (
     name: string,
 ): Promise<GameResolveResponse | null> => {
