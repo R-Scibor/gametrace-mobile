@@ -1,36 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
 import { getGameStats } from '../api/games';
 import { GameStats } from '../types/api';
+import { useCachedFetch } from './useCachedFetch';
 
 export const useGameStats = (gameId: number | null | undefined) => {
-    const [data, setData] = useState<GameStats | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { data, isLoading, isStale, lastSyncTime, refetch } = useCachedFetch<GameStats>(
+        `game-stats-${gameId}`,
+        () => getGameStats(gameId as number),
+        // Dashboard spotlight passes lastPlayed?.game_id — no fetch, no
+        // "game-stats-undefined" cache key while there is no last-played game.
+        { enabled: gameId != null },
+    );
 
-    useEffect(() => {
-        if (gameId == null) {
-            setData(null);
-            return;
-        }
-        let cancelled = false;
-        setLoading(true);
-        getGameStats(gameId)
-            .then((result) => { if (!cancelled) setData(result); })
-            .catch(() => { if (!cancelled) setData(null); })
-            .finally(() => { if (!cancelled) setLoading(false); });
-        return () => { cancelled = true; };
-    }, [gameId]);
-
-    const refresh = useCallback(async () => {
-        if (gameId == null) return;
-        setLoading(true);
-        try {
-            setData(await getGameStats(gameId));
-        } catch {
-            setData(null);
-        } finally {
-            setLoading(false);
-        }
-    }, [gameId]);
-
-    return { data, loading, refresh };
+    return { data, loading: isLoading, isStale, lastSyncTime, refresh: refetch };
 };

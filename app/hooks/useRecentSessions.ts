@@ -1,52 +1,43 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { listSessions } from '../api/sessions';
 import { Session } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
+import { useCachedFetch } from './useCachedFetch';
 
 const RECENT_LIMIT = 5;
+const EMPTY_SESSIONS: Session[] = [];
 
 export const useRecentSessions = (activeSessionId: number | null | undefined) => {
-    const [data, setData] = useState<Session[]>([]);
-    const [loading, setLoading] = useState(true);
     const stale = useSessionsStore((s) => s.stale);
     const markFresh = useSessionsStore((s) => s.markFresh);
     const prevActiveIdRef = useRef<number | null | undefined>(activeSessionId);
 
-    const fetchData = useCallback(async () => {
-        try {
-            const result = await listSessions({
-                status: ['COMPLETED', 'ERROR'],
-                limit: RECENT_LIMIT,
-            });
-            setData(result);
-            markFresh();
-        } catch {
-            // TODO
-        } finally {
-            setLoading(false);
-        }
-    }, [markFresh]);
+    const { data, isLoading, isStale, lastSyncTime, refetch } = useCachedFetch<Session[]>(
+        'recent-sessions',
+        () => listSessions({ status: ['COMPLETED', 'ERROR'], limit: RECENT_LIMIT }),
+        { initialData: EMPTY_SESSIONS, onSuccess: markFresh },
+    );
 
     // Initial mount + tab focus
     useFocusEffect(
         useCallback(() => {
-            fetchData();
-        }, [fetchData])
+            refetch();
+        }, [refetch])
     );
 
     // Active session id transition (null↔value or value→different)
     useEffect(() => {
         if (prevActiveIdRef.current !== activeSessionId) {
             prevActiveIdRef.current = activeSessionId;
-            fetchData();
+            refetch();
         }
-    }, [activeSessionId, fetchData]);
+    }, [activeSessionId, refetch]);
 
     // Mutation invalidation
     useEffect(() => {
-        if (stale) fetchData();
-    }, [stale, fetchData]);
+        if (stale) refetch();
+    }, [stale, refetch]);
 
-    return { data, loading, refresh: fetchData };
+    return { data: data ?? EMPTY_SESSIONS, loading: isLoading, isStale, lastSyncTime, refresh: refetch };
 };

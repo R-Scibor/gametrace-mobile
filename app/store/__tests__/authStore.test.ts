@@ -1,4 +1,6 @@
 import { useAuthStore } from '../authStore';
+import { waitFor } from '@testing-library/react-native';
+import { setCache, getCache } from '../../utils/cacheStorage';
 
 beforeEach(() =>
   useAuthStore.setState({ token: null, user: null, isAdmin: false, isAuthenticated: false })
@@ -23,4 +25,12 @@ test('logout clears the admin flag', () => {
   useAuthStore.getState().logout();
 
   expect(useAuthStore.getState().isAdmin).toBe(false);
+});
+
+test('logout clears cached snapshots', async () => {
+  await setCache('cache:s:1:dashboard', 1);
+
+  useAuthStore.getState().logout();
+
+  await waitFor(async () => expect(await getCache('cache:s:1:dashboard')).toBeNull());
 });

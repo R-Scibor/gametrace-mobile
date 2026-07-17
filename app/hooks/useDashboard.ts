@@ -1,35 +1,22 @@
-import { useState, useEffect, useRef } from "react";
-import { getDashboardSummary } from "../api/stats";
-import { DashboardSummary } from "../types/api";
+import { useEffect } from 'react';
+import { getDashboardSummary } from '../api/stats';
+import { useCachedFetch } from './useCachedFetch';
 
 const POLL_INTERVAL = 30000; // 30 seconds
 
 export const useDashboard = () => {
-    const [data, setData] = useState<DashboardSummary | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    const fetchData = async () => {
-        try {
-            const result = await getDashboardSummary();
-            setData(result);
-            setError(null);
-        } catch {
-            setError("Failed to fetch stats summary.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data, isLoading, isStale, lastSyncTime, error, refetch } = useCachedFetch(
+        'dashboard',
+        getDashboardSummary,
+        // The 30s poll is this hook's retry loop: absorb one blip (~60s offline
+        // before the banner). Everywhere without self-retry uses the default (1).
+        { staleAfterFailures: 2 },
+    );
 
     useEffect(() => {
-        fetchData();
-        intervalRef.current = setInterval(fetchData, POLL_INTERVAL);
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, []);
-    return { data, loading, error, refresh: fetchData };
+        const id = setInterval(refetch, POLL_INTERVAL);
+        return () => clearInterval(id);
+    }, [refetch]);
+
+    return { data, loading: isLoading, error, isStale, lastSyncTime, refresh: refetch };
 };
