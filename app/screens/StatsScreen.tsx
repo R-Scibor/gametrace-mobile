@@ -32,6 +32,8 @@ import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
+import StaleBanner from '../components/StaleBanner';
+import { useCachedFetch } from '../hooks/useCachedFetch';
 import Cover from '../components/Cover';
 import { InfoLabel } from '../components/InfoButton';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
@@ -45,6 +47,9 @@ const INFO_DECADES = 'Czas gry pogrupowany według dekady premiery gry — z jak
 
 const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
+
+type SummaryPayload = { summary: StatsSummary; heatmap: HeatmapResponse };
+type BreakdownPayload = { genres: GenresResponse; themes: ThemesResponse; releaseYears: ReleaseYearsResponse };
 
 const GRANULARITY_LABEL: Record<TrendGranularity, string> = {
     day: 'DZIENNIE',
@@ -103,96 +108,55 @@ export default function StatsScreen() {
 
     const [days, setDays] = useState<Period>(7);
     const [role, setRole] = useState<CompanyRole>('developer');
-    // One flag per fetch group so a partial failure can't be cleared by another
-    // group's success; the banner shows if any group failed.
-    const [summaryError, setSummaryError] = useState(false);
-    const [trendError, setTrendError] = useState(false);
-    const [breakdownError, setBreakdownError] = useState(false);
-    const [companiesError, setCompaniesError] = useState(false);
-    const loadError = summaryError || trendError || breakdownError || companiesError;
-
-    const [summary, setSummary] = useState<StatsSummary | null>(null);
-    const [heatmap, setHeatmap] = useState<HeatmapResponse | null>(null);
-    const [trend, setTrend] = useState<TrendResponse | null>(null);
-    const [genres, setGenres] = useState<GenresResponse | null>(null);
-    const [themes, setThemes] = useState<ThemesResponse | null>(null);
-    const [companies, setCompanies] = useState<CompaniesResponse | null>(null);
-    const [releaseYears, setReleaseYears] = useState<ReleaseYearsResponse | null>(null);
 
     // Ranked lists are capped at TOP_N; these expand them to the full fetched set.
     const [gamesExpanded, setGamesExpanded] = useState(false);
     const [companiesExpanded, setCompaniesExpanded] = useState(false);
 
-    // Period-bound: summary + heatmap share the user-selected window.
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const [s, h] = await Promise.all([getStatsSummary(days), getHeatmap(days)]);
-                if (cancelled) return;
-                setSummary(s);
-                setHeatmap(h);
-                setSummaryError(false);
-            } catch {
-                if (!cancelled) setSummaryError(true);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [days]);
+    // Period-bound: summary + heatmap share the user-selected window (one cache entry).
+    const summaryQ = useCachedFetch<SummaryPayload>(
+        `stats-summary:days=${days}`,
+        async () => {
+            const [summary, heatmap] = await Promise.all([getStatsSummary(days), getHeatmap(days)]);
+            return { summary, heatmap };
+        },
+    );
 
     // Trend buckets by the selected period (server-derived granularity).
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const t = await getTrend(days);
-                if (cancelled) return;
-                setTrend(t);
-                setTrendError(false);
-            } catch {
-                if (!cancelled) setTrendError(true);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [days]);
+    const trendQ = useCachedFetch<TrendResponse>(`stats-trend:days=${days}`, () => getTrend(days));
 
-    // Period-bound breakdowns: refetch on period change.
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const [g, t, ry] = await Promise.all([
-                    getGenres(days),
-                    getThemes(days),
-                    getReleaseYears(days),
-                ]);
-                if (cancelled) return;
-                setGenres(g);
-                setThemes(t);
-                setReleaseYears(ry);
-                setBreakdownError(false);
-            } catch {
-                if (!cancelled) setBreakdownError(true);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [days]);
+    // Period-bound breakdowns.
+    const breakdownQ = useCachedFetch<BreakdownPayload>(
+        `stats-breakdown:days=${days}`,
+        async () => {
+            const [genres, themes, releaseYears] = await Promise.all([
+                getGenres(days), getThemes(days), getReleaseYears(days),
+            ]);
+            return { genres, themes, releaseYears };
+        },
+    );
 
-    // Companies: refetch on role or period change.
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const c = await getCompanies(role, 10, days);
-                if (cancelled) return;
-                setCompanies(c);
-                setCompaniesError(false);
-            } catch {
-                if (!cancelled) setCompaniesError(true);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [role, days]);
+    // Companies: role and period are both part of the key.
+    const companiesQ = useCachedFetch<CompaniesResponse>(
+        `stats-companies:days=${days}&role=${role}`,
+        () => getCompanies(role, 10, days),
+    );
+
+    const summary = summaryQ.data?.summary ?? null;
+    const heatmap = summaryQ.data?.heatmap ?? null;
+    const trend = trendQ.data;
+    const genres = breakdownQ.data?.genres ?? null;
+    const themes = breakdownQ.data?.themes ?? null;
+    const releaseYears = breakdownQ.data?.releaseYears ?? null;
+    const companies = companiesQ.data;
+
+    const groups = [summaryQ, trendQ, breakdownQ, companiesQ];
+    // One flag per fetch group so a partial failure can't be cleared by another
+    // group's success; the banner shows if any group failed with no snapshot.
+    const loadError = groups.some((g) => g.error != null);
+    const staleSyncTimes = groups
+        .filter((g) => g.isStale && g.lastSyncTime != null)
+        .map((g) => g.lastSyncTime as number);
 
     const trendMax = trend
         ? trend.buckets.reduce((m, b) => Math.max(m, b.total_seconds), 0)
@@ -231,6 +195,9 @@ export default function StatsScreen() {
                     })}
                 </View>
 
+                {staleSyncTimes.length > 0 && (
+                    <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.errorWrap} />
+                )}
                 {loadError && <ErrorBanner message="Nie udało się pobrać statystyk." style={styles.errorWrap} />}
 
                 {/* ── PRZEGLĄD ── */}

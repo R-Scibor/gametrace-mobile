@@ -1,7 +1,10 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import StatsScreen from '../StatsScreen';
+import { useServerStore } from '../../store/serverStore';
+import { useAuthStore } from '../../store/authStore';
 
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 
@@ -24,7 +27,10 @@ import {
   getStatsSummary, getHeatmap, getTrend, getGenres, getThemes, getReleaseYears, getCompanies,
 } from '../../api/stats';
 
-beforeEach(() => {
+beforeEach(async () => {
+  await AsyncStorage.clear();
+  useServerStore.setState({ serverUrl: 'https://s.example/api/v1' });
+  useAuthStore.setState({ token: 't', user: { discordId: '1', username: 'u' }, isAdmin: false, isAuthenticated: true });
   mockNavigate.mockReset();
   (getStatsSummary as jest.Mock).mockResolvedValue({
     days: 7, window_start: null, window_end: '', total_seconds: 0, previous_total_seconds: 0,
@@ -90,4 +96,62 @@ test('tapping the longest-session record card opens that game detail', async () 
   expect(mockNavigate).toHaveBeenCalledWith('GameDetail', {
     gameId: 7, gameName: 'Celeste', coverImageUrl: '/covers/7.png',
   });
+});
+
+function mockAllStatsRejected() {
+  const err = new Error('net');
+  (getStatsSummary as jest.Mock).mockRejectedValue(err);
+  (getHeatmap as jest.Mock).mockRejectedValue(err);
+  (getTrend as jest.Mock).mockRejectedValue(err);
+  (getGenres as jest.Mock).mockRejectedValue(err);
+  (getThemes as jest.Mock).mockRejectedValue(err);
+  (getReleaseYears as jest.Mock).mockRejectedValue(err);
+  (getCompanies as jest.Mock).mockRejectedValue(err);
+}
+
+test('offline revisit shows cached stats with the stale banner', async () => {
+  const first = await renderScreen();
+  await waitFor(() => expect(first.getByText('Adventure')).toBeTruthy());
+  await waitFor(async () => {
+    const keys = await AsyncStorage.getAllKeys();
+    expect(keys.some((k) => k.includes('stats-breakdown'))).toBe(true);
+  });
+  await first.unmount();
+
+  mockAllStatsRejected();
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText(/Dane offline/)).toBeTruthy());
+  expect(getByText('Adventure')).toBeTruthy(); // cached genre bar still renders
+});
+
+test('shows both banners when one group is cached-stale and another never loaded', async () => {
+  (getCompanies as jest.Mock).mockRejectedValue(new Error('net')); // companies never snapshot
+  const first = await renderScreen();
+  await waitFor(() => expect(first.getByText('Adventure')).toBeTruthy());
+  await waitFor(async () => {
+    const keys = await AsyncStorage.getAllKeys();
+    expect(keys.some((k) => k.includes('stats-breakdown'))).toBe(true);
+  });
+  await first.unmount();
+
+  mockAllStatsRejected();
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText(/Dane offline/)).toBeTruthy());
+  expect(getByText('Nie udało się pobrać statystyk.')).toBeTruthy();
+});
+
+test('period change does not show the previous period payload under the new label', async () => {
+  const first = await renderScreen();
+  await waitFor(() => expect(first.getByText('Adventure')).toBeTruthy());
+  await first.unmount();
+
+  mockAllStatsRejected();
+  const { getByText, queryByText } = await renderScreen();
+  await waitFor(() => expect(getByText(/Dane offline/)).toBeTruthy());
+
+  await fireEvent.press(getByText('30 DNI')); // days=30 — a key never cached
+
+  await waitFor(() => expect(queryByText('Adventure')).toBeNull());
 });
