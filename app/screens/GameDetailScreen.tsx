@@ -18,10 +18,13 @@ import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
 import AlertSheet from '../components/AlertSheet';
 import { useLocalCoversStore } from '../store/localCoversStore';
+import { useCachedFetch } from '../hooks/useCachedFetch';
+import StaleBanner from '../components/StaleBanner';
 
 const COVER_WIDTH = 264;
 const COVER_HEIGHT = 362;
 const PAGE_SIZE = 20;
+const EMPTY_SESSIONS: Session[] = [];
 
 const STATUS_LABEL: Record<SessionStatus, string | null> = {
     COMPLETED: null,
@@ -46,9 +49,9 @@ export default function GameDetailScreen() {
     const { gameId, gameName, coverImageUrl, enrichmentStatus, isAccepted: initialAccepted, isIgnored: initialIgnored } = route.params;
 
     const [sessions, setSessions] = useState<Session[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [loadError, setLoadError] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [paginationError, setPaginationError] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
     const [isIgnored, setIsIgnored] = useState(initialIgnored ?? false);
@@ -59,6 +62,23 @@ export default function GameDetailScreen() {
     const invalidateGames = useGamesStore((s) => s.invalidate);
     const sessionsStale = useSessionsStore((s) => s.stale);
     const markSessionsFresh = useSessionsStore((s) => s.markFresh);
+
+    const {
+        data: sessionsPage, isLoading: sessionsLoading, isStale: sessionsIsStale,
+        lastSyncTime: sessionsSyncTime, error: sessionsError, refetch: refetchSessions,
+    } = useCachedFetch<Session[]>(
+        `game-sessions-${gameId}`,
+        () => getGameSessions(gameId, 0, PAGE_SIZE),
+        { initialData: EMPTY_SESSIONS, onSuccess: markSessionsFresh, enabled: gameId != null },
+    );
+
+    // Page 0 lives in the cache hook; mirror it into the visible list. Any
+    // successful page-0 refetch resets appended pages (same as the old reload()).
+    useEffect(() => {
+        const page = sessionsPage ?? EMPTY_SESSIONS;
+        setSessions(page);
+        setHasMore(page.length === PAGE_SIZE);
+    }, [sessionsPage]);
 
     const canAccept = enrichmentStatus === 'NEEDS_REVIEW' && isAccepted !== true;
 
@@ -88,22 +108,22 @@ export default function GameDetailScreen() {
     const handleRestore = () => applyPref({ is_ignored: false }, () => setIsIgnored(false));
 
     const loadMore = async () => {
-        if (loading || !hasMore) return;
-        setLoading(true);
+        if (loadingMore || sessionsLoading || !hasMore) return;
+        setLoadingMore(true);
         try {
             const page = await getGameSessions(gameId, sessions.length, PAGE_SIZE);
             setSessions(prev => [...prev, ...page]);
             if (page.length < PAGE_SIZE) setHasMore(false);
-            setLoadError(false);
+            setPaginationError(false);
         } catch {
-            setLoadError(true);
+            setPaginationError(true);
         }
-        setLoading(false);
+        setLoadingMore(false);
     };
 
-    useEffect(() => { loadMore(); }, []);
-
-    const { data: stats, refresh: refreshStats } = useGameStats(gameId);
+    const {
+        data: stats, isStale: statsIsStale, lastSyncTime: statsSyncTime, refresh: refreshStats,
+    } = useGameStats(gameId);
     const totalSeconds = stats?.total_seconds ?? 0;
     const sessionCount = stats?.session_count ?? 0;
     const avgSeconds = sessionCount ? Math.round(totalSeconds / sessionCount) : 0;
@@ -111,18 +131,8 @@ export default function GameDetailScreen() {
 
     // Reload page 0 of sessions + stats together
     const reload = useCallback(async () => {
-        try {
-            const [page] = await Promise.all([
-                getGameSessions(gameId, 0, PAGE_SIZE),
-                refreshStats(),
-            ]);
-            setSessions(page);
-            setHasMore(page.length === PAGE_SIZE);
-            setLoadError(false);
-        } catch {
-            setLoadError(true);
-        }
-    }, [gameId, refreshStats]);
+        await Promise.all([refetchSessions(), refreshStats()]);
+    }, [refetchSessions, refreshStats]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -130,14 +140,14 @@ export default function GameDetailScreen() {
         setRefreshing(false);
     };
 
-    // Refetch when returning after a session was edited/discarded elsewhere
+    // Refetch when returning after a session was edited/discarded elsewhere.
+    // Fresh is marked on network success — a failed reload retries next focus.
     useFocusEffect(
         useCallback(() => {
             if (sessionsStale) {
-                markSessionsFresh();
                 reload();
             }
-        }, [sessionsStale, markSessionsFresh, reload])
+        }, [sessionsStale, reload])
     );
 
     const localCover = useLocalCoversStore((s) => s.covers[gameId]);
@@ -172,6 +182,11 @@ export default function GameDetailScreen() {
         setGameMenu(false);
         clearLocalCover(gameId);
     };
+
+    const staleSyncTimes = [
+        sessionsIsStale ? sessionsSyncTime : null,
+        statsIsStale ? statsSyncTime : null,
+    ].filter((t): t is number => t != null);
 
     const header = (
         <View style={styles.headerWrap}>
@@ -226,7 +241,12 @@ export default function GameDetailScreen() {
             </View>
 
             <Text style={[common.label, styles.historyLabel]}>HISTORIA</Text>
-            {loadError && <ErrorBanner message="Nie udało się pobrać sesji dla tej gry." style={styles.errorWrap} />}
+            {staleSyncTimes.length > 0 && (
+                <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.errorWrap} />
+            )}
+            {(sessionsError != null || paginationError) && (
+                <ErrorBanner message="Nie udało się pobrać sesji dla tej gry." style={styles.errorWrap} />
+            )}
         </View>
     );
 
