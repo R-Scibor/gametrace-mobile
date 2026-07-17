@@ -54,6 +54,7 @@ export function useCachedFetch<T>(
 
     const runNetwork = useCallback(async (gen: number, key: string) => {
         if (!hasSnapshotRef.current) setIsLoading(true);
+        let success: { value: T } | undefined;
         try {
             const result = await fetchFnRef.current();
             if (gen !== generationRef.current) return;
@@ -65,7 +66,7 @@ export function useCachedFetch<T>(
             setError(null);
             setIsLoading(false);
             void setCache(key, result);
-            optionsRef.current?.onSuccess?.(result);
+            success = { value: result };
         } catch {
             if (gen !== generationRef.current) return;
             failuresRef.current += 1;
@@ -77,7 +78,11 @@ export function useCachedFetch<T>(
                 setError(FETCH_ERROR_MESSAGE);
             }
             setIsLoading(false);
+            return;
         }
+        // Fire onSuccess after the fetch has fully settled, outside the try, so a
+        // throwing callback can't be caught above and miscounted as a fetch failure.
+        optionsRef.current?.onSuccess?.(success.value);
     }, []);
 
     // Key lifecycle: on mount and whenever the assembled key changes (feature,
