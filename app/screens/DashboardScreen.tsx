@@ -12,6 +12,7 @@ import LiveTimer from '../components/LiveTimer';
 import PulsingDot from '../components/PulsingDot';
 import HeroSpotlight from '../components/HeroSpotlight';
 import Cover from '../components/Cover';
+import StaleBanner from '../components/StaleBanner';
 import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -38,8 +39,10 @@ const fmtHeaderDate = () => {
 
 export default function DashboardScreen() {
     const navigation = useNavigation();
-    const { data, loading, error, refresh } = useDashboard();
-    const { data: recents, refresh: refreshRecents } = useRecentSessions(data?.active_session?.id ?? null);
+    const { data, loading, error, isStale, lastSyncTime, refresh } = useDashboard();
+    const {
+        data: recents, isStale: recentsStale, lastSyncTime: recentsLastSync, refresh: refreshRecents,
+    } = useRecentSessions(data?.active_session?.id ?? null);
     const [refreshing, setRefreshing] = useState(false);
     const [listHeight, setListHeight] = useState(0);
 
@@ -47,6 +50,12 @@ export default function DashboardScreen() {
         ? recents.find((s) => s.status === 'COMPLETED') ?? null
         : null;
     const { data: spotlightStats } = useGameStats(lastPlayed?.game_id);
+
+    // Oldest sync time among stale resources — never overclaim freshness.
+    const staleSyncTimes = [
+        isStale ? lastSyncTime : null,
+        recentsStale ? recentsLastSync : null,
+    ].filter((t): t is number => t != null);
 
     const onPullRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -125,6 +134,10 @@ export default function DashboardScreen() {
                     </View>
                     <Text style={styles.headerDate}>{fmtHeaderDate()}</Text>
                 </View>
+
+                {staleSyncTimes.length > 0 && (
+                    <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.staleWrap} />
+                )}
 
                 {/* Active session */}
                 {data?.active_session && (
@@ -310,6 +323,7 @@ const styles = StyleSheet.create({
     errorAction: {
         fontFamily: displayFont.regular, fontSize: 11, color: colors.warn, letterSpacing: 0.5,
     },
+    staleWrap: { marginHorizontal: 20, marginBottom: 12 },
 
     // Stat tiles
     tilesRow: {
