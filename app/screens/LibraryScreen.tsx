@@ -5,15 +5,18 @@ import { useNavigation, useFocusEffect, useRoute, RouteProp, CompositeNavigation
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getGames } from '../api/games';
-import { Game, GameSort, LibraryFilter } from '../types/api';
+import { Game, GameListResponse, GameSort, LibraryFilter } from '../types/api';
 import { TabParamList, RootStackParamList } from '../navigation/types';
 import { useGamesStore } from '../store/gamesStore';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
+import { useCachedFetch } from '../hooks/useCachedFetch';
+import StaleBanner from '../components/StaleBanner';
 
 const PAGE_SIZE = 20;
+const EMPTY_PAGE: GameListResponse = { total: 0, items: [] };
 const SORTS: { key: GameSort; label: string }[] = [
     { key: 'name', label: 'NAZWA' },
     { key: 'playtime', label: 'CZAS GRY' },
@@ -57,14 +60,13 @@ export default function LibraryScreen() {
     const [activeTab, setActiveTab] = useState<Tab>('all');
     const [games, setGames] = useState<Game[]>([]);
     const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [query, setQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
-    const [loadError, setLoadError] = useState(false);
-    const [reloadNonce, setReloadNonce] = useState(0);
     const [sort, setSort] = useState<GameSort>('name');
     const [filter, setFilter] = useState<LibraryFilter | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [paginationError, setPaginationError] = useState(false);
 
     const gamesStale = useGamesStore((s) => s.stale);
     const markGamesFresh = useGamesStore((s) => s.markFresh);
@@ -79,35 +81,34 @@ export default function LibraryScreen() {
         return () => clearTimeout(t);
     }, [query]);
 
-    // Fetch the first page whenever the tab/search changes (skip resets to 0), or when
-    // a preference change elsewhere bumps reloadNonce
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            setLoading(true);
-            try {
-                const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
-                if (cancelled) return;
-                setGames(res.items);
-                setTotal(res.total);
-                setLoadError(false);
-            } catch {
-                if (!cancelled) setLoadError(true);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [inLibrary, debouncedQuery, reloadNonce, sort, filter]);
+    // Every input that changes the response is in the key; user text is escaped
+    // so a q containing "&"/"=" can't collide with another combination.
+    const feature = `library:tab=${activeTab}&sort=${sort}&q=${encodeURIComponent(debouncedQuery)}&filter=${filter ? encodeURIComponent(`${filter.type}:${filter.value}`) : ''}`;
 
-    // Refresh on focus if a game's accept/ignore state changed on another screen
+    const {
+        data: page0Data, isLoading: page0Loading, isStale: page0Stale,
+        lastSyncTime: page0SyncTime, error: page0Error, refetch: refetchPage0,
+    } = useCachedFetch<GameListResponse>(
+        feature,
+        () => getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined }),
+        { initialData: EMPTY_PAGE, onSuccess: markGamesFresh },
+    );
+
+    // Page 0 lives in the cache hook; mirror it into the visible list. Any
+    // successful page-0 refetch resets appended pages (old reloadNonce behavior).
+    useEffect(() => {
+        const page = page0Data ?? EMPTY_PAGE;
+        setGames(page.items);
+        setTotal(page.total);
+    }, [page0Data]);
+
+    // Refresh page 0 on focus if a game's accept/ignore state changed elsewhere.
     useFocusEffect(
         useCallback(() => {
             if (gamesStale) {
-                markGamesFresh();
-                setReloadNonce((n) => n + 1);
+                refetchPage0();
             }
-        }, [gamesStale, markGamesFresh])
+        }, [gamesStale, refetchPage0])
     );
 
     // Drill-down intake: apply an incoming facet once (forcing playtime sort), then
@@ -137,29 +138,22 @@ export default function LibraryScreen() {
     );
 
     const loadMore = async () => {
-        if (loading || !hasMore) return;
-        setLoading(true);
+        if (loadingMore || page0Loading || !hasMore) return;
+        setLoadingMore(true);
         try {
             const res = await getGames({ skip: games.length, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
             setGames(prev => [...prev, ...res.items]);
             setTotal(res.total);
-            setLoadError(false);
+            setPaginationError(false);
         } catch {
-            setLoadError(true);
+            setPaginationError(true);
         }
-        setLoading(false);
+        setLoadingMore(false);
     };
 
     const onRefresh = async () => {
         setRefreshing(true);
-        try {
-            const res = await getGames({ skip: 0, limit: PAGE_SIZE, q: debouncedQuery || undefined, inLibrary, sort, filter: filter ?? undefined });
-            setGames(res.items);
-            setTotal(res.total);
-            setLoadError(false);
-        } catch {
-            setLoadError(true);
-        }
+        await refetchPage0();
         setRefreshing(false);
     };
 
@@ -232,7 +226,12 @@ export default function LibraryScreen() {
                 })}
             </View>
 
-            {loadError && (
+            {page0Stale && page0SyncTime != null && (
+                <View style={styles.errorWrap}>
+                    <StaleBanner lastSyncTime={page0SyncTime} />
+                </View>
+            )}
+            {(page0Error != null || paginationError) && (
                 <View style={styles.errorWrap}>
                     <ErrorBanner />
                 </View>
@@ -246,7 +245,7 @@ export default function LibraryScreen() {
                 contentContainerStyle={styles.gridContent}
                 columnWrapperStyle={styles.gridRow}
                 ListEmptyComponent={
-                    !loading ? (
+                    !page0Loading ? (
                         <Text style={styles.emptyText}>
                             {activeTab === 'other' ? 'Brak gier poza biblioteką' : 'Brak gier do wyświetlenia'}
                         </Text>
