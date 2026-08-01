@@ -1,10 +1,45 @@
 {
   "title": "Settings",
+  "sections": {
+    "account": "ACCOUNT",
+    "preferences": "PREFERENCES",
+    "status": "STATUS",
+    "data": "DATA",
+    "connection": "CONNECTION",
+    "feedback": "FEEDBACK"
+  },
+  "account": {
+    "user": "User",
+    "userId": "ID: {{id}}",
+    "permissions": "Permissions",
+    "admin": "ADMIN"
+  },
   "preferences": {
     "language": "Language",
     "timezone": "Timezone",
     "darkMode": "Dark mode",
     "darkModeSub": "App interface"
+  },
+  "status": {
+    "bot": "Bot",
+    "botUptime": "Bot active since"
+  },
+  "data": {
+    "trash": "Trash",
+    "trashSub": "Rejected sessions"
+  },
+  "connection": {
+    "server": "Server"
+  },
+  "feedback": {
+    "send": "Send feedback",
+    "sendSub": "Report a bug or idea"
+  },
+  "logout": "LOG OUT",
+  "logoutPending": "LOGGING OUT...",
+  "serverModal": {
+    "title": "Change server",
+    "hint": "Changing server will log you out."
   },
   "errors": {
     "languageSave": "Couldn't save language. Try again.",

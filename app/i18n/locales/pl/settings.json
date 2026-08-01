@@ -1,10 +1,45 @@
 {
   "title": "Ustawienia",
+  "sections": {
+    "account": "KONTO",
+    "preferences": "PREFERENCJE",
+    "status": "STATUS",
+    "data": "DANE",
+    "connection": "POŁĄCZENIE",
+    "feedback": "OPINIE"
+  },
+  "account": {
+    "user": "Użytkownik",
+    "userId": "ID: {{id}}",
+    "permissions": "Uprawnienia",
+    "admin": "ADMIN"
+  },
   "preferences": {
     "language": "Język",
     "timezone": "Strefa czasowa",
     "darkMode": "Tryb ciemny",
     "darkModeSub": "Interfejs aplikacji"
+  },
+  "status": {
+    "bot": "Bot",
+    "botUptime": "Bot aktywny od"
+  },
+  "data": {
+    "trash": "Kosz",
+    "trashSub": "Odrzucone sesje"
+  },
+  "connection": {
+    "server": "Serwer"
+  },
+  "feedback": {
+    "send": "Wyślij opinię",
+    "sendSub": "Zgłoś błąd lub pomysł"
+  },
+  "logout": "WYLOGUJ SIĘ",
+  "logoutPending": "WYLOGOWYWANIE...",
+  "serverModal": {
+    "title": "Zmień serwer",
+    "hint": "Po zmianie serwera zostaniesz wylogowany."
   },
   "errors": {
     "languageSave": "Nie udało się zapisać języka. Spróbuj ponownie.",

@@ -49,6 +49,7 @@ export default function SettingsScreen() {
     const navigation = useNavigation();
     const { t, i18n } = useTranslation('settings');
     const { t: tc } = useTranslation('common');
+    const { t: ts } = useTranslation('server');
     const { user, isAdmin, logout } = useAuthStore();
     const openReport = useReportStore((s) => s.open);
     const { isDarkMode, toggleDarkMode } = useSettingsStore();
@@ -76,9 +77,9 @@ export default function SettingsScreen() {
         } else if (result.status === 'insecure') {
             setInsecureUrl(result.baseUrl);
         } else if (result.status === 'invalid') {
-            setServerError('Podaj adres serwera (host:port)');
+            setServerError(ts('errors.invalid'));
         } else {
-            setServerError('Nie można połączyć się z serwerem');
+            setServerError(ts('errors.unreachable'));
         }
     };
 
@@ -115,24 +116,27 @@ export default function SettingsScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={common.eyebrow}>◈ GAMETRACE</Text>
-                    <Text style={common.title}>Ustawienia</Text>
+                    <Text style={common.title}>{t('title')}</Text>
                 </View>
 
                 {/* Account */}
-                <SectionHeaderLocal title="KONTO" />
-                <SettingsRow label="Użytkownik" subtext={user?.discordId ? `ID: ${user.discordId}` : undefined}>
+                <SectionHeaderLocal title={t('sections.account')} />
+                <SettingsRow
+                    label={t('account.user')}
+                    subtext={user?.discordId ? t('account.userId', { id: user.discordId }) : undefined}
+                >
                     <Text style={styles.rowValue}>{user?.username ?? '—'}</Text>
                 </SettingsRow>
                 {isAdmin && (
-                    <SettingsRow label="Uprawnienia">
+                    <SettingsRow label={t('account.permissions')}>
                         <View style={styles.adminBadge}>
-                            <Text style={styles.adminBadgeText}>ADMIN</Text>
+                            <Text style={styles.adminBadgeText}>{t('account.admin')}</Text>
                         </View>
                     </SettingsRow>
                 )}
 
                 {/* Appearance */}
-                <SectionHeaderLocal title="PREFERENCJE" />
+                <SectionHeaderLocal title={t('sections.preferences')} />
                 <SettingsRow label={t('preferences.darkMode')} subtext={t('preferences.darkModeSub')}>
                     <Switch
                         value={isDarkMode}
@@ -176,48 +180,48 @@ export default function SettingsScreen() {
                 </SettingsRow>
 
                 {/* Status */}
-                <SectionHeaderLocal title="STATUS" />
-                <SettingsRow label="Bot">
+                <SectionHeaderLocal title={t('sections.status')} />
+                <SettingsRow label={t('status.bot')}>
                     <Text style={[styles.statusValue, health && botColor(health.bot.status)]}>
                         {health ? health.bot.status.toUpperCase() : '—'}
                     </Text>
                 </SettingsRow>
                 {health?.bot.uptime_seconds != null && (
-                    <SettingsRow label="Bot aktywny od">
+                    <SettingsRow label={t('status.botUptime')}>
                         <Text style={styles.statusValue}>{formatUptime(health.bot.uptime_seconds)}</Text>
                     </SettingsRow>
                 )}
 
                 {/* Data */}
-                <SectionHeaderLocal title="DANE" />
+                <SectionHeaderLocal title={t('sections.data')} />
                 <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => navigation.navigate('Trash')}>
                     <View style={styles.rowInfo}>
-                        <Text style={styles.rowLabel}>Kosz</Text>
-                        <Text style={styles.rowSubtext}>Odrzucone sesje</Text>
+                        <Text style={styles.rowLabel}>{t('data.trash')}</Text>
+                        <Text style={styles.rowSubtext}>{t('data.trashSub')}</Text>
                     </View>
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
 
                 {/* Connection */}
-                <SectionHeaderLocal title="POŁĄCZENIE" />
+                <SectionHeaderLocal title={t('sections.connection')} />
                 <TouchableOpacity
                     style={styles.row}
                     activeOpacity={0.7}
                     onPress={() => { setServerInput(''); setServerError(null); setServerModalOpen(true); }}
                 >
                     <View style={styles.rowInfo}>
-                        <Text style={styles.rowLabel}>Serwer</Text>
+                        <Text style={styles.rowLabel}>{t('connection.server')}</Text>
                         <Text style={styles.rowSubtext} numberOfLines={1}>{serverUrl ?? '—'}</Text>
                     </View>
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
 
                 {/* Feedback */}
-                <SectionHeaderLocal title="OPINIE" />
+                <SectionHeaderLocal title={t('sections.feedback')} />
                 <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={openReport}>
                     <View style={styles.rowInfo}>
-                        <Text style={styles.rowLabel}>Wyślij opinię</Text>
-                        <Text style={styles.rowSubtext}>Zgłoś błąd lub pomysł</Text>
+                        <Text style={styles.rowLabel}>{t('feedback.send')}</Text>
+                        <Text style={styles.rowSubtext}>{t('feedback.sendSub')}</Text>
                     </View>
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
@@ -230,7 +234,7 @@ export default function SettingsScreen() {
                     activeOpacity={0.7}
                 >
                     <Text style={common.secondaryButtonText}>
-                        {loading ? 'WYLOGOWYWANIE...' : 'WYLOGUJ SIĘ'}
+                        {loading ? t('logoutPending') : t('logout')}
                     </Text>
                 </TouchableOpacity>
 
@@ -264,15 +268,15 @@ export default function SettingsScreen() {
             <Modal visible={serverModalOpen} transparent animationType="fade" onRequestClose={() => setServerModalOpen(false)}>
                 <View style={styles.modalBackdrop}>
                     <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Zmień serwer</Text>
-                        <Text style={styles.modalHint}>Po zmianie serwera zostaniesz wylogowany.</Text>
+                        <Text style={styles.modalTitle}>{t('serverModal.title')}</Text>
+                        <Text style={styles.modalHint}>{t('serverModal.hint')}</Text>
                         <View style={styles.inputWrapper}>
                             <View style={styles.orangeBar} />
                             <TextInput
                                 style={styles.modalInput}
                                 value={serverInput}
                                 onChangeText={setServerInput}
-                                placeholder="host:port"
+                                placeholder={ts('addressPlaceholder')}
                                 placeholderTextColor={colors.text3}
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -282,10 +286,12 @@ export default function SettingsScreen() {
                         {serverError ? <Text style={styles.modalError}>{serverError}</Text> : null}
                         <View style={styles.modalActions}>
                             <TouchableOpacity onPress={() => setServerModalOpen(false)}>
-                                <Text style={styles.modalCancel}>ANULUJ</Text>
+                                <Text style={styles.modalCancel}>{tc('actions.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={submitServerChange} disabled={changeLoading}>
-                                <Text style={styles.modalConfirm}>{changeLoading ? 'ŁĄCZENIE...' : 'POŁĄCZ'}</Text>
+                                <Text style={styles.modalConfirm}>
+                                    {changeLoading ? ts('connecting') : ts('connect')}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -294,9 +300,9 @@ export default function SettingsScreen() {
 
             <ConfirmSheet
                 visible={insecureUrl != null}
-                title="Połączenie nieszyfrowane"
-                message="Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?"
-                confirmLabel="Połącz mimo to"
+                title={ts('insecure.title')}
+                message={ts('insecure.message')}
+                confirmLabel={ts('insecure.confirm')}
                 destructive
                 onConfirm={() => { if (insecureUrl) confirmInsecure(insecureUrl); setInsecureUrl(null); setServerModalOpen(false); }}
                 onCancel={() => setInsecureUrl(null)}
