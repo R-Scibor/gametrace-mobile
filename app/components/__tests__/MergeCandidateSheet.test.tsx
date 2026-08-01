@@ -9,7 +9,7 @@ jest.mock('../../utils/reportContext', () => ({
   }),
 }));
 
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import MergeCandidateSheet from '../MergeCandidateSheet';
 import { getGames } from '../../api/games';
 import { submitReport } from '../../api/reports';
@@ -163,4 +163,60 @@ test('on submit failure keeps UI open and shows inline send error', async () => 
   expect(await findByText('Nie udało się wysłać. Spróbuj ponownie.')).toBeTruthy();
   expect(defaultOnClose).not.toHaveBeenCalled();
   expect(useAlertStore.getState().alert).toBeNull();
+});
+
+test('clearing search ignores stale in-flight search results', async () => {
+  jest.useFakeTimers();
+  try {
+    const SEARCH_ONLY = makeGame(99, 'Search Only Hit');
+    let resolveSearch: ((value: { total: number; items: Game[] }) => void) | null = null;
+    let searchCalls = 0;
+
+    (getGames as jest.Mock).mockImplementation((opts: { inLibrary?: boolean; q?: string } = {}) => {
+      if (opts.q) {
+        searchCalls += 1;
+        // Only block the first of the dual fetch so Promise.all stays pending
+        if (searchCalls === 1) {
+          return new Promise((resolve) => {
+            resolveSearch = resolve;
+          });
+        }
+        return Promise.resolve({ total: 1, items: [SEARCH_ONLY] });
+      }
+      if (opts.inLibrary === false) {
+        return Promise.resolve({ total: 1, items: [TARGET] });
+      }
+      return Promise.resolve({ total: 2, items: [makeGame(1, 'Elden Ring'), OTHER] });
+    });
+
+    const { findByText, getByPlaceholderText, queryByText } = await renderSheet();
+    expect(await findByText('Dark Souls')).toBeTruthy();
+
+    await fireEvent.changeText(getByPlaceholderText('Szukaj gry...'), 'eld');
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(300);
+    });
+
+    await waitFor(() => expect(searchCalls).toBeGreaterThanOrEqual(1));
+
+    // Clear query before in-flight search resolves
+    await fireEvent.changeText(getByPlaceholderText('Szukaj gry...'), '');
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(300);
+    });
+
+    expect(await findByText('Dark Souls')).toBeTruthy();
+    expect(queryByText('Search Only Hit')).toBeNull();
+
+    // Stale dual-fetch completes; must not replace unscoped list
+    await act(async () => {
+      resolveSearch?.({ total: 1, items: [SEARCH_ONLY] });
+    });
+    await waitFor(() => {
+      expect(queryByText('Search Only Hit')).toBeNull();
+      expect(queryByText('Dark Souls')).toBeTruthy();
+    });
+  } finally {
+    jest.useRealTimers();
+  }
 });

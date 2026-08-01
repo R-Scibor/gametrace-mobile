@@ -129,6 +129,8 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
     const runSearch = useCallback(
         async (trimmed: string) => {
             if (!trimmed) {
+                // Invalidate in-flight dual fetch so stale q-results cannot overwrite unscoped
+                requestIdRef.current += 1;
                 setGames(unscopedRef.current);
                 setSearching(false);
                 setLoadError(null);
