@@ -7,3 +7,7 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
+
+jest.mock('expo-localization', () => ({
+  getLocales: () => [{ languageCode: 'pl', languageTag: 'pl-PL' }],
+}));

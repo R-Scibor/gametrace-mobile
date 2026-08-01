@@ -1,0 +1,24 @@
+{
+  "language": { "label": "Language", "pl": "Polski", "en": "English" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "library": "Library",
+    "addSession": "Add",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "session": {
+    "expiredTitle": "Session expired",
+    "expiredBody": "Log in again."
+  },
+  "errors": {
+    "fetch": "Couldn't load data. Check your connection.",
+    "connectionLabel": "CONNECTION ERROR",
+    "connectionMessage": "Couldn't load data. Check your connection."
+  },
+  "actions": {
+    "confirm": "CONFIRM",
+    "cancel": "CANCEL",
+    "loading": "LOADING..."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "language": { "label": "Język", "pl": "Polski", "en": "English" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "library": "Biblioteka",
+    "addSession": "Dodaj",
+    "stats": "Statystyki",
+    "settings": "Ustawienia"
+  },
+  "session": {
+    "expiredTitle": "Sesja wygasła",
+    "expiredBody": "Zaloguj się ponownie."
+  },
+  "errors": {
+    "fetch": "Nie udało się pobrać danych. Sprawdź połączenie.",
+    "connectionLabel": "BŁĄD POŁĄCZENIA",
+    "connectionMessage": "Nie udało się pobrać danych. Sprawdź połączenie."
+  },
+  "actions": {
+    "confirm": "POTWIERDŹ",
+    "cancel": "ANULUJ",
+    "loading": "ŁADOWANIE..."
+  }
+}
