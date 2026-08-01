@@ -7,12 +7,16 @@ import enCommon from './locales/en/common.json';
 import plCommon from './locales/pl/common.json';
 import enSettings from './locales/en/settings.json';
 import plSettings from './locales/pl/settings.json';
+import enAuth from './locales/en/auth.json';
+import plAuth from './locales/pl/auth.json';
+import enServer from './locales/en/server.json';
+import plServer from './locales/pl/server.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
 const resources = {
-  en: { common: enCommon, settings: enSettings },
-  pl: { common: plCommon, settings: plSettings },
+  en: { common: enCommon, settings: enSettings, auth: enAuth, server: enServer },
+  pl: { common: plCommon, settings: plSettings, auth: plAuth, server: plServer },
 };
 
 // Init with temporary en; hydrateLanguage sets real lng before UI mounts.

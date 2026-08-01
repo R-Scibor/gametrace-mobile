@@ -1,0 +1,24 @@
+{
+  "tagline": "— POŁĄCZ Z SERWEREM —",
+  "addressLabel": "ADRES SERWERA",
+  "addressPlaceholder": "host:port",
+  "connecting": "ŁĄCZENIE...",
+  "connect": "POŁĄCZ",
+  "helper": "Wpisz adres swojego serwera GameTrace",
+  "helperExample": "np. home.example.com:8010",
+  "errors": {
+    "invalid": "Podaj adres serwera (host:port)",
+    "unreachable": "Nie można połączyć się z serwerem"
+  },
+  "insecure": {
+    "title": "Połączenie nieszyfrowane",
+    "message": "Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?",
+    "confirm": "Połącz mimo to"
+  },
+  "join": {
+    "title": "Dodaj bota do serwera",
+    "message": "Aby GameTrace śledził Twoją rozgrywkę, dodaj bota do swojego serwera Discord.",
+    "confirm": "Dodaj bota",
+    "cancel": "Później"
+  }
+}

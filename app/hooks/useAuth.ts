@@ -6,41 +6,42 @@ import { useSettingsStore } from '../store/settingsStore';
 import { getDeviceTimezone } from '../utils/timezones';
 import { useDiscordOAuth } from './useDiscordOAuth';
 import { useServerJoinStore } from '../store/serverJoinStore';
+import i18n from '../i18n';
 
-// Turn a link-code redemption failure into a Polish message keyed off the
+// Turn a link-code redemption failure into a message keyed off the
 // backend's status codes (see docs/api.md → Auth → POST /auth/link).
 const linkErrorMessage = (e: any): string => {
   const status = e?.response?.status;
   switch (status) {
     case 401:
-      return 'Nieprawidłowy lub wygasły kod. Uruchom /login na Discordzie ponownie.';
+      return i18n.t('auth:errors.link401');
     case 422:
-      return 'Kod musi mieć 6 cyfr.';
+      return i18n.t('auth:errors.link422');
     case 429: {
       const retryAfter = e?.response?.headers?.['retry-after'];
       return retryAfter
-        ? `Zbyt wiele prób. Spróbuj ponownie za ${retryAfter} s.`
-        : 'Zbyt wiele prób. Spróbuj ponownie później.';
+        ? i18n.t('auth:errors.link429Retry', { seconds: retryAfter })
+        : i18n.t('auth:errors.link429');
     }
     case 503:
-      return 'Logowanie kodem jest chwilowo niedostępne. Spróbuj później.';
+      return i18n.t('auth:errors.link503');
     default:
-      return e?.response ? 'Nie udało się zalogować. Spróbuj ponownie.' : 'Błąd połączenia z serwerem';
+      return e?.response ? i18n.t('auth:errors.loginFailed') : i18n.t('auth:errors.connection');
   }
 };
 
-// Map a Discord OAuth failure to Polish copy (see docs/api.md → POST /auth/discord).
+// Map a Discord OAuth failure to copy (see docs/api.md → POST /auth/discord).
 const discordErrorMessage = (e: any): string => {
   const status = e?.response?.status;
   switch (status) {
     case 400:
-      return 'Nie można zalogować przez Discord (błąd przekierowania).';
+      return i18n.t('auth:errors.discord400');
     case 401:
-      return 'Logowanie przez Discord nie powiodło się. Spróbuj ponownie.';
+      return i18n.t('auth:errors.discord401');
     case 502:
-      return 'Discord jest chwilowo niedostępny. Spróbuj później.';
+      return i18n.t('auth:errors.discord502');
     default:
-      return e?.response ? 'Nie udało się zalogować. Spróbuj ponownie.' : 'Błąd połączenia z serwerem';
+      return e?.response ? i18n.t('auth:errors.loginFailed') : i18n.t('auth:errors.connection');
   }
 };
 
@@ -65,7 +66,7 @@ export const useAuth = () => {
       seedSession(data);
       return true;
     } catch (e: any) {
-      const message = e.response?.data?.detail ?? 'Błąd połączenia z serwerem';
+      const message = e.response?.data?.detail ?? i18n.t('auth:errors.connection');
       setError(message);
       return false;
     } finally {
@@ -97,7 +98,7 @@ export const useAuth = () => {
       const result = await promptDiscord();
       if (result.type === 'cancel') return false;
       if (result.type === 'error') {
-        setError('Logowanie przez Discord nie powiodło się. Spróbuj ponownie.');
+        setError(i18n.t('auth:errors.discord401'));
         return false;
       }
       const data = await discordLogin(result.code, result.codeVerifier, result.redirectUri);

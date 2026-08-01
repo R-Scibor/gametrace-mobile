@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -11,6 +12,7 @@ import { DEV_USERNAME_LOGIN, DISCORD_OAUTH_LOGIN, DISCORD_CLIENT_ID, APP_VERSION
 type Mode = 'link' | 'username';
 
 export default function AuthScreen() {
+  const { t } = useTranslation('auth');
   const [mode, setMode] = useState<Mode>('link');
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
@@ -40,7 +42,7 @@ export default function AuthScreen() {
           <Text style={styles.title}>
             Game<Text style={styles.titleAccent}>Trace</Text>
           </Text>
-          <Text style={styles.tagline}>— SIGN IN —</Text>
+          <Text style={styles.tagline}>{t('tagline')}</Text>
           <View style={styles.rule} />
         </View>
 
@@ -55,14 +57,14 @@ export default function AuthScreen() {
         <View style={styles.form}>
           {mode === 'link' ? (
             <>
-              <Text style={styles.label}>KOD LOGOWANIA</Text>
+              <Text style={styles.label}>{t('linkCodeLabel')}</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.orangeBar} />
                 <TextInput
                   style={styles.input}
                   value={formatLinkCode(code)}
-                  onChangeText={(t) => setCode(normalizeLinkCode(t))}
-                  placeholder="231 996"
+                  onChangeText={(text) => setCode(normalizeLinkCode(text))}
+                  placeholder={t('linkCodePlaceholder')}
                   placeholderTextColor={colors.text3}
                   keyboardType="number-pad"
                   maxLength={7}
@@ -72,14 +74,14 @@ export default function AuthScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.label}>NAZWA UŻYTKOWNIKA DISCORD</Text>
+              <Text style={styles.label}>{t('usernameLabel')}</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.orangeBar} />
                 <TextInput
                   style={styles.input}
                   value={username}
                   onChangeText={setUsername}
-                  placeholder="Your Discord username"
+                  placeholder={t('usernamePlaceholder')}
                   placeholderTextColor={colors.text3}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -95,7 +97,7 @@ export default function AuthScreen() {
             disabled={!canSubmit}
           >
             <Text style={[styles.buttonText, !canSubmit && styles.buttonTextDisabled]}>
-              {loading ? 'ŁĄCZENIE...' : 'ZALOGUJ SIĘ'}
+              {loading ? t('connecting') : t('signIn')}
             </Text>
           </TouchableOpacity>
 
@@ -103,7 +105,7 @@ export default function AuthScreen() {
             <>
               <View style={styles.orDivider}>
                 <View style={styles.orLine} />
-                <Text style={styles.orText}>LUB</Text>
+                <Text style={styles.orText}>{t('or')}</Text>
                 <View style={styles.orLine} />
               </View>
               <TouchableOpacity
@@ -111,7 +113,7 @@ export default function AuthScreen() {
                 onPress={handleDiscordLogin}
                 disabled={!discordReady || loading}
               >
-                <Text style={styles.discordButtonText}>ZALOGUJ PRZEZ DISCORD</Text>
+                <Text style={styles.discordButtonText}>{t('signInDiscord')}</Text>
               </TouchableOpacity>
             </>
           ) : null}
@@ -121,12 +123,14 @@ export default function AuthScreen() {
           {mode === 'link' ? (
             <>
               <Text style={styles.helperLine}>
-                Uruchom <Text style={styles.helperAccent}>/login</Text> na Discordzie
+                {t('helperLinkPrefix')}{' '}
+                <Text style={styles.helperAccent}>/login</Text>{' '}
+                {t('helperLinkSuffix')}
               </Text>
-              <Text style={styles.helperLine}>i wpisz 6-cyfrowy kod (ważny 5 minut)</Text>
+              <Text style={styles.helperLine}>{t('helperLinkLine2')}</Text>
             </>
           ) : (
-            <Text style={styles.helperLine}>Logowanie nazwą — tylko do testów</Text>
+            <Text style={styles.helperLine}>{t('helperUsername')}</Text>
           )}
 
           {DEV_USERNAME_LOGIN && (
@@ -135,7 +139,7 @@ export default function AuthScreen() {
               onPress={() => setMode(mode === 'link' ? 'username' : 'link')}
             >
               <Text style={styles.switcherText}>
-                {mode === 'link' ? 'Zaloguj się nazwą (dev)' : '← Wróć do kodu'}
+                {mode === 'link' ? t('switchToUsername') : t('switchToCode')}
               </Text>
             </TouchableOpacity>
           )}
@@ -145,7 +149,7 @@ export default function AuthScreen() {
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
           <View style={styles.footerDot} />
-          <Text style={styles.footerText}>LINK STABLE</Text>
+          <Text style={styles.footerText}>{t('footerLinkStable')}</Text>
         </View>
         <Text style={styles.footerText}>v{APP_VERSION}</Text>
       </View>

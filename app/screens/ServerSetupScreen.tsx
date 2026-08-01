@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { resolveServer } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
 import ConfirmSheet from '../components/ConfirmSheet';
@@ -9,6 +10,7 @@ import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
 export default function ServerSetupScreen() {
+  const { t } = useTranslation('server');
   const [host, setHost] = useState('gametrace.rscibor.dev');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,9 +30,9 @@ export default function ServerSetupScreen() {
       } else if (result.status === 'insecure') {
         setInsecureUrl(result.baseUrl);
       } else if (result.status === 'invalid') {
-        setError('Podaj adres serwera (host:port)');
+        setError(t('errors.invalid'));
       } else {
-        setError('Nie można połączyć się z serwerem');
+        setError(t('errors.unreachable'));
       }
     } finally {
       setLoading(false);
@@ -49,7 +51,7 @@ export default function ServerSetupScreen() {
           <Text style={styles.title}>
             Game<Text style={styles.titleAccent}>Trace</Text>
           </Text>
-          <Text style={styles.tagline}>— POŁĄCZ Z SERWEREM —</Text>
+          <Text style={styles.tagline}>{t('tagline')}</Text>
           <View style={styles.rule} />
         </View>
 
@@ -60,14 +62,14 @@ export default function ServerSetupScreen() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>ADRES SERWERA</Text>
+          <Text style={styles.label}>{t('addressLabel')}</Text>
           <View style={styles.inputWrapper}>
             <View style={styles.orangeBar} />
             <TextInput
               style={styles.input}
               value={host}
               onChangeText={setHost}
-              placeholder="host:port"
+              placeholder={t('addressPlaceholder')}
               placeholderTextColor={colors.text3}
               autoCapitalize="none"
               autoCorrect={false}
@@ -82,24 +84,24 @@ export default function ServerSetupScreen() {
             disabled={!canSubmit}
           >
             <Text style={[styles.buttonText, !canSubmit && styles.buttonTextDisabled]}>
-              {loading ? 'ŁĄCZENIE...' : 'POŁĄCZ'}
+              {loading ? t('connecting') : t('connect')}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.helper}>
-          <Text style={styles.helperLine}>Wpisz adres swojego serwera GameTrace</Text>
+          <Text style={styles.helperLine}>{t('helper')}</Text>
           <Text style={[styles.helperLine, styles.helperAccent]}>
-            np. home.example.com:8010
+            {t('helperExample')}
           </Text>
         </View>
       </View>
 
       <ConfirmSheet
         visible={insecureUrl != null}
-        title="Połączenie nieszyfrowane"
-        message="Ten serwer jest dostępny tylko przez nieszyfrowane HTTP. Połączyć mimo to?"
-        confirmLabel="Połącz mimo to"
+        title={t('insecure.title')}
+        message={t('insecure.message')}
+        confirmLabel={t('insecure.confirm')}
         destructive
         onConfirm={() => { if (insecureUrl) setServerUrl(insecureUrl); setInsecureUrl(null); }}
         onCancel={() => setInsecureUrl(null)}

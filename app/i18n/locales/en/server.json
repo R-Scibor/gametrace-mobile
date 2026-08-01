@@ -1,0 +1,24 @@
+{
+  "tagline": "— CONNECT TO SERVER —",
+  "addressLabel": "SERVER ADDRESS",
+  "addressPlaceholder": "host:port",
+  "connecting": "CONNECTING...",
+  "connect": "CONNECT",
+  "helper": "Enter your GameTrace server address",
+  "helperExample": "e.g. home.example.com:8010",
+  "errors": {
+    "invalid": "Enter a server address (host:port)",
+    "unreachable": "Couldn't connect to the server"
+  },
+  "insecure": {
+    "title": "Unencrypted connection",
+    "message": "This server is only available over unencrypted HTTP. Connect anyway?",
+    "confirm": "Connect anyway"
+  },
+  "join": {
+    "title": "Add bot to server",
+    "message": "For GameTrace to track your play, add the bot to your Discord server.",
+    "confirm": "Add bot",
+    "cancel": "Later"
+  }
+}
