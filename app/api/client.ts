@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useServerStore } from '../store/serverStore';
 import { useAlertStore } from '../store/alertStore';
+import i18n from '../i18n';
 
 const client = axios.create({
     timeout: 5000,
@@ -27,7 +28,10 @@ client.interceptors.response.use(
             const wasAuthenticated = useAuthStore.getState().isAuthenticated;
             useAuthStore.getState().logout();
             if (wasAuthenticated) {
-                useAlertStore.getState().showAlert('Sesja wygasła', 'Zaloguj się ponownie.');
+                useAlertStore.getState().showAlert(
+                    i18n.t('common:session.expiredTitle'),
+                    i18n.t('common:session.expiredBody'),
+                );
             }
         }
         return Promise.reject(error);

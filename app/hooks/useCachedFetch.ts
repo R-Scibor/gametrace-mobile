@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCache, setCache } from '../utils/cacheStorage';
 import { useServerStore } from '../store/serverStore';
 import { useAuthStore } from '../store/authStore';
+import i18n from '../i18n';
 
-// Same copy as ErrorBanner's default message — screens may render it directly.
-export const FETCH_ERROR_MESSAGE = 'Nie udało się pobrać danych. Sprawdź połączenie.';
+// Same catalog key as ErrorBanner's default message — screens may render it directly.
+export function getFetchErrorMessage() {
+    return i18n.t('common:errors.fetch');
+}
 
 type Options<T> = {
     /** Consecutive failures needed to flip isStale. Default 1; raise only at call
@@ -75,7 +78,7 @@ export function useCachedFetch<T>(
                     setIsStale(true);
                 }
             } else {
-                setError(FETCH_ERROR_MESSAGE);
+                setError(getFetchErrorMessage());
             }
             setIsLoading(false);
             return;

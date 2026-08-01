@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCachedFetch, FETCH_ERROR_MESSAGE } from '../useCachedFetch';
+import { useCachedFetch, getFetchErrorMessage } from '../useCachedFetch';
 import { getCache, setCache } from '../../utils/cacheStorage';
 import { useServerStore } from '../../store/serverStore';
 import { useAuthStore } from '../../store/authStore';
@@ -90,7 +90,7 @@ test('failure with no snapshot sets error immediately', async () => {
     const { result } = await renderHook(() =>
         useCachedFetch<string>('feat', () => Promise.reject(new Error('net'))));
 
-    await waitFor(() => expect(result.current.error).toBe(FETCH_ERROR_MESSAGE));
+    await waitFor(() => expect(result.current.error).toBe(getFetchErrorMessage()));
     expect(result.current.isStale).toBe(false);
     expect(result.current.data).toBeNull();
     expect(result.current.isLoading).toBe(false);
@@ -116,7 +116,7 @@ test('initialData alone is not a snapshot and does not suppress error', async ()
     const { result } = await renderHook(() =>
         useCachedFetch<string[]>('feat', () => Promise.reject(new Error('net')), { initialData: [] }));
 
-    await waitFor(() => expect(result.current.error).toBe(FETCH_ERROR_MESSAGE));
+    await waitFor(() => expect(result.current.error).toBe(getFetchErrorMessage()));
     expect(result.current.data).toEqual([]);
     expect(result.current.lastSyncTime).toBeNull();
 });

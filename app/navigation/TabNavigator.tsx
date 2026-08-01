@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DashboardScreen from '../screens/DashboardScreen';
 import LibraryScreen from '../screens/LibraryScreen';
@@ -15,6 +16,7 @@ import { TabParamList } from './types';
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
+  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
 
   return (
@@ -44,7 +46,7 @@ export default function TabNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarLabel: 'Dashboard',
+          tabBarLabel: t('nav.dashboard'),
           tabBarIcon: ({ color }) => <DashboardIcon color={color} />,
         }}
       />
@@ -52,7 +54,7 @@ export default function TabNavigator() {
         name="Library"
         component={LibraryScreen}
         options={{
-          tabBarLabel: 'Biblioteka',
+          tabBarLabel: t('nav.library'),
           tabBarIcon: ({ color }) => <LibraryIcon color={color} />,
         }}
       />
@@ -60,7 +62,7 @@ export default function TabNavigator() {
         name="AddSession"
         component={AddSessionScreen}
         options={{
-          tabBarLabel: 'Dodaj',
+          tabBarLabel: t('nav.addSession'),
           tabBarIcon: ({ color }) => <AddIcon color={color} />,
         }}
       />
@@ -68,7 +70,7 @@ export default function TabNavigator() {
         name="Stats"
         component={StatsScreen}
         options={{
-          tabBarLabel: 'Statystyki',
+          tabBarLabel: t('nav.stats'),
           tabBarIcon: ({ color }) => <StatsIcon color={color} />,
         }}
       />
@@ -76,7 +78,7 @@ export default function TabNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarLabel: 'Ustawienia',
+          tabBarLabel: t('nav.settings'),
           tabBarIcon: ({ color }) => <SettingsIcon color={color} />,
         }}
       />

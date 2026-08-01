@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 
@@ -9,10 +10,14 @@ type Props = {
 };
 
 export default function ErrorBanner({
-    message = 'Nie udało się pobrać danych. Sprawdź połączenie.',
-    label = 'BŁĄD POŁĄCZENIA',
+    message: propMessage,
+    label: propLabel,
     style,
 }: Props) {
+    const { t } = useTranslation('common');
+    const label = propLabel ?? t('errors.connectionLabel');
+    const message = propMessage ?? t('errors.connectionMessage');
+
     return (
         <View style={[styles.container, style]}>
             <View style={styles.bar} />
