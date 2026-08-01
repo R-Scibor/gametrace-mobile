@@ -43,3 +43,5 @@ yarn-error.*
 
 # Internal documentation / notes
 docs/internal
+# Isolated git worktrees
+.worktrees/
