@@ -17,6 +17,7 @@ import { common } from '../theme/styles';
 import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
 import AlertSheet from '../components/AlertSheet';
+import MergeCandidateSheet from '../components/MergeCandidateSheet';
 import { useLocalCoversStore } from '../store/localCoversStore';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import StaleBanner from '../components/StaleBanner';
@@ -57,6 +58,7 @@ export default function GameDetailScreen() {
     const [isIgnored, setIsIgnored] = useState(initialIgnored ?? false);
     const [isAccepted, setIsAccepted] = useState<boolean | null>(initialAccepted ?? null);
     const [gameMenu, setGameMenu] = useState(false);
+    const [dupSheet, setDupSheet] = useState(false);
     const [prefBusy, setPrefBusy] = useState(false);
     const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
     const invalidateGames = useGamesStore((s) => s.invalidate);
@@ -322,10 +324,27 @@ export default function GameDetailScreen() {
                         <Text style={sheetStyles.rowDesc}>{cover ? 'Użyj okładki z bazy gier' : 'Wróć do litery zastępczej'}</Text>
                     </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                    style={sheetStyles.row}
+                    onPress={() => {
+                        setGameMenu(false);
+                        setDupSheet(true);
+                    }}
+                    activeOpacity={0.7}
+                >
+                    <Text style={sheetStyles.rowText}>Zgłoś duplikat</Text>
+                    <Text style={sheetStyles.rowDesc}>Ta sama gra podzielona na dwa wpisy</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={() => setGameMenu(false)} activeOpacity={0.7}>
                     <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>Anuluj</Text>
                 </TouchableOpacity>
             </BottomSheet>
+
+            <MergeCandidateSheet
+                visible={dupSheet}
+                onClose={() => setDupSheet(false)}
+                source={{ id: gameId, name: gameName?.trim() || '—' }}
+            />
 
             <AlertSheet
                 visible={alert != null}
