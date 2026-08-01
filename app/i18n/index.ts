@@ -17,6 +17,14 @@ import enLibrary from './locales/en/library.json';
 import plLibrary from './locales/pl/library.json';
 import enStats from './locales/en/stats.json';
 import plStats from './locales/pl/stats.json';
+import enSessions from './locales/en/sessions.json';
+import plSessions from './locales/pl/sessions.json';
+import enGameDetail from './locales/en/gameDetail.json';
+import plGameDetail from './locales/pl/gameDetail.json';
+import enVoice from './locales/en/voice.json';
+import plVoice from './locales/pl/voice.json';
+import enTrash from './locales/en/trash.json';
+import plTrash from './locales/pl/trash.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
@@ -29,6 +37,10 @@ const resources = {
     dashboard: enDashboard,
     library: enLibrary,
     stats: enStats,
+    sessions: enSessions,
+    gameDetail: enGameDetail,
+    voice: enVoice,
+    trash: enTrash,
   },
   pl: {
     common: plCommon,
@@ -38,6 +50,10 @@ const resources = {
     dashboard: plDashboard,
     library: plLibrary,
     stats: plStats,
+    sessions: plSessions,
+    gameDetail: plGameDetail,
+    voice: plVoice,
+    trash: plTrash,
   },
 };
 

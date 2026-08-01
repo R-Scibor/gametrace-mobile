@@ -1,0 +1,41 @@
+{
+  "addTitle": "Add session",
+  "editTitle": "Edit session",
+  "back": "← BACK",
+  "gameLabel": "GAME",
+  "startLabel": "START",
+  "endLabel": "END",
+  "durationLabel": "DURATION",
+  "notesLabel": "NOTES (OPTIONAL)",
+  "notesPlaceholder": "Additional details",
+  "searchGame": "Search game...",
+  "changeGame": "Change →",
+  "saving": "SAVING...",
+  "saveSession": "SAVE SESSION",
+  "saveChanges": "SAVE CHANGES",
+  "recordVoice": "RECORD VOICE",
+  "discardSession": "DISCARD SESSION",
+  "sourceBot": "⬡ BOT",
+  "sourceManual": "✎ MANUAL",
+  "errorBadge": "ERROR",
+  "blockedOngoing": "Can't edit an active session",
+  "endBeforeStart": "End time can't be before start",
+  "validation": "Choose a game and start/end times",
+  "errors": {
+    "gamesLoad": "Couldn't load the game list. Check your connection.",
+    "sessionLoad": "Couldn't load the session for editing.",
+    "createFailed": "Couldn't save the session",
+    "saveFailed": "Couldn't save changes",
+    "discardFailed": "Couldn't discard the session"
+  },
+  "botConfirm": {
+    "title": "Session source change",
+    "message": "Saving will change the session source to manual (user). It may not count toward some community stats, but it will fully work in your own stats.",
+    "confirm": "Save anyway"
+  },
+  "discardConfirm": {
+    "title": "Discard session?",
+    "message": "The session will be discarded and won't count toward stats.",
+    "confirm": "Discard session"
+  }
+}

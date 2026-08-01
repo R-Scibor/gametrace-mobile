@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
 import { getGameSessions, updateGamePreference } from '../api/games';
@@ -21,21 +22,17 @@ import MergeCandidateSheet from '../components/MergeCandidateSheet';
 import { useLocalCoversStore } from '../store/localCoversStore';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import StaleBanner from '../components/StaleBanner';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const COVER_WIDTH = 264;
 const COVER_HEIGHT = 362;
 const PAGE_SIZE = 20;
 const EMPTY_SESSIONS: Session[] = [];
 
-const STATUS_LABEL: Record<SessionStatus, string | null> = {
-    COMPLETED: null,
-    ONGOING: 'TRWA',
-    ERROR: 'BŁĄD',
-};
-
 const formatDate = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleString('pl', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleString(intlLocale(i18n.language), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
 // The detail cover renders large (264px logical → upscaled on retina), so request a
@@ -47,7 +44,14 @@ const upgradeIgdbCover = (url: string | null): string | null =>
 export default function GameDetailScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'GameDetail'>>();
     const navigation = useNavigation();
+    const { t } = useTranslation('gameDetail');
     const { gameId, gameName, coverImageUrl, enrichmentStatus, isAccepted: initialAccepted, isIgnored: initialIgnored } = route.params;
+
+    const statusLabel = (status: SessionStatus): string | null => {
+        if (status === 'ONGOING') return t('status.ongoing');
+        if (status === 'ERROR') return t('status.error');
+        return null;
+    };
 
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -96,7 +100,7 @@ export default function GameDetailScreen() {
             invalidateGames();
             setGameMenu(false);
         } catch {
-            setAlert({ title: 'Błąd', message: 'Nie udało się zapisać zmiany.' });
+            setAlert({ title: t('alerts.errorTitle'), message: t('alerts.prefSaveFailed') });
         } finally {
             setPrefBusy(false);
         }
@@ -160,7 +164,7 @@ export default function GameDetailScreen() {
         try {
             const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!perm.granted) {
-                setAlert({ title: 'Brak uprawnień', message: 'Nie udało się uzyskać dostępu do zdjęć.' });
+                setAlert({ title: t('alerts.noPermissionTitle'), message: t('alerts.noPermissionMessage') });
                 return;
             }
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -171,7 +175,7 @@ export default function GameDetailScreen() {
             if (result.canceled || !result.assets?.[0]) return;
             await setLocalCover(gameId, result.assets[0].uri);
         } catch {
-            setAlert({ title: 'Błąd', message: 'Nie udało się zapisać zdjęcia.' });
+            setAlert({ title: t('alerts.errorTitle'), message: t('alerts.photoSaveFailed') });
         }
     };
 
@@ -194,12 +198,12 @@ export default function GameDetailScreen() {
         <View style={styles.headerWrap}>
             <View style={[common.headerTop, styles.headerTopRow]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-                    <Text style={common.back}>← COFNIJ</Text>
+                    <Text style={common.back}>{t('back')}</Text>
                 </TouchableOpacity>
                 <Text style={common.eyebrow}>◈ GAMETRACE</Text>
             </View>
             <View style={styles.titleRow}>
-                <Text style={common.title}>Szczegóły gry</Text>
+                <Text style={common.title}>{t('title')}</Text>
                 <TouchableOpacity style={styles.menuButton} onPress={() => setGameMenu(true)} hitSlop={12}>
                     <Text style={styles.menuDots}>⋯</Text>
                 </TouchableOpacity>
@@ -222,32 +226,32 @@ export default function GameDetailScreen() {
 
             {(isAccepted === true || isIgnored) && (
                 <View style={styles.tagsRow}>
-                    {isAccepted === true && <Text style={[styles.tag, styles.tagAccepted]}>ZAAKCEPTOWANA</Text>}
-                    {isIgnored && <Text style={[styles.tag, styles.tagIgnored]}>IGNOROWANA</Text>}
+                    {isAccepted === true && <Text style={[styles.tag, styles.tagAccepted]}>{t('accepted')}</Text>}
+                    {isIgnored && <Text style={[styles.tag, styles.tagIgnored]}>{t('ignored')}</Text>}
                 </View>
             )}
 
             <View style={styles.statsRow}>
                 <View style={styles.statCell}>
                     <Text style={styles.statValue}>{sessionCount}</Text>
-                    <Text style={styles.statLabel}>SESJE</Text>
+                    <Text style={styles.statLabel}>{t('stats.sessions')}</Text>
                 </View>
                 <View style={styles.statCellMid}>
                     <Text style={styles.statValue}>{formatDuration(totalSeconds)}</Text>
-                    <Text style={styles.statLabel}>ŁĄCZNIE</Text>
+                    <Text style={styles.statLabel}>{t('stats.total')}</Text>
                 </View>
                 <View style={styles.statCell}>
                     <Text style={styles.statValue}>{formatDuration(avgSeconds)}</Text>
-                    <Text style={styles.statLabel}>ŚREDNIO</Text>
+                    <Text style={styles.statLabel}>{t('stats.average')}</Text>
                 </View>
             </View>
 
-            <Text style={[common.label, styles.historyLabel]}>HISTORIA</Text>
+            <Text style={[common.label, styles.historyLabel]}>{t('history')}</Text>
             {staleSyncTimes.length > 0 && (
                 <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.errorWrap} />
             )}
             {(sessionsError != null || paginationError) && (
-                <ErrorBanner message="Nie udało się pobrać sesji dla tej gry." style={styles.errorWrap} />
+                <ErrorBanner message={t('sessionsLoadError')} style={styles.errorWrap} />
             )}
         </View>
     );
@@ -270,7 +274,7 @@ export default function GameDetailScreen() {
                     />
                 }
                 renderItem={({ item }) => {
-                    const statusLabel = STATUS_LABEL[item.status];
+                    const label = statusLabel(item.status);
                     const duration = formatDuration(item.duration_seconds);
                     return (
                         <TouchableOpacity
@@ -282,12 +286,12 @@ export default function GameDetailScreen() {
                                 <Text style={styles.sessionDate}>{formatDate(item.start_time)}</Text>
                                 <Text style={styles.sessionDuration}>{duration}</Text>
                             </View>
-                            {statusLabel && (
+                            {label && (
                                 <Text style={[
                                     styles.sessionStatus,
                                     item.status === 'ERROR' && styles.sessionStatusError,
                                 ]}>
-                                    {statusLabel}
+                                    {label}
                                 </Text>
                             )}
                             {item.notes && <Text style={styles.sessionNotes} numberOfLines={2}>{item.notes}</Text>}
@@ -296,32 +300,32 @@ export default function GameDetailScreen() {
                 }}
             />
 
-            <BottomSheet visible={gameMenu} onClose={() => setGameMenu(false)} title="OPCJE">
+            <BottomSheet visible={gameMenu} onClose={() => setGameMenu(false)} title={t('menu.title')}>
                 {canAccept && (
                     <TouchableOpacity style={sheetStyles.row} onPress={handleAccept} activeOpacity={0.7} disabled={prefBusy}>
-                        <Text style={sheetStyles.rowText}>Akceptuj grę</Text>
-                        <Text style={sheetStyles.rowDesc}>Pokaż w bibliotece i statystykach</Text>
+                        <Text style={sheetStyles.rowText}>{t('menu.accept')}</Text>
+                        <Text style={sheetStyles.rowDesc}>{t('menu.acceptDesc')}</Text>
                     </TouchableOpacity>
                 )}
                 {isIgnored ? (
                     <TouchableOpacity style={sheetStyles.row} onPress={handleRestore} activeOpacity={0.7} disabled={prefBusy}>
-                        <Text style={sheetStyles.rowText}>Przywróć grę</Text>
-                        <Text style={sheetStyles.rowDesc}>Pokaż ponownie w bibliotece</Text>
+                        <Text style={sheetStyles.rowText}>{t('menu.restore')}</Text>
+                        <Text style={sheetStyles.rowDesc}>{t('menu.restoreDesc')}</Text>
                     </TouchableOpacity>
                 ) : (
                     <TouchableOpacity style={sheetStyles.row} onPress={handleIgnore} activeOpacity={0.7} disabled={prefBusy}>
-                        <Text style={[sheetStyles.rowText, sheetStyles.rowWarn]}>Ignoruj grę</Text>
-                        <Text style={sheetStyles.rowDesc}>Ukryj z biblioteki i statystyk</Text>
+                        <Text style={[sheetStyles.rowText, sheetStyles.rowWarn]}>{t('menu.ignore')}</Text>
+                        <Text style={sheetStyles.rowDesc}>{t('menu.ignoreDesc')}</Text>
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity style={sheetStyles.row} onPress={handleChangeCover} activeOpacity={0.7}>
-                    <Text style={sheetStyles.rowText}>Zmień okładkę</Text>
-                    <Text style={sheetStyles.rowDesc}>Wybierz własne zdjęcie</Text>
+                    <Text style={sheetStyles.rowText}>{t('menu.changeCover')}</Text>
+                    <Text style={sheetStyles.rowDesc}>{t('menu.changeCoverDesc')}</Text>
                 </TouchableOpacity>
                 {localCover && (
                     <TouchableOpacity style={sheetStyles.row} onPress={handleRestoreCover} activeOpacity={0.7}>
-                        <Text style={sheetStyles.rowText}>{cover ? 'Przywróć oryginalną okładkę' : 'Usuń okładkę'}</Text>
-                        <Text style={sheetStyles.rowDesc}>{cover ? 'Użyj okładki z bazy gier' : 'Wróć do litery zastępczej'}</Text>
+                        <Text style={sheetStyles.rowText}>{cover ? t('menu.restoreCover') : t('menu.removeCover')}</Text>
+                        <Text style={sheetStyles.rowDesc}>{cover ? t('menu.restoreCoverDesc') : t('menu.removeCoverDesc')}</Text>
                     </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -332,11 +336,11 @@ export default function GameDetailScreen() {
                     }}
                     activeOpacity={0.7}
                 >
-                    <Text style={sheetStyles.rowText}>Zgłoś duplikat</Text>
-                    <Text style={sheetStyles.rowDesc}>Ta sama gra podzielona na dwa wpisy</Text>
+                    <Text style={sheetStyles.rowText}>{t('menu.reportDuplicate')}</Text>
+                    <Text style={sheetStyles.rowDesc}>{t('menu.reportDuplicateDesc')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={() => setGameMenu(false)} activeOpacity={0.7}>
-                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>Anuluj</Text>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{t('menu.cancel')}</Text>
                 </TouchableOpacity>
             </BottomSheet>
 

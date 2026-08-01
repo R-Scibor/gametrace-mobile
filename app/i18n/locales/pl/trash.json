@@ -1,0 +1,29 @@
+{
+  "back": "← COFNIJ",
+  "title": "Kosz",
+  "subtitle": "Odrzucone sesje są przechowywane 7 dni, potem znikają na stałe.",
+  "empty": "Kosz jest pusty",
+  "sessionFrom": "Sesja z {{date}}",
+  "sessionFallback": "SESJA",
+  "purge": {
+    "soon": "usuwane wkrótce",
+    "tomorrow": "usuwane jutro",
+    "inDays": "usuwane za {{days}} dni"
+  },
+  "menu": {
+    "restore": "Przywróć sesję",
+    "restoreDesc": "Wróci do historii i statystyk",
+    "hardDelete": "Usuń trwale",
+    "hardDeleteDesc": "Nieodwracalne usunięcie sesji",
+    "cancel": "Anuluj"
+  },
+  "confirm": {
+    "title": "Usunąć trwale?",
+    "message": "Sesja zostanie usunięta na stałe. Tej operacji nie można cofnąć.",
+    "confirm": "Usuń trwale"
+  },
+  "errors": {
+    "restore": "Nie udało się przywrócić sesji",
+    "delete": "Nie udało się usunąć sesji"
+  }
+}

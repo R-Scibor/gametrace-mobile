@@ -1,0 +1,42 @@
+{
+  "back": "← BACK",
+  "title": "Game details",
+  "accepted": "ACCEPTED",
+  "ignored": "IGNORED",
+  "stats": {
+    "sessions": "SESSIONS",
+    "total": "TOTAL",
+    "average": "AVERAGE"
+  },
+  "history": "HISTORY",
+  "sessionsLoadError": "Couldn't load sessions for this game.",
+  "status": {
+    "ongoing": "LIVE",
+    "error": "ERROR"
+  },
+  "menu": {
+    "title": "OPTIONS",
+    "accept": "Accept game",
+    "acceptDesc": "Show in library and stats",
+    "restore": "Restore game",
+    "restoreDesc": "Show again in library",
+    "ignore": "Ignore game",
+    "ignoreDesc": "Hide from library and stats",
+    "changeCover": "Change cover",
+    "changeCoverDesc": "Pick your own photo",
+    "restoreCover": "Restore original cover",
+    "restoreCoverDesc": "Use cover from game database",
+    "removeCover": "Remove cover",
+    "removeCoverDesc": "Back to letter placeholder",
+    "reportDuplicate": "Report duplicate",
+    "reportDuplicateDesc": "Same game split into two entries",
+    "cancel": "Cancel"
+  },
+  "alerts": {
+    "errorTitle": "Error",
+    "prefSaveFailed": "Couldn't save the change.",
+    "noPermissionTitle": "No permission",
+    "noPermissionMessage": "Couldn't access photos.",
+    "photoSaveFailed": "Couldn't save the photo."
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { getTrashedSessions, restoreSession, hardDeleteSession } from '../api/sessions';
 import { TrashedSession } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
@@ -15,23 +16,17 @@ import { apiErrorMessage } from '../utils/apiError';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const PAGE_SIZE = 20;
 
 const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('pl', { day: '2-digit', month: 'short', year: 'numeric' });
-
-const purgeLabel = (iso?: string): string => {
-    if (!iso) return '';
-    const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
-    if (Number.isNaN(days)) return '';
-    if (days <= 0) return 'usuwane wkrótce';
-    if (days === 1) return 'usuwane jutro';
-    return `usuwane za ${days} dni`;
-};
+    new Date(iso).toLocaleDateString(intlLocale(i18n.language), { day: '2-digit', month: 'short', year: 'numeric' });
 
 export default function TrashScreen() {
     const navigation = useNavigation();
+    const { t } = useTranslation('trash');
     const [sessions, setSessions] = useState<TrashedSession[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
@@ -41,6 +36,15 @@ export default function TrashScreen() {
     const [confirmDelete, setConfirmDelete] = useState<TrashedSession | null>(null);
     const [busy, setBusy] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    const purgeLabel = (iso?: string): string => {
+        if (!iso) return '';
+        const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+        if (Number.isNaN(days)) return '';
+        if (days <= 0) return t('purge.soon');
+        if (days === 1) return t('purge.tomorrow');
+        return t('purge.inDays', { days });
+    };
 
     const loadMore = async () => {
         if (loading || !hasMore) return;
@@ -80,7 +84,7 @@ export default function TrashScreen() {
             useSessionsStore.getState().invalidate();
             useGamesStore.getState().invalidate();
         } catch (e) {
-            setErrorMsg(apiErrorMessage(e, 'Nie udało się przywrócić sesji'));
+            setErrorMsg(apiErrorMessage(e, t('errors.restore')));
         } finally {
             setBusy(false);
             setMenuSession(null);
@@ -94,7 +98,7 @@ export default function TrashScreen() {
             await hardDeleteSession(s.id);
             setSessions(prev => prev.filter(x => x.id !== s.id));
         } catch (e) {
-            setErrorMsg(apiErrorMessage(e, 'Nie udało się usunąć sesji'));
+            setErrorMsg(apiErrorMessage(e, t('errors.delete')));
         } finally {
             setBusy(false);
             setConfirmDelete(null);
@@ -106,12 +110,12 @@ export default function TrashScreen() {
             <View style={styles.header}>
                 <View style={common.headerTop}>
                     <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-                        <Text style={common.back}>← COFNIJ</Text>
+                        <Text style={common.back}>{t('back')}</Text>
                     </TouchableOpacity>
                     <Text style={common.eyebrow}>◈ GAMETRACE</Text>
                 </View>
-                <Text style={common.title}>Kosz</Text>
-                <Text style={styles.subtitle}>Odrzucone sesje są przechowywane 7 dni, potem znikają na stałe.</Text>
+                <Text style={common.title}>{t('title')}</Text>
+                <Text style={styles.subtitle}>{t('subtitle')}</Text>
             </View>
 
             {loadError && <View style={styles.errorWrap}><ErrorBanner /></View>}
@@ -120,7 +124,7 @@ export default function TrashScreen() {
                 data={sessions}
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={!loading ? <Text style={styles.empty}>Kosz jest pusty</Text> : null}
+                ListEmptyComponent={!loading ? <Text style={styles.empty}>{t('empty')}</Text> : null}
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setMenuSession(item)}>
                         <Cover
@@ -131,7 +135,7 @@ export default function TrashScreen() {
                         />
                         <View style={{ flex: 1, minWidth: 0 }}>
                             <Text style={styles.name} numberOfLines={1}>{item.game.primary_name}</Text>
-                            <Text style={styles.meta}>Sesja z {fmtDate(item.start_time)}</Text>
+                            <Text style={styles.meta}>{t('sessionFrom', { date: fmtDate(item.start_time) })}</Text>
                         </View>
                         <Text style={styles.purge}>{purgeLabel(item.purges_at)}</Text>
                     </TouchableOpacity>
@@ -151,11 +155,11 @@ export default function TrashScreen() {
             <BottomSheet
                 visible={!!menuSession}
                 onClose={() => setMenuSession(null)}
-                title={menuSession?.game.primary_name ?? 'SESJA'}
+                title={menuSession?.game.primary_name ?? t('sessionFallback')}
             >
                 <TouchableOpacity style={sheetStyles.row} activeOpacity={0.7} disabled={busy} onPress={() => menuSession && doRestore(menuSession)}>
-                    <Text style={sheetStyles.rowText}>Przywróć sesję</Text>
-                    <Text style={sheetStyles.rowDesc}>Wróci do historii i statystyk</Text>
+                    <Text style={sheetStyles.rowText}>{t('menu.restore')}</Text>
+                    <Text style={sheetStyles.rowDesc}>{t('menu.restoreDesc')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={sheetStyles.row}
@@ -163,19 +167,19 @@ export default function TrashScreen() {
                     disabled={busy}
                     onPress={() => { const s = menuSession; setMenuSession(null); setConfirmDelete(s); }}
                 >
-                    <Text style={[sheetStyles.rowText, sheetStyles.rowWarn]}>Usuń trwale</Text>
-                    <Text style={sheetStyles.rowDesc}>Nieodwracalne usunięcie sesji</Text>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowWarn]}>{t('menu.hardDelete')}</Text>
+                    <Text style={sheetStyles.rowDesc}>{t('menu.hardDeleteDesc')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} activeOpacity={0.7} onPress={() => setMenuSession(null)}>
-                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>Anuluj</Text>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{t('menu.cancel')}</Text>
                 </TouchableOpacity>
             </BottomSheet>
 
             <ConfirmSheet
                 visible={!!confirmDelete}
-                title="Usunąć trwale?"
-                message="Sesja zostanie usunięta na stałe. Tej operacji nie można cofnąć."
-                confirmLabel="Usuń trwale"
+                title={t('confirm.title')}
+                message={t('confirm.message')}
+                confirmLabel={t('confirm.confirm')}
                 destructive
                 onConfirm={() => confirmDelete && doHardDelete(confirmDelete)}
                 onCancel={() => setConfirmDelete(null)}

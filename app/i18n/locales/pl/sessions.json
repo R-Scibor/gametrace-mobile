@@ -1,0 +1,41 @@
+{
+  "addTitle": "Dodaj sesję",
+  "editTitle": "Edytuj sesję",
+  "back": "← COFNIJ",
+  "gameLabel": "GRA",
+  "startLabel": "ROZPOCZĘCIE",
+  "endLabel": "ZAKOŃCZENIE",
+  "durationLabel": "CZAS TRWANIA",
+  "notesLabel": "NOTATKI (OPCJONALNE)",
+  "notesPlaceholder": "Dodatkowe informacje",
+  "searchGame": "Szukaj gry...",
+  "changeGame": "Zmień →",
+  "saving": "ZAPISYWANIE...",
+  "saveSession": "ZAPISZ SESJĘ",
+  "saveChanges": "ZAPISZ ZMIANY",
+  "recordVoice": "NAGRAJ GŁOSOWO",
+  "discardSession": "ODRZUĆ SESJĘ",
+  "sourceBot": "⬡ BOT",
+  "sourceManual": "✎ RĘCZNA",
+  "errorBadge": "BŁĄD",
+  "blockedOngoing": "Nie można edytować aktywnej sesji",
+  "endBeforeStart": "Zakończenie nie może być przed rozpoczęciem",
+  "validation": "Wybierz grę oraz daty rozpoczęcia i zakończenia",
+  "errors": {
+    "gamesLoad": "Nie udało się pobrać listy gier. Sprawdź połączenie.",
+    "sessionLoad": "Nie udało się pobrać sesji do edycji.",
+    "createFailed": "Nie udało się zapisać sesji",
+    "saveFailed": "Nie udało się zapisać zmian",
+    "discardFailed": "Nie udało się odrzucić sesji"
+  },
+  "botConfirm": {
+    "title": "Zmiana źródła sesji",
+    "message": "Zapisanie zmieni źródło sesji na ręczne (użytkownik). Może nie liczyć się do niektórych statystyk społeczności, ale w pełni zadziała w Twoich własnych statystykach.",
+    "confirm": "Zapisz mimo to"
+  },
+  "discardConfirm": {
+    "title": "Odrzucić sesję?",
+    "message": "Sesja zostanie odrzucona i nie będzie wliczana do statystyk.",
+    "confirm": "Odrzuć sesję"
+  }
+}

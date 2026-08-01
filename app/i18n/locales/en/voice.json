@@ -1,0 +1,23 @@
+{
+  "back": "← BACK",
+  "title": "Voice session",
+  "cta": {
+    "processing": "ANALYZING RECORDING...",
+    "stop": "STOP",
+    "start": "START RECORDING"
+  },
+  "recHint": {
+    "recording": "LIVE",
+    "idle": "TAP"
+  },
+  "exampleLabel": "EXAMPLE",
+  "exampleText": "\"I played Baldur's Gate from six to ten.\"",
+  "footer": "Whisper detects the game and pre-fills the session form.",
+  "alerts": {
+    "errorTitle": "Error",
+    "permissionTitle": "No access",
+    "permissionMessage": "Allow microphone access in settings.",
+    "recordFailed": "Recording failed.",
+    "sendFailed": "Couldn't send the recording."
+  }
+}

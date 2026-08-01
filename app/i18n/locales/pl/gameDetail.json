@@ -1,0 +1,42 @@
+{
+  "back": "← COFNIJ",
+  "title": "Szczegóły gry",
+  "accepted": "ZAAKCEPTOWANA",
+  "ignored": "IGNOROWANA",
+  "stats": {
+    "sessions": "SESJE",
+    "total": "ŁĄCZNIE",
+    "average": "ŚREDNIO"
+  },
+  "history": "HISTORIA",
+  "sessionsLoadError": "Nie udało się pobrać sesji dla tej gry.",
+  "status": {
+    "ongoing": "TRWA",
+    "error": "BŁĄD"
+  },
+  "menu": {
+    "title": "OPCJE",
+    "accept": "Akceptuj grę",
+    "acceptDesc": "Pokaż w bibliotece i statystykach",
+    "restore": "Przywróć grę",
+    "restoreDesc": "Pokaż ponownie w bibliotece",
+    "ignore": "Ignoruj grę",
+    "ignoreDesc": "Ukryj z biblioteki i statystyk",
+    "changeCover": "Zmień okładkę",
+    "changeCoverDesc": "Wybierz własne zdjęcie",
+    "restoreCover": "Przywróć oryginalną okładkę",
+    "restoreCoverDesc": "Użyj okładki z bazy gier",
+    "removeCover": "Usuń okładkę",
+    "removeCoverDesc": "Wróć do litery zastępczej",
+    "reportDuplicate": "Zgłoś duplikat",
+    "reportDuplicateDesc": "Ta sama gra podzielona na dwa wpisy",
+    "cancel": "Anuluj"
+  },
+  "alerts": {
+    "errorTitle": "Błąd",
+    "prefSaveFailed": "Nie udało się zapisać zmiany.",
+    "noPermissionTitle": "Brak uprawnień",
+    "noPermissionMessage": "Nie udało się uzyskać dostępu do zdjęć.",
+    "photoSaveFailed": "Nie udało się zapisać zdjęcia."
+  }
+}

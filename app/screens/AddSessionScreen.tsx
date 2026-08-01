@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { TabParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import { createSession } from '../api/sessions';
@@ -24,6 +25,7 @@ export default function AddSessionScreen() {
     const navigation = useNavigation();
     const route = useRoute<RouteProp<TabParamList, 'AddSession'>>();
     const prefill = route.params;
+    const { t } = useTranslation('sessions');
 
     const [games, setGames] = useState<Game[]>([]);
     const [gameQuery, setGameQuery] = useState('');
@@ -65,7 +67,7 @@ export default function AddSessionScreen() {
     const handleSubmit = async () => {
         if (loading) return;
         if (!selectedGame || !startTime || !endTime) {
-            setErrorMsg('Wybierz grę oraz daty rozpoczęcia i zakończenia');
+            setErrorMsg(t('validation'));
             return;
         }
         setLoading(true);
@@ -81,7 +83,7 @@ export default function AddSessionScreen() {
         } catch (e: any) {
             if (__DEV__) console.log('createSession failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : detail?.detail ?? 'Nie udało się zapisać sesji';
+            const msg = typeof detail === 'string' ? detail : detail?.detail ?? t('errors.createFailed');
             setErrorMsg(msg);
         }
         setLoading(false);
@@ -94,12 +96,12 @@ export default function AddSessionScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={common.eyebrow}>◈ GAMETRACE</Text>
-                    <Text style={common.title}>Dodaj sesję</Text>
+                    <Text style={common.title}>{t('addTitle')}</Text>
                 </View>
 
                 {/* Game picker */}
-                <Text style={common.label}>GRA</Text>
-                {gamesLoadError && <ErrorBanner message="Nie udało się pobrać listy gier. Sprawdź połączenie." style={styles.errorWrap} />}
+                <Text style={common.label}>{t('gameLabel')}</Text>
+                {gamesLoadError && <ErrorBanner message={t('errors.gamesLoad')} style={styles.errorWrap} />}
                 {selectedGame ? (
                     <TouchableOpacity
                         style={styles.selectedGame}
@@ -108,7 +110,7 @@ export default function AddSessionScreen() {
                     >
                         <View style={styles.selectedGameRule} />
                         <Text style={styles.selectedGameText} numberOfLines={1}>{selectedGame.primary_name}</Text>
-                        <Text style={styles.changeLink}>Zmień →</Text>
+                        <Text style={styles.changeLink}>{t('changeGame')}</Text>
                     </TouchableOpacity>
                 ) : (
                     <>
@@ -116,7 +118,7 @@ export default function AddSessionScreen() {
                             <View style={common.orangeBar} />
                             <TextInput
                                 style={common.input}
-                                placeholder="Szukaj gry..."
+                                placeholder={t('searchGame')}
                                 placeholderTextColor={colors.text3}
                                 value={gameQuery}
                                 onChangeText={setGameQuery}
@@ -141,20 +143,20 @@ export default function AddSessionScreen() {
                 )}
 
                 {/* Start time */}
-                <Text style={common.label}>ROZPOCZĘCIE</Text>
+                <Text style={common.label}>{t('startLabel')}</Text>
                 <DateTimeField value={startTime} onChange={setStartTime} />
 
                 {/* End time */}
-                <Text style={common.label}>ZAKOŃCZENIE</Text>
+                <Text style={common.label}>{t('endLabel')}</Text>
                 <DateTimeField value={endTime} onChange={setEndTime} />
 
                 {/* Notes */}
-                <Text style={common.label}>NOTATKI (OPCJONALNE)</Text>
+                <Text style={common.label}>{t('notesLabel')}</Text>
                 <View style={common.inputWrapper}>
                     <View style={common.orangeBar} />
                     <TextInput
                         style={[common.input, styles.textArea]}
-                        placeholder="Dodatkowe informacje"
+                        placeholder={t('notesPlaceholder')}
                         placeholderTextColor={colors.text3}
                         value={notes}
                         onChangeText={setNotes}
@@ -172,7 +174,7 @@ export default function AddSessionScreen() {
                     activeOpacity={0.85}
                 >
                     <Text style={[common.buttonText, loading && common.buttonTextDisabled]}>
-                        {loading ? 'ZAPISYWANIE...' : 'ZAPISZ SESJĘ'}
+                        {loading ? t('saving') : t('saveSession')}
                     </Text>
                 </TouchableOpacity>
 
@@ -182,7 +184,7 @@ export default function AddSessionScreen() {
                     onPress={() => navigation.navigate('Voice')}
                     activeOpacity={0.7}
                 >
-                    <Text style={common.secondaryButtonText}>NAGRAJ GŁOSOWO</Text>
+                    <Text style={common.secondaryButtonText}>{t('recordVoice')}</Text>
                 </TouchableOpacity>
 
             </ScrollView>

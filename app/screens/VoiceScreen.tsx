@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useVoiceRecord } from '../hooks/useVoiceRecord';
 import { transcribeAudio } from '../api/voice';
 import { resolveGame } from '../api/games';
@@ -14,6 +15,7 @@ const BAR_COUNT = 9;
 
 export default function VoiceScreen() {
     const navigation = useNavigation();
+    const { t } = useTranslation('voice');
     const { isRecording, start, stop } = useVoiceRecord();
     const [processing, setProcessing] = useState(false);
     const [alert, setAlert] = useState<{ title: string; message: string } | null>(null);
@@ -64,9 +66,9 @@ export default function VoiceScreen() {
                 await start();
             } catch (e: any) {
                 if (e?.message === 'PERMISSION_DENIED') {
-                    setAlert({ title: 'Brak dostępu', message: 'Zezwól na mikrofon w ustawieniach.' });
+                    setAlert({ title: t('alerts.permissionTitle'), message: t('alerts.permissionMessage') });
                 } else {
-                    setAlert({ title: 'Błąd', message: 'Nagrywanie nie powiodło się.' });
+                    setAlert({ title: t('alerts.errorTitle'), message: t('alerts.recordFailed') });
                 }
             }
             return;
@@ -76,7 +78,7 @@ export default function VoiceScreen() {
         try {
             uri = await stop();
         } catch {
-            setAlert({ title: 'Błąd', message: 'Nagrywanie nie powiodło się.' });
+            setAlert({ title: t('alerts.errorTitle'), message: t('alerts.recordFailed') });
             return;
         }
 
@@ -97,14 +99,14 @@ export default function VoiceScreen() {
         } catch (e: any) {
             if (__DEV__) console.log('transcribe failed', e?.response?.status, e?.response?.data, e?.message);
             const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : 'Nie udało się wysłać nagrania.';
-            setAlert({ title: 'Błąd', message: msg });
+            const msg = typeof detail === 'string' ? detail : t('alerts.sendFailed');
+            setAlert({ title: t('alerts.errorTitle'), message: msg });
         } finally {
             setProcessing(false);
         }
     };
 
-    const cta = processing ? 'ANALIZA NAGRANIA...' : isRecording ? 'ZATRZYMAJ' : 'ROZPOCZNIJ NAGRYWANIE';
+    const cta = processing ? t('cta.processing') : isRecording ? t('cta.stop') : t('cta.start');
 
     return (
         <SafeAreaView style={common.safe} edges={['top']}>
@@ -114,11 +116,11 @@ export default function VoiceScreen() {
                 <View style={styles.header}>
                     <View style={common.headerTop}>
                         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-                            <Text style={common.back}>← COFNIJ</Text>
+                            <Text style={common.back}>{t('back')}</Text>
                         </TouchableOpacity>
                         <Text style={common.eyebrow}>◈ GAMETRACE</Text>
                     </View>
-                    <Text style={common.title}>Sesja głosowa</Text>
+                    <Text style={common.title}>{t('title')}</Text>
                 </View>
 
                 {/* Hero record control */}
@@ -158,7 +160,7 @@ export default function VoiceScreen() {
                             ))}
                         </View>
 
-                        <Text style={styles.recHint}>{isRecording ? 'TRWA' : 'NACIŚNIJ'}</Text>
+                        <Text style={styles.recHint}>{isRecording ? t('recHint.recording') : t('recHint.idle')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -180,16 +182,12 @@ export default function VoiceScreen() {
                 <View style={styles.hintBlock}>
                     <View style={common.orangeBar} />
                     <View style={styles.hintBody}>
-                        <Text style={styles.hintLabel}>PRZYKŁAD</Text>
-                        <Text style={styles.hintText}>
-                            „Grałem w Baldur's Gate od osiemnastej do dwudziestej drugiej."
-                        </Text>
+                        <Text style={styles.hintLabel}>{t('exampleLabel')}</Text>
+                        <Text style={styles.hintText}>{t('exampleText')}</Text>
                     </View>
                 </View>
 
-                <Text style={styles.footer}>
-                    Whisper rozpoznaje grę i wstępnie wypełnia formularz sesji.
-                </Text>
+                <Text style={styles.footer}>{t('footer')}</Text>
             </View>
 
             <AlertSheet

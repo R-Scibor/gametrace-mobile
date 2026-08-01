@@ -1,0 +1,23 @@
+{
+  "back": "← COFNIJ",
+  "title": "Sesja głosowa",
+  "cta": {
+    "processing": "ANALIZA NAGRANIA...",
+    "stop": "ZATRZYMAJ",
+    "start": "ROZPOCZNIJ NAGRYWANIE"
+  },
+  "recHint": {
+    "recording": "TRWA",
+    "idle": "NACIŚNIJ"
+  },
+  "exampleLabel": "PRZYKŁAD",
+  "exampleText": "„Grałem w Baldur's Gate od osiemnastej do dwudziestej drugiej.”",
+  "footer": "Whisper rozpoznaje grę i wstępnie wypełnia formularz sesji.",
+  "alerts": {
+    "errorTitle": "Błąd",
+    "permissionTitle": "Brak dostępu",
+    "permissionMessage": "Zezwól na mikrofon w ustawieniach.",
+    "recordFailed": "Nagrywanie nie powiodło się.",
+    "sendFailed": "Nie udało się wysłać nagrania."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "back": "← BACK",
+  "title": "Trash",
+  "subtitle": "Discarded sessions are kept for 7 days, then permanently removed.",
+  "empty": "Trash is empty",
+  "sessionFrom": "Session from {{date}}",
+  "sessionFallback": "SESSION",
+  "purge": {
+    "soon": "deleting soon",
+    "tomorrow": "deleting tomorrow",
+    "inDays": "deleting in {{days}} days"
+  },
+  "menu": {
+    "restore": "Restore session",
+    "restoreDesc": "Returns to history and stats",
+    "hardDelete": "Delete permanently",
+    "hardDeleteDesc": "Irreversible session deletion",
+    "cancel": "Cancel"
+  },
+  "confirm": {
+    "title": "Delete permanently?",
+    "message": "The session will be permanently deleted. This can't be undone.",
+    "confirm": "Delete permanently"
+  },
+  "errors": {
+    "restore": "Couldn't restore the session",
+    "delete": "Couldn't delete the session"
+  }
+}

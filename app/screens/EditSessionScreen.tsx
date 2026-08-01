@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import Cover from '../components/Cover';
@@ -16,14 +17,17 @@ import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const fmtDateTime = (iso: string) =>
-    new Date(iso).toLocaleString('pl', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    new Date(iso).toLocaleString(intlLocale(i18n.language), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 export default function EditSessionScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'EditSession'>>();
     const navigation = useNavigation();
     const { sessionId, status } = route.params;
+    const { t } = useTranslation('sessions');
 
     const [session, setSession] = useState<Session | null>(null);
     const [endTime, setEndTime] = useState<Date | null>(null);
@@ -52,7 +56,7 @@ export default function EditSessionScreen() {
         return (
             <SafeAreaView style={common.safe} edges={['top']}>
                 <View style={styles.center}>
-                    <Text style={styles.blockedText}>Nie można edytować aktywnej sesji</Text>
+                    <Text style={styles.blockedText}>{t('blockedOngoing')}</Text>
                 </View>
             </SafeAreaView>
         );
@@ -70,7 +74,7 @@ export default function EditSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('[patchSession] save failed', e?.response?.status, e?.response?.data, e?.message);
-            setErrorMsg(apiErrorMessage(e, 'Nie udało się zapisać zmian'));
+            setErrorMsg(apiErrorMessage(e, t('errors.saveFailed')));
         }
         setLoading(false);
     };
@@ -92,7 +96,7 @@ export default function EditSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('[discard] DELETE failed', e?.response?.status, JSON.stringify(e?.response?.data), e?.message);
-            setErrorMsg(apiErrorMessage(e, 'Nie udało się odrzucić sesji'));
+            setErrorMsg(apiErrorMessage(e, t('errors.discardFailed')));
         }
         setLoading(false);
     };
@@ -112,14 +116,14 @@ export default function EditSessionScreen() {
                 <View style={styles.header}>
                     <View style={common.headerTop}>
                         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12}>
-                            <Text style={common.back}>← COFNIJ</Text>
+                            <Text style={common.back}>{t('back')}</Text>
                         </TouchableOpacity>
                         <Text style={common.eyebrow}>◈ GAMETRACE</Text>
                     </View>
-                    <Text style={common.title}>Edytuj sesję</Text>
+                    <Text style={common.title}>{t('editTitle')}</Text>
                 </View>
 
-                {loadError && <ErrorBanner message="Nie udało się pobrać sesji do edycji." style={styles.errorWrap} />}
+                {loadError && <ErrorBanner message={t('errors.sessionLoad')} style={styles.errorWrap} />}
 
                 {/* Session context */}
                 {session && (
@@ -135,19 +139,19 @@ export default function EditSessionScreen() {
                                 <Text style={styles.gameName} numberOfLines={2}>{session.game.primary_name}</Text>
                                 <View style={styles.badgeRow}>
                                     <Text style={styles.sourceText}>
-                                        {session.source === 'BOT' ? '⬡ BOT' : '✎ RĘCZNA'}
+                                        {session.source === 'BOT' ? t('sourceBot') : t('sourceManual')}
                                     </Text>
-                                    {session.status === 'ERROR' && <Text style={styles.errorBadge}>BŁĄD</Text>}
+                                    {session.status === 'ERROR' && <Text style={styles.errorBadge}>{t('errorBadge')}</Text>}
                                 </View>
                             </View>
                         </View>
                         <View style={styles.metaRow}>
                             <View style={styles.metaCell}>
-                                <Text style={styles.metaLabel}>ROZPOCZĘCIE</Text>
+                                <Text style={styles.metaLabel}>{t('startLabel')}</Text>
                                 <Text style={styles.metaValue}>{fmtDateTime(session.start_time)}</Text>
                             </View>
                             <View style={styles.metaCell}>
-                                <Text style={styles.metaLabel}>CZAS TRWANIA</Text>
+                                <Text style={styles.metaLabel}>{t('durationLabel')}</Text>
                                 <Text style={[styles.metaValue, styles.metaDuration]}>
                                     {durationValid ? formatDuration(rawDuration) : '—'}
                                 </Text>
@@ -157,19 +161,19 @@ export default function EditSessionScreen() {
                 )}
 
                 {/* End time */}
-                <Text style={common.label}>ZAKOŃCZENIE</Text>
+                <Text style={common.label}>{t('endLabel')}</Text>
                 <DateTimeField value={endTime} onChange={setEndTime} />
                 {endBeforeStart && (
-                    <Text style={styles.warnText}>Zakończenie nie może być przed rozpoczęciem</Text>
+                    <Text style={styles.warnText}>{t('endBeforeStart')}</Text>
                 )}
 
                 {/* Notes */}
-                <Text style={common.label}>NOTATKI (OPCJONALNE)</Text>
+                <Text style={common.label}>{t('notesLabel')}</Text>
                 <View style={common.inputWrapper}>
                     <View style={common.orangeBar} />
                     <TextInput
                         style={[common.input, styles.textArea]}
-                        placeholder="Dodatkowe informacje"
+                        placeholder={t('notesPlaceholder')}
                         placeholderTextColor={colors.text3}
                         value={notes}
                         onChangeText={setNotes}
@@ -187,7 +191,7 @@ export default function EditSessionScreen() {
                     activeOpacity={0.85}
                 >
                     <Text style={[common.buttonText, saveDisabled && common.buttonTextDisabled]}>
-                        {loading ? 'ZAPISYWANIE...' : 'ZAPISZ ZMIANY'}
+                        {loading ? t('saving') : t('saveChanges')}
                     </Text>
                 </TouchableOpacity>
 
@@ -197,25 +201,25 @@ export default function EditSessionScreen() {
                     disabled={loading}
                     activeOpacity={0.85}
                 >
-                    <Text style={styles.discardButtonText}>ODRZUĆ SESJĘ</Text>
+                    <Text style={styles.discardButtonText}>{t('discardSession')}</Text>
                 </TouchableOpacity>
 
             </ScrollView>
 
             <ConfirmSheet
                 visible={confirmVisible}
-                title="Zmiana źródła sesji"
-                message="Zapisanie zmieni źródło sesji na ręczne (użytkownik). Może nie liczyć się do niektórych statystyk społeczności, ale w pełni zadziała w Twoich własnych statystykach."
-                confirmLabel="Zapisz mimo to"
+                title={t('botConfirm.title')}
+                message={t('botConfirm.message')}
+                confirmLabel={t('botConfirm.confirm')}
                 onConfirm={() => { setConfirmVisible(false); doSave(); }}
                 onCancel={() => setConfirmVisible(false)}
             />
 
             <ConfirmSheet
                 visible={discardVisible}
-                title="Odrzucić sesję?"
-                message="Sesja zostanie odrzucona i nie będzie wliczana do statystyk."
-                confirmLabel="Odrzuć sesję"
+                title={t('discardConfirm.title')}
+                message={t('discardConfirm.message')}
+                confirmLabel={t('discardConfirm.confirm')}
                 destructive
                 onConfirm={() => { setDiscardVisible(false); doDiscard(); }}
                 onCancel={() => setDiscardVisible(false)}
