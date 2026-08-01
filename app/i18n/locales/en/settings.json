@@ -1,0 +1,13 @@
+{
+  "title": "Settings",
+  "preferences": {
+    "language": "Language",
+    "timezone": "Timezone",
+    "darkMode": "Dark mode",
+    "darkModeSub": "App interface"
+  },
+  "errors": {
+    "languageSave": "Couldn't save language. Try again.",
+    "timezoneSave": "Couldn't save timezone. Try again."
+  }
+}

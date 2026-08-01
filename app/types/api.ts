@@ -225,6 +225,7 @@ export interface ProfileMe {
   discord_id: string;
   username: string;
   timezone: string;
+  language?: string | null;
   notifications_enabled: boolean;
   is_admin: boolean;
 }

@@ -1,0 +1,13 @@
+{
+  "title": "Ustawienia",
+  "preferences": {
+    "language": "Język",
+    "timezone": "Strefa czasowa",
+    "darkMode": "Tryb ciemny",
+    "darkModeSub": "Interfejs aplikacji"
+  },
+  "errors": {
+    "languageSave": "Nie udało się zapisać języka. Spróbuj ponownie.",
+    "timezoneSave": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
+  }
+}

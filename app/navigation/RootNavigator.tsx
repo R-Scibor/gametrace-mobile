@@ -14,11 +14,17 @@ import GlobalAlertHost from '../components/GlobalAlertHost';
 import ServerJoinHost from '../components/ServerJoinHost';
 import ReportSheet from '../components/ReportSheet';
 import ReportFab from '../components/ReportFab';
+import { useLanguageSync } from '../hooks/useLanguageSync';
 import { navigationRef } from './navigationRef';
 import { DEV_REPORT_FAB } from '../config';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+function LanguageSyncHost() {
+    useLanguageSync();
+    return null;
+}
 
 export default function RootNavigator() {
     const serverUrl = useServerStore((state) => state.serverUrl);
@@ -59,6 +65,7 @@ export default function RootNavigator() {
       <>
         {DEV_REPORT_FAB && <ReportFab />}
         <ReportSheet />
+        <LanguageSyncHost />
       </>
     )}
     <GlobalAlertHost />

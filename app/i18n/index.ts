@@ -5,12 +5,14 @@ import { getLocales } from 'expo-localization';
 import { resolveLanguage, type Language } from './resolve';
 import enCommon from './locales/en/common.json';
 import plCommon from './locales/pl/common.json';
+import enSettings from './locales/en/settings.json';
+import plSettings from './locales/pl/settings.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
 const resources = {
-  en: { common: enCommon },
-  pl: { common: plCommon },
+  en: { common: enCommon, settings: enSettings },
+  pl: { common: plCommon, settings: plSettings },
 };
 
 // Init with temporary en; hydrateLanguage sets real lng before UI mounts.

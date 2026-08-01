@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useServerStore } from '../store/serverStore';
 import { useReportStore } from '../store/reportStore';
 import { useChangeServer } from './useChangeServer';
 import { useTimezone } from './useTimezone';
+import { useLanguage } from '../hooks/useLanguage';
+import { isLanguage, type Language } from '../i18n/resolve';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
@@ -44,10 +47,19 @@ function SettingsRow({ label, subtext, children }: { label: string, subtext?: st
 
 export default function SettingsScreen() {
     const navigation = useNavigation();
+    const { t, i18n } = useTranslation('settings');
+    const { t: tc } = useTranslation('common');
     const { user, isAdmin, logout } = useAuthStore();
     const openReport = useReportStore((s) => s.open);
     const { isDarkMode, toggleDarkMode } = useSettingsStore();
     const { timezone, select: selectTimezone, sync: syncTimezone, error: tzError, clearError: clearTzError } = useTimezone();
+    const {
+        select: selectLanguage,
+        isPending: languagePending,
+        error: langError,
+        clearError: clearLangError,
+    } = useLanguage();
+    const activeLanguage: Language = isLanguage(i18n.language) ? i18n.language : 'pl';
     const serverUrl = useServerStore((s) => s.serverUrl);
     const { change, confirmInsecure, loading: changeLoading } = useChangeServer();
     const [serverModalOpen, setServerModalOpen] = useState(false);
@@ -121,7 +133,7 @@ export default function SettingsScreen() {
 
                 {/* Appearance */}
                 <SectionHeaderLocal title="PREFERENCJE" />
-                <SettingsRow label="Tryb ciemny" subtext="Interfejs aplikacji">
+                <SettingsRow label={t('preferences.darkMode')} subtext={t('preferences.darkModeSub')}>
                     <Switch
                         value={isDarkMode}
                         onValueChange={toggleDarkMode}
@@ -131,7 +143,28 @@ export default function SettingsScreen() {
                     />
                 </SettingsRow>
 
-                <SettingsRow label="Strefa czasowa" subtext={timezone}>
+                <SettingsRow label={t('preferences.language')}>
+                    <View style={styles.langChips}>
+                        {(['pl', 'en'] as const).map((lng) => {
+                            const selected = activeLanguage === lng;
+                            return (
+                                <TouchableOpacity
+                                    key={lng}
+                                    style={[styles.langChip, selected && styles.langChipSelected]}
+                                    onPress={() => selectLanguage(lng)}
+                                    disabled={languagePending}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={[styles.langChipText, selected && styles.langChipTextSelected]}>
+                                        {tc(`language.${lng}`)}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </SettingsRow>
+
+                <SettingsRow label={t('preferences.timezone')} subtext={timezone}>
                     <TouchableOpacity
                         style={styles.tzButton}
                         onPress={() => setTzPickerOpen(true)}
@@ -218,8 +251,14 @@ export default function SettingsScreen() {
 
             <AlertSheet
                 visible={tzError}
-                message="Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
+                message={t('errors.timezoneSave')}
                 onDismiss={clearTzError}
+            />
+
+            <AlertSheet
+                visible={langError}
+                message={t('errors.languageSave')}
+                onDismiss={clearLangError}
             />
 
             <Modal visible={serverModalOpen} transparent animationType="fade" onRequestClose={() => setServerModalOpen(false)}>
@@ -350,6 +389,32 @@ const styles = StyleSheet.create({
         fontFamily: bodyFont.regular,
         fontSize: 12,
         color: colors.text,
+    },
+    langChips: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    langChip: {
+        backgroundColor: colors.bg3,
+        borderWidth: 1,
+        borderColor: colors.border,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 2,
+    },
+    langChipSelected: {
+        borderColor: colors.orange,
+        backgroundColor: colors.orangeDim,
+    },
+    langChipText: {
+        fontFamily: bodyFont.regular,
+        fontSize: 12,
+        color: colors.text,
+    },
+    langChipTextSelected: {
+        color: colors.orange,
+        fontFamily: bodyFont.medium,
     },
     chevron: {
         marginLeft: 6,
