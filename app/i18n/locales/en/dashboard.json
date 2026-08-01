@@ -1,0 +1,29 @@
+{
+  "title": "Dashboard",
+  "retry": "TRY AGAIN",
+  "activeSession": "ACTIVE SESSION",
+  "startedAt": "since {{time}}",
+  "errors": {
+    "countOne": "{{count}} failed session needs attention",
+    "countOther": "{{count}} failed sessions need attention",
+    "sub": "The bot may have left sessions open",
+    "fix": "Fix →"
+  },
+  "tiles": {
+    "today": "TODAY",
+    "week": "7 DAYS",
+    "month": "30 DAYS"
+  },
+  "recentSessions": "RECENT SESSIONS",
+  "empty": "No sessions to display",
+  "errorBadge": "ERROR",
+  "hero": {
+    "total": "TOTAL",
+    "sessions": "SESSIONS",
+    "avgSession": "AVG. SESSION",
+    "playedToday": "played today",
+    "playedYesterday": "played yesterday",
+    "playedDaysAgo": "played {{days}} days ago",
+    "playedOn": "played {{date}}"
+  }
+}

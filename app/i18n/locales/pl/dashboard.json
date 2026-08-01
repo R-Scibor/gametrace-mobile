@@ -1,0 +1,29 @@
+{
+  "title": "Dashboard",
+  "retry": "SPRÓBUJ PONOWNIE",
+  "activeSession": "AKTYWNA SESJA",
+  "startedAt": "od {{time}}",
+  "errors": {
+    "countOne": "{{count}} nieudana sesja wymaga uwagi",
+    "countOther": "{{count}} nieudane sesje wymagają uwagi",
+    "sub": "Bot mógł zostawić otwarte sesje",
+    "fix": "Napraw →"
+  },
+  "tiles": {
+    "today": "DZIŚ",
+    "week": "7 DNI",
+    "month": "30 DNI"
+  },
+  "recentSessions": "OSTATNIE SESJE",
+  "empty": "Brak sesji do wyświetlenia",
+  "errorBadge": "BŁĄD",
+  "hero": {
+    "total": "ŁĄCZNIE",
+    "sessions": "SESJE",
+    "avgSession": "ŚR. SESJA",
+    "playedToday": "grano dziś",
+    "playedYesterday": "grano wczoraj",
+    "playedDaysAgo": "grano {{days}} dni temu",
+    "playedOn": "grano {{date}}"
+  }
+}

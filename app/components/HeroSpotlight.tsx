@@ -1,8 +1,11 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Cover from './Cover';
 import { GameStats, Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const fmtHours = (seconds: number) => (seconds / 3600).toFixed(1);
 
@@ -10,10 +13,11 @@ const fmtRecency = (iso: string) => {
     const then = new Date(iso);
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const days = Math.round((startOfDay(new Date()) - startOfDay(then)) / 86400000);
-    if (days <= 0) return 'grano dziś';
-    if (days === 1) return 'grano wczoraj';
-    if (days < 7) return `grano ${days} dni temu`;
-    return `grano ${then.toLocaleDateString('pl', { day: '2-digit', month: 'short' })}`;
+    if (days <= 0) return i18n.t('dashboard:hero.playedToday');
+    if (days === 1) return i18n.t('dashboard:hero.playedYesterday');
+    if (days < 7) return i18n.t('dashboard:hero.playedDaysAgo', { days });
+    const date = then.toLocaleDateString(intlLocale(i18n.language), { day: '2-digit', month: 'short' });
+    return i18n.t('dashboard:hero.playedOn', { date });
 };
 
 type Props = {
@@ -23,6 +27,7 @@ type Props = {
 };
 
 export default function HeroSpotlight({ session, stats, onPress }: Props) {
+    const { t } = useTranslation('dashboard');
     const avgSeconds = stats && stats.session_count > 0
         ? stats.total_seconds / stats.session_count
         : null;
@@ -43,7 +48,7 @@ export default function HeroSpotlight({ session, stats, onPress }: Props) {
                     <Text style={styles.recency}>{fmtRecency(session.end_time ?? session.start_time)}</Text>
                     <View style={styles.bottom}>
                         <View>
-                            <Text style={styles.statLabel}>ŁĄCZNIE</Text>
+                            <Text style={styles.statLabel}>{t('hero.total')}</Text>
                             <View style={styles.bigRow}>
                                 <Text style={styles.big}>{stats ? fmtHours(stats.total_seconds) : '—'}</Text>
                                 <Text style={styles.bigUnit}>h</Text>
@@ -51,11 +56,11 @@ export default function HeroSpotlight({ session, stats, onPress }: Props) {
                         </View>
                         <View style={styles.sideStats}>
                             <View>
-                                <Text style={styles.statLabel}>SESJE</Text>
+                                <Text style={styles.statLabel}>{t('hero.sessions')}</Text>
                                 <Text style={styles.statValue}>{stats ? stats.session_count : '—'}</Text>
                             </View>
                             <View>
-                                <Text style={styles.statLabel}>ŚR. SESJA</Text>
+                                <Text style={styles.statLabel}>{t('hero.avgSession')}</Text>
                                 <Text style={styles.statValue}>{avgSeconds != null ? `${fmtHours(avgSeconds)}h` : '—'}</Text>
                             </View>
                         </View>

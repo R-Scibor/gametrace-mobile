@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useDashboard } from '../hooks/useDashboard';
 import { useRecentSessions } from '../hooks/useRecentSessions';
 import { useGameStats } from '../hooks/useGameStats';
@@ -17,6 +18,8 @@ import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { formatDuration } from '../utils/duration';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const ROW_HEIGHT = 66; // sessionRow: 44 cover + 16 vpadding + 2 border + 4 marginBottom — keep in sync with styles.sessionRow
 
@@ -24,21 +27,22 @@ const fmtHours = (seconds: number) => (seconds / 3600).toFixed(1);
 
 const fmtTimeShort = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleTimeString('pl', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(intlLocale(i18n.language), { hour: '2-digit', minute: '2-digit' });
 };
 
 const fmtDateShort = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString('pl', { day: '2-digit', month: 'short' });
+    return d.toLocaleDateString(intlLocale(i18n.language), { day: '2-digit', month: 'short' });
 };
 
 const fmtHeaderDate = () => {
     const d = new Date();
-    return d.toLocaleDateString('pl', { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
+    return d.toLocaleDateString(intlLocale(i18n.language), { weekday: 'short', day: '2-digit', month: 'short' }).toUpperCase();
 };
 
 export default function DashboardScreen() {
     const navigation = useNavigation();
+    const { t } = useTranslation('dashboard');
     const { data, loading, error, isStale, lastSyncTime, refresh } = useDashboard();
     const {
         data: recents, isStale: recentsStale, lastSyncTime: recentsLastSync, refresh: refreshRecents,
@@ -98,7 +102,7 @@ export default function DashboardScreen() {
                 <View style={styles.center}>
                     <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity onPress={refresh} style={styles.retryBtn}>
-                        <Text style={styles.retryText}>SPRÓBUJ PONOWNIE</Text>
+                        <Text style={styles.retryText}>{t('retry')}</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -111,6 +115,7 @@ export default function DashboardScreen() {
 
     // last row's trailing margin can hang into the bottom edge, so it doesn't need counting
     const visibleCount = Math.min(recents.length, Math.floor((listHeight + 4) / ROW_HEIGHT));
+    const pendingCount = data?.pending_errors?.length ?? 0;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -130,7 +135,7 @@ export default function DashboardScreen() {
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.eyebrow}>◈ GAMETRACE</Text>
-                        <Text style={styles.title}>Dashboard</Text>
+                        <Text style={styles.title}>{t('title')}</Text>
                     </View>
                     <Text style={styles.headerDate}>{fmtHeaderDate()}</Text>
                 </View>
@@ -154,7 +159,7 @@ export default function DashboardScreen() {
                             <View style={styles.activeMeta}>
                                 <View style={styles.liveRow}>
                                     <PulsingDot />
-                                    <Text style={styles.liveLabel}>AKTYWNA SESJA</Text>
+                                    <Text style={styles.liveLabel}>{t('activeSession')}</Text>
                                 </View>
                                 <Text style={styles.activeName} numberOfLines={1}>
                                     {data.active_session.game_name}
@@ -164,7 +169,7 @@ export default function DashboardScreen() {
                                     style={styles.timer}
                                 />
                                 <Text style={styles.activeStartedAt}>
-                                    od {fmtTimeShort(data.active_session.start_time)}
+                                    {t('startedAt', { time: fmtTimeShort(data.active_session.start_time) })}
                                 </Text>
                             </View>
                         </View>
@@ -181,35 +186,37 @@ export default function DashboardScreen() {
                 )}
 
                 {/* Error banner */}
-                {data?.pending_errors && data.pending_errors.length > 0 && (
+                {pendingCount > 0 && (
                     <TouchableOpacity activeOpacity={0.85} onPress={openErrors} style={styles.errorBanner}>
                         <Text style={styles.errorIcon}>⚠</Text>
                         <View style={{ flex: 1 }}>
                             <Text style={styles.errorTitle}>
-                                {data.pending_errors.length} {data.pending_errors.length === 1 ? 'nieudana sesja wymaga uwagi' : 'nieudane sesje wymagają uwagi'}
+                                {pendingCount === 1
+                                    ? t('errors.countOne', { count: pendingCount })
+                                    : t('errors.countOther', { count: pendingCount })}
                             </Text>
-                            <Text style={styles.errorSub}>Bot mógł zostawić otwarte sesje</Text>
+                            <Text style={styles.errorSub}>{t('errors.sub')}</Text>
                         </View>
-                        <Text style={styles.errorAction}>Napraw →</Text>
+                        <Text style={styles.errorAction}>{t('errors.fix')}</Text>
                     </TouchableOpacity>
                 )}
 
                 {/* Stat tiles */}
                 <View style={styles.tilesRow}>
-                    <StatTile label="DZIŚ" value={fmtHours(today)} unit="h" />
-                    <StatTile label="7 DNI" value={fmtHours(week)} unit="h" />
-                    <StatTile label="30 DNI" value={fmtHours(month)} unit="h" />
+                    <StatTile label={t('tiles.today')} value={fmtHours(today)} unit="h" />
+                    <StatTile label={t('tiles.week')} value={fmtHours(week)} unit="h" />
+                    <StatTile label={t('tiles.month')} value={fmtHours(month)} unit="h" />
                 </View>
 
                 {/* Recent sessions */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionLabel}>OSTATNIE SESJE</Text>
+                    <Text style={styles.sectionLabel}>{t('recentSessions')}</Text>
                     <View style={styles.sectionRule} />
                 </View>
 
                 <View style={styles.listRegion} onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}>
                     {recents.length === 0 ? (
-                        <Text style={styles.emptyText}>Brak sesji do wyświetlenia</Text>
+                        <Text style={styles.emptyText}>{t('empty')}</Text>
                     ) : (
                         recents.slice(0, visibleCount).map((s) => (
                             <TouchableOpacity
@@ -231,7 +238,7 @@ export default function DashboardScreen() {
                                     </Text>
                                 </View>
                                 {s.status === 'ERROR' ? (
-                                    <Text style={styles.errorBadge}>BŁĄD</Text>
+                                    <Text style={styles.errorBadge}>{t('errorBadge')}</Text>
                                 ) : (
                                     <Text style={styles.sessionDuration}>{formatDuration(s.duration_seconds)}</Text>
                                 )}

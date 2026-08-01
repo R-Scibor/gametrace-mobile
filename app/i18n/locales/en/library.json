@@ -1,0 +1,27 @@
+{
+  "title": "Library",
+  "gameCount": "{{count}} GAMES",
+  "tabs": {
+    "mine": "MY GAMES",
+    "other": "OTHER"
+  },
+  "searchPlaceholder": "Search game...",
+  "filter": {
+    "clearAria": "Clear filter",
+    "genre": "Genre",
+    "theme": "Theme",
+    "developer": "Developer",
+    "publisher": "Publisher",
+    "release_decade": "Decade"
+  },
+  "sort": {
+    "name": "NAME",
+    "playtime": "PLAYTIME",
+    "last_played": "LAST PLAYED"
+  },
+  "empty": {
+    "other": "No games outside your library",
+    "default": "No games to display"
+  },
+  "hidden": "HIDDEN"
+}

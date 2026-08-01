@@ -1,0 +1,27 @@
+{
+  "title": "Biblioteka",
+  "gameCount": "{{count}} GIER",
+  "tabs": {
+    "mine": "MOJE GRY",
+    "other": "INNE"
+  },
+  "searchPlaceholder": "Szukaj gry...",
+  "filter": {
+    "clearAria": "Wyczyść filtr",
+    "genre": "Gatunek",
+    "theme": "Motyw",
+    "developer": "Deweloper",
+    "publisher": "Wydawca",
+    "release_decade": "Dekada"
+  },
+  "sort": {
+    "name": "NAZWA",
+    "playtime": "CZAS GRY",
+    "last_played": "OSTATNIO GRANE"
+  },
+  "empty": {
+    "other": "Brak gier poza biblioteką",
+    "default": "Brak gier do wyświetlenia"
+  },
+  "hidden": "UKRYTE"
+}

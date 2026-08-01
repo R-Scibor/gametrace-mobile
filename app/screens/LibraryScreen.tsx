@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute, RouteProp, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { getGames } from '../api/games';
 import { Game, GameListResponse, GameSort, LibraryFilter } from '../types/api';
 import { TabParamList, RootStackParamList } from '../navigation/types';
@@ -17,18 +18,7 @@ import StaleBanner from '../components/StaleBanner';
 
 const PAGE_SIZE = 20;
 const EMPTY_PAGE: GameListResponse = { total: 0, items: [] };
-const SORTS: { key: GameSort; label: string }[] = [
-    { key: 'name', label: 'NAZWA' },
-    { key: 'playtime', label: 'CZAS GRY' },
-    { key: 'last_played', label: 'OSTATNIO GRANE' },
-];
-const FILTER_PREFIX: Record<LibraryFilter['type'], string> = {
-    genre: 'Gatunek',
-    theme: 'Motyw',
-    developer: 'Deweloper',
-    publisher: 'Wydawca',
-    release_decade: 'Dekada',
-};
+const SORT_KEYS: GameSort[] = ['name', 'playtime', 'last_played'];
 const GRID_PADDING = 14;
 const CELL_MARGIN = 6;
 const CELL_PADDING = 6;
@@ -55,6 +45,7 @@ type LibraryNavigationProp = CompositeNavigationProp<
 export default function LibraryScreen() {
     const navigation = useNavigation<LibraryNavigationProp>();
     const route = useRoute<RouteProp<TabParamList, 'Library'>>();
+    const { t } = useTranslation('library');
     const { width } = useWindowDimensions();
     const grid = computeGrid(width);
     const [activeTab, setActiveTab] = useState<Tab>('all');
@@ -163,20 +154,20 @@ export default function LibraryScreen() {
             <View style={styles.header}>
                 <View>
                     <Text style={styles.eyebrow}>◈ GAMETRACE</Text>
-                    <Text style={styles.title}>Biblioteka</Text>
+                    <Text style={styles.title}>{t('title')}</Text>
                 </View>
-                <Text style={styles.headerCount}>{total} GIER</Text>
+                <Text style={styles.headerCount}>{t('gameCount', { count: total })}</Text>
             </View>
 
             {/* Tabs */}
             <View style={styles.tabs}>
                 <TabButton
-                    label="MOJE GRY"
+                    label={t('tabs.mine')}
                     active={activeTab === 'all'}
                     onPress={() => setActiveTab('all')}
                 />
                 <TabButton
-                    label="INNE"
+                    label={t('tabs.other')}
                     active={activeTab === 'other'}
                     onPress={() => setActiveTab('other')}
                 />
@@ -187,7 +178,7 @@ export default function LibraryScreen() {
                 <View style={styles.orangeBar} />
                 <TextInput
                     style={styles.search}
-                    placeholder="Szukaj gry..."
+                    placeholder={t('searchPlaceholder')}
                     placeholderTextColor={colors.text3}
                     value={query}
                     onChangeText={setQuery}
@@ -200,9 +191,9 @@ export default function LibraryScreen() {
                 <View style={styles.chipRow}>
                     <View style={styles.chip}>
                         <Text style={styles.chipText} numberOfLines={1}>
-                            {FILTER_PREFIX[filter.type]}: {filter.value}
+                            {t(`filter.${filter.type}`)}: {filter.value}
                         </Text>
-                        <TouchableOpacity onPress={() => setFilter(null)} hitSlop={8} accessibilityLabel="Wyczyść filtr">
+                        <TouchableOpacity onPress={() => setFilter(null)} hitSlop={8} accessibilityLabel={t('filter.clearAria')}>
                             <Text style={styles.chipClear}>✕</Text>
                         </TouchableOpacity>
                     </View>
@@ -211,7 +202,7 @@ export default function LibraryScreen() {
 
             {/* Sort */}
             <View style={styles.sortRow}>
-                {SORTS.map(({ key, label }) => {
+                {SORT_KEYS.map((key) => {
                     const active = sort === key;
                     return (
                         <TouchableOpacity
@@ -220,7 +211,9 @@ export default function LibraryScreen() {
                             onPress={() => setSort(key)}
                             activeOpacity={0.85}
                         >
-                            <Text style={[styles.sortPillText, active && styles.sortPillTextActive]}>{label}</Text>
+                            <Text style={[styles.sortPillText, active && styles.sortPillTextActive]}>
+                                {t(`sort.${key}`)}
+                            </Text>
                         </TouchableOpacity>
                     );
                 })}
@@ -247,7 +240,7 @@ export default function LibraryScreen() {
                 ListEmptyComponent={
                     !page0Loading ? (
                         <Text style={styles.emptyText}>
-                            {activeTab === 'other' ? 'Brak gier poza biblioteką' : 'Brak gier do wyświetlenia'}
+                            {activeTab === 'other' ? t('empty.other') : t('empty.default')}
                         </Text>
                     ) : null
                 }
@@ -280,7 +273,7 @@ export default function LibraryScreen() {
                                 )}
                                 {item.is_ignored && (
                                     <View style={styles.ignoredBadge}>
-                                        <Text style={styles.ignoredBadgeText}>UKRYTE</Text>
+                                        <Text style={styles.ignoredBadgeText}>{t('hidden')}</Text>
                                     </View>
                                 )}
                             </View>

@@ -11,12 +11,34 @@ import enAuth from './locales/en/auth.json';
 import plAuth from './locales/pl/auth.json';
 import enServer from './locales/en/server.json';
 import plServer from './locales/pl/server.json';
+import enDashboard from './locales/en/dashboard.json';
+import plDashboard from './locales/pl/dashboard.json';
+import enLibrary from './locales/en/library.json';
+import plLibrary from './locales/pl/library.json';
+import enStats from './locales/en/stats.json';
+import plStats from './locales/pl/stats.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
 const resources = {
-  en: { common: enCommon, settings: enSettings, auth: enAuth, server: enServer },
-  pl: { common: plCommon, settings: plSettings, auth: plAuth, server: plServer },
+  en: {
+    common: enCommon,
+    settings: enSettings,
+    auth: enAuth,
+    server: enServer,
+    dashboard: enDashboard,
+    library: enLibrary,
+    stats: enStats,
+  },
+  pl: {
+    common: plCommon,
+    settings: plSettings,
+    auth: plAuth,
+    server: plServer,
+    dashboard: plDashboard,
+    library: plLibrary,
+    stats: plStats,
+  },
 };
 
 // Init with temporary en; hydrateLanguage sets real lng before UI mounts.

@@ -1,0 +1,85 @@
+{
+  "title": "Statystyki",
+  "period": {
+    "label": "OKRES",
+    "max": "MAX",
+    "days": "{{days}} DNI"
+  },
+  "errors": {
+    "load": "Nie udało się pobrać statystyk."
+  },
+  "sections": {
+    "overview": "PRZEGLĄD",
+    "games": "GRY",
+    "whenYouPlay": "KIEDY GRASZ",
+    "yourTaste": "TWÓJ GUST",
+    "creators": "TWÓRCY"
+  },
+  "overview": {
+    "total": "ŁĄCZNIE",
+    "avgSession": "ŚR. SESJA",
+    "newGames": "NOWE GRY",
+    "subtitleAll": "w całym okresie",
+    "subtitleDays": "w ciągu ostatnich {{days}} dni",
+    "recordLabel": "REKORD · NAJDŁUŻSZA SESJA"
+  },
+  "empty": {
+    "sessions": "Brak sesji w tym okresie",
+    "data": "Brak danych"
+  },
+  "showMore": "Pokaż więcej",
+  "showLess": "Pokaż mniej",
+  "labels": {
+    "activity": "AKTYWNOŚĆ · DZIEŃ × PORA DNIA",
+    "activityTitle": "AKTYWNOŚĆ",
+    "trends": "TRENDY",
+    "trendsWithGranularity": "TRENDY · {{granularity}}",
+    "genres": "GATUNKI",
+    "themes": "MOTYWY",
+    "decades": "DEKADY WYDANIA"
+  },
+  "info": {
+    "activity": "Kiedy w tygodniu grasz. Doba podzielona na 4 pory po 6 h: Noc (0–6), Rano (6–12), Popołudnie (12–18), Wieczór (18–24). Jaśniejsze pole = więcej czasu. Dotknij pola, by zobaczyć szczegóły.",
+    "trend": "Czas gry w kolejnych okresach. Podziałka zależy od wybranego okresu: dziennie / tygodniowo / miesięcznie. Dotknij punktu, by zobaczyć wartość.",
+    "genres": "Gra ma zwykle kilka gatunków, więc każda sesja liczy się do każdego z nich. Słupki pokazują, w co grasz najwięcej — nie sumują się do 100%.",
+    "themes": "Jak przy gatunkach: gra ma wiele motywów, więc sesje liczą się do każdego. To ranking najczęstszych motywów, nie podział procentowy.",
+    "decades": "Czas gry pogrupowany według dekady premiery gry — z jakich epok są gry, w które grasz."
+  },
+  "granularity": {
+    "day": "DZIENNIE",
+    "week": "TYGODNIOWO",
+    "month": "MIESIĘCZNIE"
+  },
+  "roles": {
+    "developer": "DEWELOPERZY",
+    "publisher": "WYDAWCY"
+  },
+  "heat": {
+    "night": "Noc",
+    "morning": "Rano",
+    "afternoon": "Popołudnie",
+    "evening": "Wieczór"
+  },
+  "dow": {
+    "short": {
+      "0": "PN",
+      "1": "WT",
+      "2": "ŚR",
+      "3": "CZ",
+      "4": "PT",
+      "5": "SB",
+      "6": "ND"
+    },
+    "full": {
+      "0": "Poniedziałek",
+      "1": "Wtorek",
+      "2": "Środa",
+      "3": "Czwartek",
+      "4": "Piątek",
+      "5": "Sobota",
+      "6": "Niedziela"
+    }
+  },
+  "gameCountOne": "{{count}} gra",
+  "gameCountOther": "{{count}} gier"
+}

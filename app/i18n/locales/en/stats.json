@@ -1,0 +1,85 @@
+{
+  "title": "Stats",
+  "period": {
+    "label": "PERIOD",
+    "max": "MAX",
+    "days": "{{days}} DAYS"
+  },
+  "errors": {
+    "load": "Couldn't load stats."
+  },
+  "sections": {
+    "overview": "OVERVIEW",
+    "games": "GAMES",
+    "whenYouPlay": "WHEN YOU PLAY",
+    "yourTaste": "YOUR TASTE",
+    "creators": "CREATORS"
+  },
+  "overview": {
+    "total": "TOTAL",
+    "avgSession": "AVG. SESSION",
+    "newGames": "NEW GAMES",
+    "subtitleAll": "over all time",
+    "subtitleDays": "over the last {{days}} days",
+    "recordLabel": "RECORD · LONGEST SESSION"
+  },
+  "empty": {
+    "sessions": "No sessions in this period",
+    "data": "No data"
+  },
+  "showMore": "Show more",
+  "showLess": "Show less",
+  "labels": {
+    "activity": "ACTIVITY · DAY × TIME OF DAY",
+    "activityTitle": "ACTIVITY",
+    "trends": "TRENDS",
+    "trendsWithGranularity": "TRENDS · {{granularity}}",
+    "genres": "GENRES",
+    "themes": "THEMES",
+    "decades": "RELEASE DECADES"
+  },
+  "info": {
+    "activity": "When you play during the week. The day is split into 4 six-hour slots: Night (0–6), Morning (6–12), Afternoon (12–18), Evening (18–24). Brighter cell = more time. Tap a cell for details.",
+    "trend": "Playtime across successive periods. Bucket size depends on the selected range: daily / weekly / monthly. Tap a point to see its value.",
+    "genres": "A game usually has several genres, so each session counts toward every one of them. Bars show what you play most — they do not add up to 100%.",
+    "themes": "Same as genres: a game has multiple themes, so sessions count toward each. This ranks common themes; it is not a percentage split.",
+    "decades": "Playtime grouped by the game's release decade — which eras the games you play come from."
+  },
+  "granularity": {
+    "day": "DAILY",
+    "week": "WEEKLY",
+    "month": "MONTHLY"
+  },
+  "roles": {
+    "developer": "DEVELOPERS",
+    "publisher": "PUBLISHERS"
+  },
+  "heat": {
+    "night": "Night",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening"
+  },
+  "dow": {
+    "short": {
+      "0": "MON",
+      "1": "TUE",
+      "2": "WED",
+      "3": "THU",
+      "4": "FRI",
+      "5": "SAT",
+      "6": "SUN"
+    },
+    "full": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    }
+  },
+  "gameCountOne": "{{count}} game",
+  "gameCountOther": "{{count}} games"
+}

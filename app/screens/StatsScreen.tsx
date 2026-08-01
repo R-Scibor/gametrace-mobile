@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import {
     getCompanies,
@@ -37,13 +38,8 @@ import { useCachedFetch } from '../hooks/useCachedFetch';
 import Cover from '../components/Cover';
 import { InfoLabel } from '../components/InfoButton';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
-
-// Explanatory copy for the per-stat ⓘ affordances.
-const INFO_ACTIVITY = 'Kiedy w tygodniu grasz. Doba podzielona na 4 pory po 6 h: Noc (0–6), Rano (6–12), Popołudnie (12–18), Wieczór (18–24). Jaśniejsze pole = więcej czasu. Dotknij pola, by zobaczyć szczegóły.';
-const INFO_TREND = 'Czas gry w kolejnych okresach. Podziałka zależy od wybranego okresu: dziennie / tygodniowo / miesięcznie. Dotknij punktu, by zobaczyć wartość.';
-const INFO_GENRES = 'Gra ma zwykle kilka gatunków, więc każda sesja liczy się do każdego z nich. Słupki pokazują, w co grasz najwięcej — nie sumują się do 100%.';
-const INFO_THEMES = 'Jak przy gatunkach: gra ma wiele motywów, więc sesje liczą się do każdego. To ranking najczęstszych motywów, nie podział procentowy.';
-const INFO_DECADES = 'Czas gry pogrupowany według dekady premiery gry — z jakich epok są gry, w które grasz.';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 
 const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
@@ -51,28 +47,16 @@ type Period = typeof PERIODS[number];
 type SummaryPayload = { summary: StatsSummary; heatmap: HeatmapResponse };
 type BreakdownPayload = { genres: GenresResponse; themes: ThemesResponse; releaseYears: ReleaseYearsResponse };
 
-const GRANULARITY_LABEL: Record<TrendGranularity, string> = {
-    day: 'DZIENNIE',
-    week: 'TYGODNIOWO',
-    month: 'MIESIĘCZNIE',
-};
-
 const ROLES: readonly CompanyRole[] = ['developer', 'publisher'] as const;
-const ROLE_LABELS: Record<CompanyRole, string> = {
-    developer: 'DEWELOPERZY',
-    publisher: 'WYDAWCY',
-};
 
-const DOW_LABELS = ['PN', 'WT', 'ŚR', 'CZ', 'PT', 'SB', 'ND'];
-const DOW_FULL = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
 // Even 6h time-of-day buckets; `start` is the first hour each covers. Icon shows in
-// the column header; `label` is the full word used in the tap readout.
+// the column header; label comes from stats:heat.* at render.
 const HEAT_BUCKETS = [
-    { label: 'Noc', start: 0, Icon: NightIcon },
-    { label: 'Rano', start: 6, Icon: MorningIcon },
-    { label: 'Popołudnie', start: 12, Icon: AfternoonIcon },
-    { label: 'Wieczór', start: 18, Icon: EveningIcon },
-];
+    { key: 'night', start: 0, Icon: NightIcon },
+    { key: 'morning', start: 6, Icon: MorningIcon },
+    { key: 'afternoon', start: 12, Icon: AfternoonIcon },
+    { key: 'evening', start: 18, Icon: EveningIcon },
+] as const;
 
 // Rank-as-heat: most-played tag is the hottest orange, fading to deep ember.
 const TAG_HEAT = ['#ff7a1a', '#f2691a', '#d9591b', '#b8491a', '#8f3a18'];
@@ -99,6 +83,7 @@ type StatsNavigationProp = CompositeNavigationProp<
 
 export default function StatsScreen() {
     const navigation = useNavigation<StatsNavigationProp>();
+    const { t } = useTranslation('stats');
     const drill = (type: LibraryFilter['type'], value: string) => {
         navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
     };
@@ -172,11 +157,11 @@ export default function StatsScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={common.eyebrow}>◈ GAMETRACE</Text>
-                    <Text style={common.title}>Statystyki</Text>
+                    <Text style={common.title}>{t('title')}</Text>
                 </View>
 
                 {/* Period selector */}
-                <Text style={common.label}>OKRES</Text>
+                <Text style={common.label}>{t('period.label')}</Text>
                 <View style={styles.pillRow}>
                     {PERIODS.map(p => {
                         const active = days === p;
@@ -188,7 +173,7 @@ export default function StatsScreen() {
                                 activeOpacity={0.85}
                             >
                                 <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                                    {p === 0 ? 'MAX' : `${p} DNI`}
+                                    {p === 0 ? t('period.max') : t('period.days', { days: p })}
                                 </Text>
                             </TouchableOpacity>
                         );
@@ -198,29 +183,29 @@ export default function StatsScreen() {
                 {staleSyncTimes.length > 0 && (
                     <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.errorWrap} />
                 )}
-                {loadError && <ErrorBanner message="Nie udało się pobrać statystyk." style={styles.errorWrap} />}
+                {loadError && <ErrorBanner message={t('errors.load')} style={styles.errorWrap} />}
 
                 {/* ── PRZEGLĄD ── */}
-                <SectionHeader label="PRZEGLĄD" />
+                <SectionHeader label={t('sections.overview')} />
                 <View style={styles.totalCard}>
                     <View style={styles.totalRule} />
                     <View style={styles.totalBody}>
-                        <Text style={styles.totalLabel}>ŁĄCZNIE</Text>
+                        <Text style={styles.totalLabel}>{t('overview.total')}</Text>
                         <Text style={styles.totalValue}>{summary ? formatHours(summary.total_seconds) : '—'}</Text>
                         <View style={styles.totalMeta}>
                             {summary && (
                                 <DeltaMetric total={summary.total_seconds} previous={summary.previous_total_seconds} />
                             )}
                             <Text style={styles.totalSub}>
-                                {days === 0 ? 'w całym okresie' : `w ciągu ostatnich ${days} dni`}
+                                {days === 0 ? t('overview.subtitleAll') : t('overview.subtitleDays', { days })}
                             </Text>
                         </View>
                     </View>
                 </View>
                 {summary && (
                     <View style={styles.tilesRow}>
-                        <Tile label="ŚR. SESJA" value={formatHours(summary.avg_session_seconds)} />
-                        <Tile label="NOWE GRY" value={String(summary.new_games_count)} />
+                        <Tile label={t('overview.avgSession')} value={formatHours(summary.avg_session_seconds)} />
+                        <Tile label={t('overview.newGames')} value={String(summary.new_games_count)} />
                     </View>
                 )}
 
@@ -247,7 +232,7 @@ export default function StatsScreen() {
                                 />
                             </View>
                             <View style={styles.recordMeta}>
-                                <Text style={styles.recordLabel}>REKORD · NAJDŁUŻSZA SESJA</Text>
+                                <Text style={styles.recordLabel}>{t('overview.recordLabel')}</Text>
                                 {summary.longest_session_game_name && (
                                     <Text style={styles.recordGame} numberOfLines={2}>{summary.longest_session_game_name}</Text>
                                 )}
@@ -258,9 +243,9 @@ export default function StatsScreen() {
                 )}
 
                 {/* ── GRY ── */}
-                <SectionHeader label="GRY" />
+                <SectionHeader label={t('sections.games')} />
                 {!summary || summary.per_game.length === 0 ? (
-                    <Text style={styles.empty}>Brak sesji w tym okresie</Text>
+                    <Text style={styles.empty}>{t('empty.sessions')}</Text>
                 ) : (
                     (() => {
                         const rows = gamesExpanded ? summary.per_game : summary.per_game.slice(0, TOP_N);
@@ -290,16 +275,18 @@ export default function StatsScreen() {
                 )}
 
                 {/* ── KIEDY GRASZ ── */}
-                <SectionHeader label="KIEDY GRASZ" />
-                <InfoLabel label="AKTYWNOŚĆ · DZIEŃ × PORA DNIA" title="AKTYWNOŚĆ" body={INFO_ACTIVITY} />
+                <SectionHeader label={t('sections.whenYouPlay')} />
+                <InfoLabel label={t('labels.activity')} title={t('labels.activityTitle')} body={t('info.activity')} />
                 <Heatmap data={heatmap} />
                 <InfoLabel
-                    label={`TRENDY${trend ? ` · ${GRANULARITY_LABEL[trend.granularity]}` : ''}`}
-                    title="TRENDY"
-                    body={INFO_TREND}
+                    label={trend
+                        ? t('labels.trendsWithGranularity', { granularity: t(`granularity.${trend.granularity}`) })
+                        : t('labels.trends')}
+                    title={t('labels.trends')}
+                    body={t('info.trend')}
                 />
                 {!trend || trendMax === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
+                    <Text style={styles.empty}>{t('empty.data')}</Text>
                 ) : (
                     <View style={styles.trend}>
                         <TrendLine key={days} buckets={trend.buckets} granularity={trend.granularity} max={trendMax} />
@@ -307,27 +294,27 @@ export default function StatsScreen() {
                 )}
 
                 {/* ── TWÓJ GUST ── */}
-                <SectionHeader label="TWÓJ GUST" />
+                <SectionHeader label={t('sections.yourTaste')} />
                 {/* Genres — a game carries multiple genres, so each session counts
                     toward every genre on its game. Bars are share-of-exposure (overlap
                     allowed), not a partition; longest bar = most-played genre. */}
-                <InfoLabel label="GATUNKI" body={INFO_GENRES} />
+                <InfoLabel label={t('labels.genres')} body={t('info.genres')} />
                 <BreakdownList
                     items={genres ? genres.items.map(g => ({ label: g.genre, seconds: g.total_seconds })) : null}
                     onItemPress={(label) => drill('genre', label)}
                 />
 
                 {/* Themes — same overlap caveat as genres above. */}
-                <InfoLabel label="MOTYWY" body={INFO_THEMES} />
+                <InfoLabel label={t('labels.themes')} body={t('info.themes')} />
                 <BreakdownList
-                    items={themes ? themes.items.map(t => ({ label: t.theme, seconds: t.total_seconds })) : null}
+                    items={themes ? themes.items.map(item => ({ label: item.theme, seconds: item.total_seconds })) : null}
                     onItemPress={(label) => drill('theme', label)}
                 />
 
                 {/* Release years */}
-                <InfoLabel label="DEKADY WYDANIA" body={INFO_DECADES} />
+                <InfoLabel label={t('labels.decades')} body={t('info.decades')} />
                 {!releaseYears || releaseYears.items.length === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
+                    <Text style={styles.empty}>{t('empty.data')}</Text>
                 ) : (
                     releaseYears.items.map(item => (
                         <BreakdownBar
@@ -341,7 +328,7 @@ export default function StatsScreen() {
                 )}
 
                 {/* ── TWÓRCY ── */}
-                <SectionHeader label="TWÓRCY" />
+                <SectionHeader label={t('sections.creators')} />
                 <View style={styles.pillRow}>
                     {ROLES.map(r => {
                         const active = role === r;
@@ -353,14 +340,14 @@ export default function StatsScreen() {
                                 activeOpacity={0.85}
                             >
                                 <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                                    {ROLE_LABELS[r]}
+                                    {t(`roles.${r}`)}
                                 </Text>
                             </TouchableOpacity>
                         );
                     })}
                 </View>
                 {!companies || companies.items.length === 0 ? (
-                    <Text style={styles.empty}>Brak danych</Text>
+                    <Text style={styles.empty}>{t('empty.data')}</Text>
                 ) : (
                     (() => {
                         const rows = companiesExpanded ? companies.items : companies.items.slice(0, TOP_N);
@@ -377,7 +364,9 @@ export default function StatsScreen() {
                                         <View style={styles.companyMain}>
                                             <Text style={styles.gameName} numberOfLines={1}>{item.name}</Text>
                                             <Text style={styles.companyMeta}>
-                                                {item.game_count} {item.game_count === 1 ? 'gra' : 'gier'}
+                                                {item.game_count === 1
+                                                    ? t('gameCountOne', { count: item.game_count })
+                                                    : t('gameCountOther', { count: item.game_count })}
                                             </Text>
                                         </View>
                                         <Text style={styles.gameTime}>{formatHours(item.total_seconds)}</Text>
@@ -406,11 +395,12 @@ type BreakdownItem = { label: string; seconds: number };
 // toward every tag on its game, so these don't partition to 100% — the bars are
 // scaled to the top tag, read as "most-played", not "share of total".
 function BreakdownList({ items, onItemPress }: { items: BreakdownItem[] | null; onItemPress?: (label: string) => void }) {
+    const { t } = useTranslation('stats');
     if (!items) {
         return <Text style={styles.empty}>—</Text>;
     }
     if (items.length === 0) {
-        return <Text style={styles.empty}>Brak danych</Text>;
+        return <Text style={styles.empty}>{t('empty.data')}</Text>;
     }
 
     const top = [...items].sort((a, b) => b.seconds - a.seconds).slice(0, TOP_N);
@@ -481,6 +471,7 @@ function Tile({ label, value, unit }: { label: string; value: string; unit?: str
 // 7 day-rows × 4 time-of-day buckets. Tapping a cell shows its slot + hours in a
 // readout above the grid; defaults to the peak cell so it always reads something.
 function Heatmap({ data }: { data: HeatmapResponse | null }) {
+    const { t } = useTranslation('stats');
     const [selected, setSelected] = useState<{ dow: number; b: number } | null>(null);
 
     // Sum each (dow, hour) cell into its 6h bucket → 7×4 matrix.
@@ -499,7 +490,7 @@ function Heatmap({ data }: { data: HeatmapResponse | null }) {
     }
 
     if (!data || max === 0) {
-        return <Text style={styles.empty}>Brak danych</Text>;
+        return <Text style={styles.empty}>{t('empty.data')}</Text>;
     }
 
     const sel = selected ?? peak;
@@ -508,7 +499,7 @@ function Heatmap({ data }: { data: HeatmapResponse | null }) {
         <View style={styles.heatmap}>
             <View style={styles.heatReadout}>
                 <Text style={styles.heatReadoutSlot} numberOfLines={1}>
-                    {DOW_FULL[sel.dow]} · {HEAT_BUCKETS[sel.b].label}
+                    {t(`dow.full.${sel.dow}`)} · {t(`heat.${HEAT_BUCKETS[sel.b].key}`)}
                 </Text>
                 <Text style={styles.heatReadoutValue}>{formatHours(grid[sel.dow][sel.b])}</Text>
             </View>
@@ -516,15 +507,15 @@ function Heatmap({ data }: { data: HeatmapResponse | null }) {
                 <View style={styles.heatDowSpacer} />
                 <View style={styles.heatCells}>
                     {HEAT_BUCKETS.map(bk => (
-                        <View key={bk.label} style={styles.heatColIcon}>
+                        <View key={bk.key} style={styles.heatColIcon}>
                             <bk.Icon color={colors.text2} size={16} />
                         </View>
                     ))}
                 </View>
             </View>
-            {DOW_LABELS.map((label, dow) => (
+            {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
                 <View key={dow} style={styles.heatRow}>
-                    <Text style={styles.heatDow}>{label}</Text>
+                    <Text style={styles.heatDow}>{t(`dow.short.${dow}`)}</Text>
                     <View style={styles.heatCells}>
                         {HEAT_BUCKETS.map((bk, b) => {
                             const seconds = grid[dow][b];
@@ -532,7 +523,7 @@ function Heatmap({ data }: { data: HeatmapResponse | null }) {
                             const isSel = sel.dow === dow && sel.b === b;
                             return (
                                 <TouchableOpacity
-                                    key={b}
+                                    key={bk.key}
                                     activeOpacity={0.8}
                                     onPress={() => setSelected({ dow, b })}
                                     style={[
@@ -564,11 +555,10 @@ const TREND_PLOT_W = TREND_W - TREND_PAD_X * 2;         // usable horizontal ran
 
 const TREND_MIN_SPACING = 30; // px between points; below this we scroll instead of crowd
 
-const PL_MONTHS = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
-
-// bucket_start → axis label per granularity: day "DD.MM", week "DD.MM–DD.MM", month "mmm YYYY".
+// bucket_start → axis label per granularity: day "DD.MM", week "DD.MM–DD.MM", month via Intl.
 function formatBucket(granularity: TrendGranularity, iso: string) {
     const d = new Date(iso);
+    const locale = intlLocale(i18n.language);
     const f = (x: Date) => `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}`;
     if (granularity === 'day') return f(d);
     if (granularity === 'week') {
@@ -576,7 +566,7 @@ function formatBucket(granularity: TrendGranularity, iso: string) {
         end.setDate(d.getDate() + 6);
         return `${f(d)}–${f(end)}`;
     }
-    return `${PL_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    return d.toLocaleDateString(locale, { month: 'short', year: 'numeric' });
 }
 
 function TrendLine({ buckets, granularity, max }: { buckets: TrendBucket[]; granularity: TrendGranularity; max: number }) {
@@ -686,9 +676,10 @@ function TagBar({ label, seconds, max, color, onPress }: { label: string; second
 }
 
 function ShowMoreToggle({ expanded, onPress }: { expanded: boolean; onPress: () => void }) {
+    const { t } = useTranslation('stats');
     return (
         <TouchableOpacity style={styles.showMore} onPress={onPress} activeOpacity={0.7}>
-            <Text style={styles.showMoreText}>{expanded ? 'Pokaż mniej' : 'Pokaż więcej'}</Text>
+            <Text style={styles.showMoreText}>{expanded ? t('showLess') : t('showMore')}</Text>
         </TouchableOpacity>
     );
 }
