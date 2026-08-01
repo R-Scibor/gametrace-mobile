@@ -21,6 +21,12 @@
     "cancel": "ANULUJ",
     "loading": "ŁADOWANIE..."
   },
+  "alert": {
+    "defaultTitle": "BŁĄD"
+  },
+  "confirm": {
+    "defaultCancel": "Anuluj"
+  },
   "stale": {
     "message": "Dane offline · ostatnia synchronizacja {{time}}"
   }

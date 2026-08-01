@@ -45,42 +45,42 @@ export default function TabNavigator() {
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
-        options={{
+        options={() => ({
           tabBarLabel: t('nav.dashboard'),
           tabBarIcon: ({ color }) => <DashboardIcon color={color} />,
-        }}
+        })}
       />
       <Tab.Screen
         name="Library"
         component={LibraryScreen}
-        options={{
+        options={() => ({
           tabBarLabel: t('nav.library'),
           tabBarIcon: ({ color }) => <LibraryIcon color={color} />,
-        }}
+        })}
       />
       <Tab.Screen
         name="AddSession"
         component={AddSessionScreen}
-        options={{
+        options={() => ({
           tabBarLabel: t('nav.addSession'),
           tabBarIcon: ({ color }) => <AddIcon color={color} />,
-        }}
+        })}
       />
       <Tab.Screen
         name="Stats"
         component={StatsScreen}
-        options={{
+        options={() => ({
           tabBarLabel: t('nav.stats'),
           tabBarIcon: ({ color }) => <StatsIcon color={color} />,
-        }}
+        })}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{
+        options={() => ({
           tabBarLabel: t('nav.settings'),
           tabBarIcon: ({ color }) => <SettingsIcon color={color} />,
-        }}
+        })}
       />
     </Tab.Navigator>
   );

@@ -98,7 +98,8 @@ export async function setActiveLanguage(lng: Language): Promise<void> {
 
 export async function hydrateLanguage(): Promise<Language> {
   const cached = await getCachedLanguage();
-  const device = getLocales()[0]?.languageTag ?? getLocales()[0]?.languageCode ?? null;
+  const deviceLocale = getLocales()[0];
+  const device = deviceLocale?.languageTag ?? deviceLocale?.languageCode ?? null;
   const lng = resolveLanguage({ cached, navigatorLanguage: device });
   await setActiveLanguage(lng);
   return lng;

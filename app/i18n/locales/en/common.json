@@ -21,6 +21,12 @@
     "cancel": "CANCEL",
     "loading": "LOADING..."
   },
+  "alert": {
+    "defaultTitle": "ERROR"
+  },
+  "confirm": {
+    "defaultCancel": "Cancel"
+  },
   "stale": {
     "message": "Offline data · last sync {{time}}"
   }

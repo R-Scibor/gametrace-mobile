@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 
 export default function ConfirmSheet({
@@ -6,7 +7,7 @@ export default function ConfirmSheet({
     title,
     message,
     confirmLabel,
-    cancelLabel = 'Anuluj',
+    cancelLabel,
     destructive,
     onConfirm,
     onCancel,
@@ -20,6 +21,9 @@ export default function ConfirmSheet({
     onConfirm: () => void;
     onCancel: () => void;
 }) {
+    const { t } = useTranslation('common');
+    const displayCancel = cancelLabel ?? t('confirm.defaultCancel');
+
     return (
         <BottomSheet visible={visible} onClose={onCancel} title={title}>
             {message ? <Text style={[sheetStyles.message, { marginBottom: 24 }]}>{message}</Text> : null}
@@ -27,7 +31,7 @@ export default function ConfirmSheet({
                 <Text style={[sheetStyles.primaryRowText, destructive && sheetStyles.rowWarn]}>{confirmLabel}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[sheetStyles.row, sheetStyles.rowLast]} onPress={onCancel} activeOpacity={0.7}>
-                <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{cancelLabel}</Text>
+                <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{displayCancel}</Text>
             </TouchableOpacity>
         </BottomSheet>
     );
