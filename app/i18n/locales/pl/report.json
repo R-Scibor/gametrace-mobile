@@ -1,0 +1,29 @@
+{
+  "title": "OPINIA",
+  "body": "Znalazłeś błąd? Coś nie działa, brakuje funkcji albo masz pomysł? Opisz to poniżej, a trafi prosto do twórcy aplikacji. Im więcej szczegółów, tym lepiej.",
+  "placeholder": "Co możemy poprawić? Błąd, pomysł, cokolwiek.",
+  "send": "WYŚLIJ",
+  "sending": "WYSYŁANIE...",
+  "thanksTitle": "DZIĘKI",
+  "thanksMessage": "Twoja opinia została wysłana.",
+  "sendError": "Nie udało się wysłać. Spróbuj ponownie.",
+  "fabA11y": "Wyślij opinię",
+  "merge": {
+    "title": "DUPLIKAT",
+    "explainer": "Wybierz drugą grę, która wygląda na to samo. Sprawdzimy zgłoszenie — to nie scala od razu.",
+    "source": "ŹRÓDŁO",
+    "secondGame": "DRUGA GRA",
+    "searchPlaceholder": "Szukaj gry...",
+    "noteLabel": "NOTATKA (OPCJONALNIE)",
+    "notePlaceholder": "Np. te same okładki / ten sam serwer Discord",
+    "emptyList": "Brak innych gier w bibliotece.",
+    "noResults": "Brak wyników.",
+    "loadError": "Nie udało się pobrać listy gier. Spróbuj ponownie.",
+    "submitError": "Nie udało się wysłać. Spróbuj ponownie.",
+    "retry": "SPRÓBUJ PONOWNIE",
+    "send": "WYŚLIJ",
+    "sending": "WYSYŁANIE...",
+    "thanksTitle": "DZIĘKI",
+    "thanksMessage": "Sprawdzimy i scalimy, jeśli to ta sama gra."
+  }
+}

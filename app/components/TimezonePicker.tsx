@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Modal, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { getAllZones } from '../utils/timezones';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -14,6 +15,7 @@ interface TimezonePickerProps {
 }
 
 export default function TimezonePicker({ visible, currentValue, onSelect, onClose }: TimezonePickerProps) {
+    const { t } = useTranslation('settings');
     const [search, setSearch] = useState('');
     const allZones = useMemo(() => getAllZones(), []);
 
@@ -35,9 +37,9 @@ export default function TimezonePicker({ visible, currentValue, onSelect, onClos
             <SafeAreaView style={common.safe} edges={['top', 'bottom']}>
                 <View style={styles.modalHeader}>
                     <TouchableOpacity onPress={onClose} hitSlop={12}>
-                        <Text style={styles.back}>← ZAMKNIJ</Text>
+                        <Text style={styles.back}>{t('timezonePicker.close')}</Text>
                     </TouchableOpacity>
-                    <Text style={common.title}>Strefa czasowa</Text>
+                    <Text style={common.title}>{t('preferences.timezone')}</Text>
                 </View>
 
                 <View style={styles.modalSearch}>
@@ -45,7 +47,7 @@ export default function TimezonePicker({ visible, currentValue, onSelect, onClos
                         <View style={common.orangeBar} />
                         <TextInput
                             style={common.input}
-                            placeholder="Szukaj..."
+                            placeholder={t('timezonePicker.search')}
                             placeholderTextColor={colors.text3}
                             value={search}
                             onChangeText={setSearch}

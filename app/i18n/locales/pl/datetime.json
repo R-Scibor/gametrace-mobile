@@ -1,0 +1,30 @@
+{
+  "title": "WYBIERZ DATĘ",
+  "timeLabel": "GODZINA",
+  "placeholder": "Wybierz...",
+  "confirm": "Potwierdź",
+  "cancel": "Anuluj",
+  "weekdays": {
+    "mon": "Pn",
+    "tue": "Wt",
+    "wed": "Śr",
+    "thu": "Cz",
+    "fri": "Pt",
+    "sat": "So",
+    "sun": "Nd"
+  },
+  "months": {
+    "0": "Styczeń",
+    "1": "Luty",
+    "2": "Marzec",
+    "3": "Kwiecień",
+    "4": "Maj",
+    "5": "Czerwiec",
+    "6": "Lipiec",
+    "7": "Sierpień",
+    "8": "Wrzesień",
+    "9": "Październik",
+    "10": "Listopad",
+    "11": "Grudzień"
+  }
+}

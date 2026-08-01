@@ -3,6 +3,7 @@ import {
     View, Text, TouchableOpacity, ScrollView, StyleSheet,
     NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet } from './BottomSheet';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
@@ -11,11 +12,7 @@ import {
 } from './dateTime';
 
 const MINUTE_STEP = 1;
-const WEEKDAYS = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
-const MONTHS = [
-    'Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec',
-    'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień',
-];
+const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 const ITEM_H = 40;
 const VISIBLE = 3; // odd, so one row sits centered under the band
@@ -41,8 +38,9 @@ function seedDraft(value: Date | null) {
 }
 
 export default function DateTimeSheet({ visible, value, onConfirm, onCancel }: Props) {
+    const { t } = useTranslation('datetime');
     return (
-        <BottomSheet visible={visible} onClose={onCancel} title="WYBIERZ DATĘ">
+        <BottomSheet visible={visible} onClose={onCancel} title={t('title')}>
             {/* Mount fresh each open so the draft re-seeds from the current value. */}
             {visible && <DateTimeSheetBody value={value} onConfirm={onConfirm} onCancel={onCancel} />}
         </BottomSheet>
@@ -52,6 +50,7 @@ export default function DateTimeSheet({ visible, value, onConfirm, onCancel }: P
 // The sheet's content, free of the Modal wrapper so it can be rendered and
 // tested directly (RN Modal breaks the test renderer in this environment).
 export function DateTimeSheetBody({ value, onConfirm, onCancel }: Omit<Props, 'visible'>) {
+    const { t } = useTranslation('datetime');
     const seeded = useMemo(() => seedDraft(value), []); // mount-only seed
     const [year, setYear] = useState(seeded.year);
     const [month, setMonth] = useState(seeded.month);
@@ -74,16 +73,16 @@ export function DateTimeSheetBody({ value, onConfirm, onCancel }: Omit<Props, 'v
                 <TouchableOpacity onPress={goPrev} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={styles.navArrow}>‹</Text>
                 </TouchableOpacity>
-                <Text style={styles.monthLabel}>{`${MONTHS[month]} ${year}`}</Text>
+                <Text style={styles.monthLabel}>{`${t(`months.${month}`)} ${year}`}</Text>
                 <TouchableOpacity onPress={goNext} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={styles.navArrow}>›</Text>
                 </TouchableOpacity>
             </View>
 
             <View style={styles.weekRow}>
-                {WEEKDAYS.map((w) => (
-                    <View key={w} style={styles.dayCell}>
-                        <Text style={styles.weekdayText}>{w}</Text>
+                {WEEKDAY_KEYS.map((key) => (
+                    <View key={key} style={styles.dayCell}>
+                        <Text style={styles.weekdayText}>{t(`weekdays.${key}`)}</Text>
                     </View>
                 ))}
             </View>
@@ -91,7 +90,7 @@ export function DateTimeSheetBody({ value, onConfirm, onCancel }: Omit<Props, 'v
             <MonthGrid year={year} month={month} day={day} onPick={setDay} />
 
             <View style={styles.divider} />
-            <Text style={styles.sectionLabel}>GODZINA</Text>
+            <Text style={styles.sectionLabel}>{t('timeLabel')}</Text>
             <View style={styles.timeRow}>
                 <WheelColumn testID="wheel-hours" values={hourOptions()} selected={hours} onSelect={setHours} format={pad2} />
                 <Text style={styles.colon}>:</Text>
@@ -101,10 +100,10 @@ export function DateTimeSheetBody({ value, onConfirm, onCancel }: Omit<Props, 'v
 
             <View style={styles.actions}>
                 <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={onCancel} activeOpacity={0.8}>
-                    <Text style={styles.btnCancelText}>Anuluj</Text>
+                    <Text style={styles.btnCancelText}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.btn, styles.btnConfirm]} onPress={confirm} activeOpacity={0.85}>
-                    <Text style={styles.btnConfirmText}>Potwierdź</Text>
+                    <Text style={styles.btnConfirmText}>{t('confirm')}</Text>
                 </TouchableOpacity>
             </View>
         </>

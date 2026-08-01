@@ -20,5 +20,9 @@
     "confirm": "POTWIERDŹ",
     "cancel": "ANULUJ",
     "loading": "ŁADOWANIE..."
+  },
+  "stale": {
+    "message": "Dane offline · ostatnia synchronizacja {{time}}"
   }
 }
+

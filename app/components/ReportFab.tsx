@@ -1,6 +1,7 @@
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useReportStore } from '../store/reportStore';
 import { colors } from '../theme/colors';
 
@@ -9,6 +10,7 @@ import { colors } from '../theme/colors';
 const TAB_BAR_HEIGHT = 72;
 
 export default function ReportFab() {
+    const { t } = useTranslation('report');
     const insets = useSafeAreaInsets();
     const open = useReportStore((s) => s.open);
     return (
@@ -16,7 +18,7 @@ export default function ReportFab() {
             style={[styles.fab, { bottom: insets.bottom + TAB_BAR_HEIGHT + 16 }]}
             onPress={open}
             activeOpacity={0.8}
-            accessibilityLabel="Wyślij opinię"
+            accessibilityLabel={t('fabA11y')}
         >
             {/* Solid red disc with a light warning triangle; evenodd cuts the
                 exclamation so the red fill shows through it. */}

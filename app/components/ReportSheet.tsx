@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 import { useReportStore } from '../store/reportStore';
 import { useAlertStore } from '../store/alertStore';
@@ -8,9 +9,8 @@ import { submitReport } from '../api/reports';
 import { colors } from '../theme/colors';
 import { bodyFont } from '../theme/fonts';
 
-const PLACEHOLDER = 'Co możemy poprawić? Błąd, pomysł, cokolwiek.';
-
 export default function ReportSheet() {
+    const { t } = useTranslation('report');
     const isOpen = useReportStore((s) => s.isOpen);
     const submitting = useReportStore((s) => s.submitting);
     const close = useReportStore((s) => s.close);
@@ -35,18 +35,17 @@ export default function ReportSheet() {
             await submitReport(message.trim(), buildReportContext());
             setMessage('');
             close();
-            showAlert('DZIĘKI', 'Twoja opinia została wysłana.');
+            showAlert(t('thanksTitle'), t('thanksMessage'));
         } catch {
             setSubmitting(false);
-            setError('Nie udało się wysłać. Spróbuj ponownie.');
+            setError(t('sendError'));
         }
     };
 
     return (
-        <BottomSheet visible={isOpen} onClose={handleClose} title="OPINIA" keyboardAware>
+        <BottomSheet visible={isOpen} onClose={handleClose} title={t('title')} keyboardAware>
             <Text style={sheetStyles.message}>
-                Znalazłeś błąd? Coś nie działa, brakuje funkcji albo masz pomysł? Opisz to
-                poniżej, a trafi prosto do twórcy aplikacji. Im więcej szczegółów, tym lepiej.
+                {t('body')}
             </Text>
             <View style={styles.inputWrapper}>
                 <View style={styles.orangeBar} />
@@ -54,7 +53,7 @@ export default function ReportSheet() {
                     style={styles.input}
                     value={message}
                     onChangeText={setMessage}
-                    placeholder={PLACEHOLDER}
+                    placeholder={t('placeholder')}
                     placeholderTextColor={colors.text3}
                     multiline
                     autoFocus
@@ -70,7 +69,7 @@ export default function ReportSheet() {
                 activeOpacity={0.7}
             >
                 <Text style={[sheetStyles.rowText, !canSend && sheetStyles.rowMuted]}>
-                    {submitting ? 'WYSYŁANIE...' : 'WYŚLIJ'}
+                    {submitting ? t('sending') : t('send')}
                 </Text>
             </TouchableOpacity>
         </BottomSheet>

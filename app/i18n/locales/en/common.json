@@ -20,5 +20,9 @@
     "confirm": "CONFIRM",
     "cancel": "CANCEL",
     "loading": "LOADING..."
+  },
+  "stale": {
+    "message": "Offline data · last sync {{time}}"
   }
 }
+

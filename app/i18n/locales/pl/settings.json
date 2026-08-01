@@ -44,5 +44,10 @@
   "errors": {
     "languageSave": "Nie udało się zapisać języka. Spróbuj ponownie.",
     "timezoneSave": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
+  },
+  "timezonePicker": {
+    "close": "← ZAMKNIJ",
+    "search": "Szukaj..."
   }
 }
+

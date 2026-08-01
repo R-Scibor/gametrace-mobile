@@ -1,0 +1,29 @@
+{
+  "title": "FEEDBACK",
+  "body": "Found a bug? Something broken, missing, or an idea? Describe it below and it goes straight to the app maker. More detail is better.",
+  "placeholder": "What can we improve? Bug, idea, anything.",
+  "send": "SEND",
+  "sending": "SENDING...",
+  "thanksTitle": "THANKS",
+  "thanksMessage": "Your feedback was sent.",
+  "sendError": "Couldn't send. Try again.",
+  "fabA11y": "Send feedback",
+  "merge": {
+    "title": "DUPLICATE",
+    "explainer": "Pick the other game that looks like the same one. We'll review — this does not merge immediately.",
+    "source": "SOURCE",
+    "secondGame": "OTHER GAME",
+    "searchPlaceholder": "Search games...",
+    "noteLabel": "NOTE (OPTIONAL)",
+    "notePlaceholder": "e.g. same covers / same Discord server",
+    "emptyList": "No other games in the library.",
+    "noResults": "No results.",
+    "loadError": "Couldn't load the game list. Try again.",
+    "submitError": "Couldn't send. Try again.",
+    "retry": "TRY AGAIN",
+    "send": "SEND",
+    "sending": "SENDING...",
+    "thanksTitle": "THANKS",
+    "thanksMessage": "We'll review and merge if it's the same game."
+  }
+}

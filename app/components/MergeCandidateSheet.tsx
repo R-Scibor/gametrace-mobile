@@ -8,12 +8,15 @@ import {
     ScrollView,
     ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 import { getGames } from '../api/games';
 import { submitReport } from '../api/reports';
 import { buildReportContext } from '../utils/reportContext';
 import { composeMergeCandidateMessage } from '../utils/composeMergeCandidateMessage';
 import { useAlertStore } from '../store/alertStore';
+import i18n from '../i18n';
+import { intlLocale } from '../i18n/resolve';
 import { Game } from '../types/api';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -26,11 +29,6 @@ export type MergeCandidateSheetProps = {
 
 const SEARCH_DEBOUNCE_MS = 300;
 const NOTE_MAX = 1000;
-const LOAD_ERROR = 'Nie udało się pobrać listy gier. Spróbuj ponownie.';
-const SUBMIT_ERROR = 'Nie udało się wysłać. Spróbuj ponownie.';
-const EXPLAINER =
-    'Wybierz drugą grę, która wygląda na to samo. Sprawdzimy zgłoszenie — to nie scala od razu.';
-const EMPTY_LIST = 'Brak innych gier w bibliotece.';
 
 function mergeGameLists(a: Game[], b: Game[], sourceId: number): Game[] {
     const byId = new Map<number, Game>();
@@ -38,11 +36,12 @@ function mergeGameLists(a: Game[], b: Game[], sourceId: number): Game[] {
     for (const g of b) byId.set(g.id, g);
     byId.delete(sourceId);
     return Array.from(byId.values()).sort((x, y) =>
-        x.primary_name.localeCompare(y.primary_name, 'pl'),
+        x.primary_name.localeCompare(y.primary_name, intlLocale(i18n.language)),
     );
 }
 
 export default function MergeCandidateSheet({ visible, onClose, source }: MergeCandidateSheetProps) {
+    const { t } = useTranslation('report');
     const showAlert = useAlertStore((s) => s.showAlert);
 
     const [query, setQuery] = useState('');
@@ -112,13 +111,13 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
             }
         } catch {
             if (reqId !== requestIdRef.current) return;
-            setLoadError(LOAD_ERROR);
+            setLoadError(t('merge.loadError'));
             setUnscopedGames([]);
             setGames([]);
         } finally {
             if (reqId === requestIdRef.current) setLoading(false);
         }
-    }, [fetchDual]);
+    }, [fetchDual, t]);
 
     // Load candidates when sheet opens
     useEffect(() => {
@@ -146,12 +145,12 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
                 // Keep selection by id even if absent from this search result
             } catch {
                 if (reqId !== requestIdRef.current) return;
-                setLoadError(LOAD_ERROR);
+                setLoadError(t('merge.loadError'));
             } finally {
                 if (reqId === requestIdRef.current) setSearching(false);
             }
         },
-        [fetchDual],
+        [fetchDual, t],
     );
 
     const handleQueryChange = (text: string) => {
@@ -196,31 +195,31 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
             await submitReport(message, buildReportContext());
             resetForm();
             onClose();
-            showAlert('DZIĘKI', 'Sprawdzimy i scalimy, jeśli to ta sama gra.');
+            showAlert(t('merge.thanksTitle'), t('merge.thanksMessage'));
         } catch {
             setSubmitting(false);
-            setSubmitError(SUBMIT_ERROR);
+            setSubmitError(t('merge.submitError'));
         }
     };
 
     const sourceDisplay = source.name.trim() || '—';
 
     return (
-        <BottomSheet visible={visible} onClose={handleClose} title="DUPLIKAT" keyboardAware>
-            <Text style={sheetStyles.message}>{EXPLAINER}</Text>
+        <BottomSheet visible={visible} onClose={handleClose} title={t('merge.title')} keyboardAware>
+            <Text style={sheetStyles.message}>{t('merge.explainer')}</Text>
 
-            <Text style={styles.sourceLabel}>ŹRÓDŁO</Text>
+            <Text style={styles.sourceLabel}>{t('merge.source')}</Text>
             <Text style={styles.sourceName} numberOfLines={2}>
                 {sourceDisplay}
             </Text>
 
-            <Text style={styles.fieldLabel}>DRUGA GRA</Text>
+            <Text style={styles.fieldLabel}>{t('merge.secondGame')}</Text>
 
             {loadError ? (
                 <View style={styles.loadErrorBlock}>
                     <Text style={styles.error}>{loadError}</Text>
                     <TouchableOpacity onPress={handleRetry} activeOpacity={0.7} style={styles.retryBtn}>
-                        <Text style={styles.retryText}>SPRÓBUJ PONOWNIE</Text>
+                        <Text style={styles.retryText}>{t('merge.retry')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : null}
@@ -233,7 +232,7 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
                             style={styles.searchInput}
                             value={query}
                             onChangeText={handleQueryChange}
-                            placeholder="Szukaj gry..."
+                            placeholder={t('merge.searchPlaceholder')}
                             placeholderTextColor={colors.text3}
                             autoCorrect={false}
                             autoCapitalize="none"
@@ -260,7 +259,7 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
                         </View>
                     ) : games.length === 0 ? (
                         <Text style={styles.empty}>
-                            {query.trim() ? 'Brak wyników.' : EMPTY_LIST}
+                            {query.trim() ? t('merge.noResults') : t('merge.emptyList')}
                         </Text>
                     ) : (
                         <ScrollView
@@ -297,14 +296,14 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
                 </>
             ) : null}
 
-            <Text style={styles.fieldLabel}>NOTATKA (OPCJONALNIE)</Text>
+            <Text style={styles.fieldLabel}>{t('merge.noteLabel')}</Text>
             <View style={[styles.inputWrapper, styles.noteWrapper]}>
                 <View style={styles.orangeBar} />
                 <TextInput
                     style={styles.noteInput}
                     value={note}
                     onChangeText={setNote}
-                    placeholder="Np. te same okładki / ten sam serwer Discord"
+                    placeholder={t('merge.notePlaceholder')}
                     placeholderTextColor={colors.text3}
                     multiline
                     maxLength={NOTE_MAX}
@@ -321,7 +320,7 @@ export default function MergeCandidateSheet({ visible, onClose, source }: MergeC
                 activeOpacity={0.7}
             >
                 <Text style={[sheetStyles.rowText, !canSend && sheetStyles.rowMuted]}>
-                    {submitting ? 'WYSYŁANIE...' : 'WYŚLIJ'}
+                    {submitting ? t('merge.sending') : t('merge.send')}
                 </Text>
             </TouchableOpacity>
         </BottomSheet>

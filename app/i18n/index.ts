@@ -25,6 +25,10 @@ import enVoice from './locales/en/voice.json';
 import plVoice from './locales/pl/voice.json';
 import enTrash from './locales/en/trash.json';
 import plTrash from './locales/pl/trash.json';
+import enDatetime from './locales/en/datetime.json';
+import plDatetime from './locales/pl/datetime.json';
+import enReport from './locales/en/report.json';
+import plReport from './locales/pl/report.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
@@ -41,6 +45,8 @@ const resources = {
     gameDetail: enGameDetail,
     voice: enVoice,
     trash: enTrash,
+    datetime: enDatetime,
+    report: enReport,
   },
   pl: {
     common: plCommon,
@@ -54,6 +60,8 @@ const resources = {
     gameDetail: plGameDetail,
     voice: plVoice,
     trash: plTrash,
+    datetime: plDatetime,
+    report: plReport,
   },
 };
 
