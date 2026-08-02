@@ -16,11 +16,11 @@ jest.mock('../../screens/VoiceScreen', () => () => null);
 // import chain (ESM) is never loaded in this suite.
 jest.mock('../../hooks/useDiscordOAuth', () => ({ useDiscordOAuth: () => ({ ready: true, promptDiscord: jest.fn() }) }));
 
-test('shows server setup when no serverUrl', async () => {
+test('shows the welcome choice when no serverUrl', async () => {
   useServerStore.setState({ serverUrl: null });
   useAuthStore.setState({ isAuthenticated: false, token: null, user: null });
   const { findByText } = await render(<RootNavigator />);
-  expect(await findByText('— POŁĄCZ Z SERWEREM —')).toBeTruthy();
+  expect(await findByText('UŻYJ OFICJALNEGO SERWERA')).toBeTruthy();
 });
 
 test('shows auth when serverUrl set but not authenticated', async () => {
