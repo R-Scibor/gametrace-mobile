@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     View, Text, ScrollView, TouchableOpacity, StyleSheet,
-    RefreshControl, ActivityIndicator,
+    RefreshControl, ActivityIndicator, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -12,27 +12,29 @@ import { useGameStats } from '../hooks/useGameStats';
 import LiveTimer from '../components/LiveTimer';
 import PulsingDot from '../components/PulsingDot';
 import HeroSpotlight from '../components/HeroSpotlight';
+import RecentSessionRow from '../components/RecentSessionRow';
+import GetStartedCard from '../components/GetStartedCard';
+import SamplePreviewBanner from '../components/SamplePreviewBanner';
 import Cover from '../components/Cover';
 import StaleBanner from '../components/StaleBanner';
 import { Session } from '../types/api';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
-import { formatDuration } from '../utils/duration';
+import { useEmptyAccountStore } from '../store/emptyAccountStore';
+import { DISCORD_INVITE_URL } from '../config';
+import {
+    SAMPLE_DASHBOARD, SAMPLE_SESSIONS, SAMPLE_LAST_SESSION, SAMPLE_GAME_STATS,
+} from '../utils/sampleData';
 import i18n from '../i18n';
 import { intlLocale } from '../i18n/resolve';
 
-const ROW_HEIGHT = 66; // sessionRow: 44 cover + 16 vpadding + 2 border + 4 marginBottom — keep in sync with styles.sessionRow
+const ROW_HEIGHT = 66; // sessionRow: 44 cover + 16 vpadding + 2 border + 4 marginBottom — keep in sync with RecentSessionRow's styles.sessionRow
 
 const fmtHours = (seconds: number) => (seconds / 3600).toFixed(1);
 
 const fmtTimeShort = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleTimeString(intlLocale(i18n.language), { hour: '2-digit', minute: '2-digit' });
-};
-
-const fmtDateShort = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString(intlLocale(i18n.language), { day: '2-digit', month: 'short' });
 };
 
 const fmtHeaderDate = () => {
@@ -45,7 +47,8 @@ export default function DashboardScreen() {
     const { t } = useTranslation('dashboard');
     const { data, loading, error, isStale, lastSyncTime, refresh } = useDashboard();
     const {
-        data: recents, isStale: recentsStale, lastSyncTime: recentsLastSync, refresh: refreshRecents,
+        data: recents, loading: recentsLoading, isStale: recentsStale,
+        lastSyncTime: recentsLastSync, refresh: refreshRecents,
     } = useRecentSessions(data?.active_session?.id ?? null);
     const [refreshing, setRefreshing] = useState(false);
     const [listHeight, setListHeight] = useState(0);
@@ -54,6 +57,23 @@ export default function DashboardScreen() {
         ? recents.find((s) => s.status === 'COMPLETED') ?? null
         : null;
     const { data: spotlightStats } = useGameStats(lastPlayed?.game_id);
+
+    const setIsEmpty = useEmptyAccountStore((s) => s.setIsEmpty);
+    const isEmpty = useEmptyAccountStore((s) => s.isEmpty);
+    const [sampleDismissed, setSampleDismissed] = useState(false);
+
+    // Publish only once BOTH inputs have settled. Gating on the dashboard alone
+    // would publish `true` while recents still hold their `initialData: []`, then
+    // flip to `false` when the real list lands.
+    useEffect(() => {
+        if (loading || !data || recentsLoading) return;
+        setIsEmpty(!data.active_session && !recents.some((s) => s.status === 'COMPLETED'));
+    }, [loading, data, recentsLoading, recents, setIsEmpty]);
+
+    // The card also covers ERROR-only accounts, which still need guidance.
+    const showGetStarted = isEmpty === true;
+    // The preview must never cover real rows the user has to act on.
+    const preview = isEmpty === true && recents.length === 0 && !sampleDismissed;
 
     // Oldest sync time among stale resources — never overclaim freshness.
     const staleSyncTimes = [
@@ -109,12 +129,14 @@ export default function DashboardScreen() {
         );
     }
 
-    const today = data?.total_seconds_today ?? 0;
-    const week = data?.total_seconds_7d ?? 0;
-    const month = data?.total_seconds_30d ?? 0;
+    const today = preview ? SAMPLE_DASHBOARD.total_seconds_today : (data?.total_seconds_today ?? 0);
+    const week = preview ? SAMPLE_DASHBOARD.total_seconds_7d : (data?.total_seconds_7d ?? 0);
+    const month = preview ? SAMPLE_DASHBOARD.total_seconds_30d : (data?.total_seconds_30d ?? 0);
 
-    // last row's trailing margin can hang into the bottom edge, so it doesn't need counting
-    const visibleCount = Math.min(recents.length, Math.floor((listHeight + 4) / ROW_HEIGHT));
+    // last row's trailing margin can hang into the bottom edge, so it doesn't need counting.
+    const rowCapacity = Math.floor((listHeight + 4) / ROW_HEIGHT);
+    const visibleCount = Math.min(recents.length, rowCapacity);
+    const sampleVisibleCount = Math.min(SAMPLE_SESSIONS.length, rowCapacity);
     const pendingCount = data?.pending_errors?.length ?? 0;
 
     return (
@@ -140,8 +162,24 @@ export default function DashboardScreen() {
                     <Text style={styles.headerDate}>{fmtHeaderDate()}</Text>
                 </View>
 
-                {staleSyncTimes.length > 0 && (
+                {!preview && staleSyncTimes.length > 0 && (
                     <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.staleWrap} />
+                )}
+
+                {showGetStarted && (
+                    <GetStartedCard
+                        onAddBot={() => { if (DISCORD_INVITE_URL) Linking.openURL(DISCORD_INVITE_URL); }}
+                        onAddSession={() => navigation.navigate('Main', { screen: 'AddSession' })}
+                        onVoice={() => navigation.navigate('Voice')}
+                    />
+                )}
+
+                {preview && (
+                    <SamplePreviewBanner
+                        onDismiss={() => setSampleDismissed(true)}
+                        onAddSession={() => navigation.navigate('Main', { screen: 'AddSession' })}
+                        style={styles.staleWrap}
+                    />
                 )}
 
                 {/* Active session */}
@@ -177,7 +215,14 @@ export default function DashboardScreen() {
                 )}
 
                 {/* Idle spotlight — last played game */}
-                {lastPlayed && (
+                {preview ? (
+                    <HeroSpotlight
+                        session={SAMPLE_LAST_SESSION}
+                        stats={SAMPLE_GAME_STATS(SAMPLE_LAST_SESSION.game_id) ?? null}
+                        onPress={() => {}}
+                        disabled
+                    />
+                ) : lastPlayed && (
                     <HeroSpotlight
                         session={lastPlayed}
                         stats={spotlightStats}
@@ -214,35 +259,20 @@ export default function DashboardScreen() {
                     <View style={styles.sectionRule} />
                 </View>
 
-                <View style={styles.listRegion} onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}>
-                    {recents.length === 0 ? (
+                <View
+                    testID="listRegion"
+                    style={styles.listRegion}
+                    onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+                >
+                    {preview ? (
+                        SAMPLE_SESSIONS.slice(0, sampleVisibleCount).map((s) => (
+                            <RecentSessionRow key={s.id} session={s} />
+                        ))
+                    ) : recents.length === 0 ? (
                         <Text style={styles.emptyText}>{t('empty')}</Text>
                     ) : (
                         recents.slice(0, visibleCount).map((s) => (
-                            <TouchableOpacity
-                                key={s.id}
-                                onPress={() => openSession(s)}
-                                activeOpacity={0.85}
-                                style={[styles.sessionRow, s.status === 'ERROR' && styles.sessionRowError]}
-                            >
-                                <Cover
-                                    gameId={s.game_id}
-                                    fallbackUri={s.game.cover_image_url}
-                                    style={styles.sessionCover}
-                                    placeholderChar={s.game.primary_name?.[0]}
-                                />
-                                <View style={{ flex: 1, minWidth: 0 }}>
-                                    <Text style={styles.sessionName} numberOfLines={1}>{s.game.primary_name}</Text>
-                                    <Text style={styles.sessionMeta}>
-                                        {s.source === 'BOT' ? '⬡' : '✎'}  {fmtDateShort(s.start_time)}
-                                    </Text>
-                                </View>
-                                {s.status === 'ERROR' ? (
-                                    <Text style={styles.errorBadge}>{t('errorBadge')}</Text>
-                                ) : (
-                                    <Text style={styles.sessionDuration}>{formatDuration(s.duration_seconds)}</Text>
-                                )}
-                            </TouchableOpacity>
+                            <RecentSessionRow key={s.id} session={s} onPress={() => openSession(s)} />
                         ))
                     )}
                 </View>
@@ -371,22 +401,6 @@ const styles = StyleSheet.create({
 
     // Recent sessions list region — flexes to remaining space; row count derived via onLayout
     listRegion: { flex: 1 },
-
-    // Recent session rows
-    sessionRow: {
-        marginHorizontal: 20, marginBottom: 4,
-        flexDirection: 'row', alignItems: 'center', gap: 10,
-        paddingHorizontal: 10, paddingVertical: 8, borderRadius: 3,
-        borderWidth: 1, borderColor: 'transparent',
-    },
-    sessionRowError: { backgroundColor: colors.warnTint, borderColor: colors.warnBorder },
-    sessionCover: { width: 32, height: 44, borderRadius: 2, backgroundColor: colors.bg3 },
-    sessionName: { fontFamily: bodyFont.medium, fontSize: 13, color: colors.text },
-    sessionMeta: { fontFamily: bodyFont.regular, fontSize: 11, color: colors.text3, marginTop: 2 },
-    sessionDuration: { fontFamily: displayFont.regular, fontSize: 13, color: colors.text2 },
-    errorBadge: {
-        fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 2, color: colors.warn,
-    },
 
     emptyText: {
         textAlign: 'center', paddingVertical: 24,

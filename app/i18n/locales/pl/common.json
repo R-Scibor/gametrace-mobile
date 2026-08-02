@@ -31,6 +31,12 @@
   },
   "stale": {
     "message": "Dane offline · ostatnia synchronizacja {{time}}"
+  },
+  "sample": {
+    "label": "PRZYKŁADOWE DANE",
+    "text": "Tak będzie wyglądać GameTrace, gdy zbierzesz trochę historii.",
+    "cta": "DODAJ SESJĘ →",
+    "dismiss": "Ukryj"
   }
 }
 

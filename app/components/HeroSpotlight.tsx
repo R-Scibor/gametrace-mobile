@@ -24,16 +24,18 @@ type Props = {
     session: Session;
     stats: GameStats | null;
     onPress: () => void;
+    /** Sample-preview mode: render normally but swallow taps. */
+    disabled?: boolean;
 };
 
-export default function HeroSpotlight({ session, stats, onPress }: Props) {
+export default function HeroSpotlight({ session, stats, onPress, disabled }: Props) {
     const { t } = useTranslation('dashboard');
     const avgSeconds = stats && stats.session_count > 0
         ? stats.total_seconds / stats.session_count
         : null;
 
     return (
-        <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
+        <TouchableOpacity activeOpacity={0.85} onPress={onPress} disabled={disabled} style={styles.card}>
             <View style={styles.row}>
                 <View style={styles.coverWrap}>
                     <Cover

@@ -15,6 +15,9 @@ import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import StaleBanner from '../components/StaleBanner';
+import SamplePreviewBanner from '../components/SamplePreviewBanner';
+import { useEmptyAccountStore } from '../store/emptyAccountStore';
+import { SAMPLE_GAMES } from '../utils/sampleData';
 
 const PAGE_SIZE = 20;
 const EMPTY_PAGE: GameListResponse = { total: 0, items: [] };
@@ -58,6 +61,8 @@ export default function LibraryScreen() {
     const [filter, setFilter] = useState<LibraryFilter | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [paginationError, setPaginationError] = useState(false);
+    const isEmpty = useEmptyAccountStore((s) => s.isEmpty);
+    const [sampleDismissed, setSampleDismissed] = useState(false);
 
     const gamesStale = useGamesStore((s) => s.stale);
     const markGamesFresh = useGamesStore((s) => s.markFresh);
@@ -92,6 +97,17 @@ export default function LibraryScreen() {
         setGames(page.items);
         setTotal(page.total);
     }, [page0Data]);
+
+    // The store flag means "no COMPLETED session", which is not the same as "no
+    // games" — an account can hold bot-created or unaccepted stubs. The local
+    // emptiness check is what stops the preview covering those real cells.
+    const preview = isEmpty === true
+        && activeTab === 'all'
+        && !debouncedQuery
+        && filter == null
+        && !page0Loading
+        && games.length === 0
+        && !sampleDismissed;
 
     // Refresh page 0 on focus if a game's accept/ignore state changed elsewhere.
     useFocusEffect(
@@ -156,7 +172,9 @@ export default function LibraryScreen() {
                     <Text style={styles.eyebrow}>◈ GAMETRACE</Text>
                     <Text style={styles.title}>{t('title')}</Text>
                 </View>
-                <Text style={styles.headerCount}>{t('gameCount', { count: total })}</Text>
+                <Text style={styles.headerCount}>
+                    {t('gameCount', { count: preview ? SAMPLE_GAMES.length : total })}
+                </Text>
             </View>
 
             {/* Tabs */}
@@ -219,19 +237,27 @@ export default function LibraryScreen() {
                 })}
             </View>
 
-            {page0Stale && page0SyncTime != null && (
+            {!preview && page0Stale && page0SyncTime != null && (
                 <View style={styles.errorWrap}>
                     <StaleBanner lastSyncTime={page0SyncTime} />
                 </View>
             )}
-            {(page0Error != null || paginationError) && (
+            {!preview && (page0Error != null || paginationError) && (
                 <View style={styles.errorWrap}>
                     <ErrorBanner />
                 </View>
             )}
+            {preview && (
+                <View style={styles.errorWrap}>
+                    <SamplePreviewBanner
+                        onDismiss={() => setSampleDismissed(true)}
+                        onAddSession={() => navigation.navigate('Main', { screen: 'AddSession' })}
+                    />
+                </View>
+            )}
 
             <FlatList
-                data={games}
+                data={preview ? SAMPLE_GAMES : games}
                 key={grid.columns}
                 keyExtractor={(item) => item.id.toString()}
                 numColumns={grid.columns}
@@ -249,6 +275,7 @@ export default function LibraryScreen() {
                     return (
                         <TouchableOpacity
                             activeOpacity={0.85}
+                            disabled={preview}
                             style={[styles.cell, needsReview && styles.cellReview, item.is_ignored && styles.cellIgnored]}
                             onPress={() => navigation.navigate('GameDetail', {
                                 gameId: item.id,

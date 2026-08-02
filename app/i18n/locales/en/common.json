@@ -31,6 +31,12 @@
   },
   "stale": {
     "message": "Offline data · last sync {{time}}"
+  },
+  "sample": {
+    "label": "SAMPLE DATA",
+    "text": "This is what GameTrace looks like once you've built up some history.",
+    "cta": "ADD A SESSION →",
+    "dismiss": "Hide"
   }
 }
 

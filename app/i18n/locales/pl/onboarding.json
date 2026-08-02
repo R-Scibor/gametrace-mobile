@@ -22,5 +22,12 @@
     "accept": "AKCEPTUJĘ I KONTYNUUJ",
     "connecting": "ŁĄCZENIE...",
     "error": "Nie można połączyć się z oficjalnym serwerem. Sprawdź połączenie i spróbuj ponownie."
+  },
+  "getStarted": {
+    "title": "PIERWSZE KROKI",
+    "intro": "Zacznij zbierać swoją historię gier.",
+    "bot": "Dodaj bota do serwera Discord",
+    "session": "Albo dodaj sesję ręcznie",
+    "voice": "Wypróbuj sesję głosową"
   }
 }

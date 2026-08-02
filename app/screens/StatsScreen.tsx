@@ -34,12 +34,19 @@ import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import ErrorBanner from '../components/ErrorBanner';
 import StaleBanner from '../components/StaleBanner';
+import SamplePreviewBanner from '../components/SamplePreviewBanner';
 import { useCachedFetch } from '../hooks/useCachedFetch';
 import Cover from '../components/Cover';
 import { InfoLabel } from '../components/InfoButton';
 import { NightIcon, MorningIcon, AfternoonIcon, EveningIcon } from '../components/icons/TimeIcons';
 import i18n from '../i18n';
 import { intlLocale } from '../i18n/resolve';
+import { useEmptyAccountStore } from '../store/emptyAccountStore';
+import {
+    SAMPLE_PERIOD_DAYS, SAMPLE_STATS_SUMMARY, SAMPLE_HEATMAP, SAMPLE_TREND,
+    SAMPLE_GENRES, SAMPLE_THEMES, SAMPLE_RELEASE_YEARS,
+    SAMPLE_COMPANIES_DEVELOPER, SAMPLE_COMPANIES_PUBLISHER,
+} from '../utils/sampleData';
 
 const PERIODS = [7, 30, 90, 0] as const; // 0 = all-time (days=0)
 type Period = typeof PERIODS[number];
@@ -84,12 +91,6 @@ type StatsNavigationProp = CompositeNavigationProp<
 export default function StatsScreen() {
     const navigation = useNavigation<StatsNavigationProp>();
     const { t } = useTranslation('stats');
-    const drill = (type: LibraryFilter['type'], value: string) => {
-        navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
-    };
-    const openGame = (gameId: number, gameName: string | null, coverImageUrl: string | null | undefined) => {
-        navigation.navigate('GameDetail', { gameId, gameName: gameName ?? undefined, coverImageUrl: coverImageUrl ?? null });
-    };
 
     const [days, setDays] = useState<Period>(7);
     const [role, setRole] = useState<CompanyRole>('developer');
@@ -97,6 +98,24 @@ export default function StatsScreen() {
     // Ranked lists are capped at TOP_N; these expand them to the full fetched set.
     const [gamesExpanded, setGamesExpanded] = useState(false);
     const [companiesExpanded, setCompaniesExpanded] = useState(false);
+
+    const isEmpty = useEmptyAccountStore((s) => s.isEmpty);
+    const [sampleDismissed, setSampleDismissed] = useState(false);
+    const preview = isEmpty === true && !sampleDismissed;
+
+    // The sample set is one fixed window, so the pills and the caption follow it
+    // rather than the live selector. Fetch keys keep using `days` — their results
+    // are discarded during preview anyway.
+    const effectiveDays = preview ? SAMPLE_PERIOD_DAYS : days;
+
+    const drill = (type: LibraryFilter['type'], value: string) => {
+        if (preview) return;
+        navigation.navigate('Main', { screen: 'Library', params: { filter: { type, value } } });
+    };
+    const openGame = (gameId: number, gameName: string | null, coverImageUrl: string | null | undefined) => {
+        if (preview) return;
+        navigation.navigate('GameDetail', { gameId, gameName: gameName ?? undefined, coverImageUrl: coverImageUrl ?? null });
+    };
 
     // Period-bound: summary + heatmap share the user-selected window (one cache entry).
     const summaryQ = useCachedFetch<SummaryPayload>(
@@ -127,13 +146,15 @@ export default function StatsScreen() {
         () => getCompanies(role, 10, days),
     );
 
-    const summary = summaryQ.data?.summary ?? null;
-    const heatmap = summaryQ.data?.heatmap ?? null;
-    const trend = trendQ.data;
-    const genres = breakdownQ.data?.genres ?? null;
-    const themes = breakdownQ.data?.themes ?? null;
-    const releaseYears = breakdownQ.data?.releaseYears ?? null;
-    const companies = companiesQ.data;
+    const summary = preview ? SAMPLE_STATS_SUMMARY : (summaryQ.data?.summary ?? null);
+    const heatmap = preview ? SAMPLE_HEATMAP : (summaryQ.data?.heatmap ?? null);
+    const trend = preview ? SAMPLE_TREND : trendQ.data;
+    const genres = preview ? SAMPLE_GENRES : (breakdownQ.data?.genres ?? null);
+    const themes = preview ? SAMPLE_THEMES : (breakdownQ.data?.themes ?? null);
+    const releaseYears = preview ? SAMPLE_RELEASE_YEARS : (breakdownQ.data?.releaseYears ?? null);
+    const companies = preview
+        ? (role === 'developer' ? SAMPLE_COMPANIES_DEVELOPER : SAMPLE_COMPANIES_PUBLISHER)
+        : companiesQ.data;
 
     const groups = [summaryQ, trendQ, breakdownQ, companiesQ];
     // One flag per fetch group so a partial failure can't be cleared by another
@@ -164,12 +185,13 @@ export default function StatsScreen() {
                 <Text style={common.label}>{t('period.label')}</Text>
                 <View style={styles.pillRow}>
                     {PERIODS.map(p => {
-                        const active = days === p;
+                        const active = effectiveDays === p;
                         return (
                             <TouchableOpacity
                                 key={p}
                                 style={[styles.pill, active && styles.pillActive]}
                                 onPress={() => setDays(p)}
+                                disabled={preview}
                                 activeOpacity={0.85}
                             >
                                 <Text style={[styles.pillText, active && styles.pillTextActive]}>
@@ -180,10 +202,18 @@ export default function StatsScreen() {
                     })}
                 </View>
 
-                {staleSyncTimes.length > 0 && (
+                {!preview && staleSyncTimes.length > 0 && (
                     <StaleBanner lastSyncTime={Math.min(...staleSyncTimes)} style={styles.errorWrap} />
                 )}
-                {loadError && <ErrorBanner message={t('errors.load')} style={styles.errorWrap} />}
+                {!preview && loadError && <ErrorBanner message={t('errors.load')} style={styles.errorWrap} />}
+
+                {preview && (
+                    <SamplePreviewBanner
+                        onDismiss={() => setSampleDismissed(true)}
+                        onAddSession={() => navigation.navigate('Main', { screen: 'AddSession' })}
+                        style={styles.errorWrap}
+                    />
+                )}
 
                 {/* ── PRZEGLĄD ── */}
                 <SectionHeader label={t('sections.overview')} />
@@ -197,7 +227,7 @@ export default function StatsScreen() {
                                 <DeltaMetric total={summary.total_seconds} previous={summary.previous_total_seconds} />
                             )}
                             <Text style={styles.totalSub}>
-                                {days === 0 ? t('overview.subtitleAll') : t('overview.subtitleDays', { days })}
+                                {effectiveDays === 0 ? t('overview.subtitleAll') : t('overview.subtitleDays', { days: effectiveDays })}
                             </Text>
                         </View>
                     </View>
