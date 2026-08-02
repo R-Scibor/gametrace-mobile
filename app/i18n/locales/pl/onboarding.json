@@ -4,6 +4,7 @@
     "official": "UŻYJ OFICJALNEGO SERWERA",
     "custom": "Użyj własnego serwera",
     "policyLink": "Polityka prywatności",
+    "summary": "GameTrace powstał z myślą o samodzielnym hostowaniu. Oficjalny serwer to darmowa opcja dla wygody, utrzymywana w miarę możliwości.",
     "infoTitle": "Który serwer?",
     "infoBody": "GameTrace jest pomyślany przede wszystkim do samodzielnego hostowania: uruchamiasz własny serwer, a dane zostają na nim.\n\nOficjalny serwer to opcja dla wygody, utrzymywana w miarę możliwości, bez gwarancji dostępności. Jeśli z niej skorzystasz, Twoje dane o rozgrywce i sesjach — oraz tożsamość Discord z połączenia konta — będą przechowywane na tym serwerze.\n\nLogowanie odbywa się kodem połączenia lub przez Discord OAuth, więc GameTrace nigdy nie widzi Twojego hasła do Discorda."
   },

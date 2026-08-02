@@ -4,6 +4,7 @@
     "official": "CONTINUE WITH OFFICIAL SERVER",
     "custom": "Use my own server",
     "policyLink": "Privacy policy",
+    "summary": "GameTrace is built for self-hosting. The official server is a free, best-effort convenience option.",
     "infoTitle": "Which server?",
     "infoBody": "GameTrace is designed mainly to be self-hosted: you run the server, your data stays on it.\n\nThe official server is a convenience option, run on a best-effort basis with no uptime guarantee. If you use it, your playtime and session data — and your Discord identity from linking — live on that server.\n\nSigning in uses a link code or Discord OAuth, so GameTrace never sees your Discord password."
   },

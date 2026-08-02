@@ -33,8 +33,14 @@ export default function WelcomeScreen({ onOfficial, onCustom }: {
                     </TouchableOpacity>
                 </View>
 
+                <Text style={styles.summary}>{t('welcome.summary')}</Text>
+
                 <View style={styles.infoRow}>
-                    <InfoButton title={t('welcome.infoTitle')} body={t('welcome.infoBody')} />
+                    <InfoButton
+                        title={t('welcome.infoTitle')}
+                        body={t('welcome.infoBody')}
+                        label={t('welcome.infoTitle')}
+                    />
                 </View>
             </View>
 
@@ -65,7 +71,11 @@ const styles = StyleSheet.create({
     buttonText: { fontFamily: displayFont.bold, fontSize: 14, letterSpacing: 2, color: colors.buttonTextOnOrange },
     linkRow: { paddingVertical: 10, alignItems: 'center' },
     link: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.text2 },
-    infoRow: { marginTop: 20, alignItems: 'center' },
+    summary: {
+        fontFamily: bodyFont.regular, fontSize: 13, lineHeight: 19, color: colors.text3,
+        textAlign: 'center', marginTop: 24,
+    },
+    infoRow: { marginTop: 4, alignItems: 'center' },
     policyLinkRow: { paddingVertical: 16, alignItems: 'center' },
     policyLink: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.text3 },
 });

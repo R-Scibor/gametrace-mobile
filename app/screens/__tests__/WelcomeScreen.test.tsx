@@ -27,6 +27,19 @@ test('secondary CTA calls onCustom', async () => {
   expect(onCustom).toHaveBeenCalledTimes(1);
 });
 
+test('the self-host framing is readable without opening anything', async () => {
+  const { getByText } = await renderScreen();
+  expect(getByText(/GameTrace powstał z myślą o samodzielnym hostowaniu/)).toBeTruthy();
+});
+
+test('the labelled info row opens the full explanation', async () => {
+  const { getByText, queryByText, findByText } = await renderScreen();
+  // the label is the tap target, not a bare icon
+  expect(queryByText(/Oficjalny serwer to opcja dla wygody, utrzymywana/)).toBeNull();
+  await fireEvent.press(getByText('Który serwer?'));
+  expect(await findByText(/Oficjalny serwer to opcja dla wygody, utrzymywana/)).toBeTruthy();
+});
+
 test('privacy policy link opens the shared policy body', async () => {
   const { getByText, queryByText, findByText } = await renderScreen();
   expect(queryByText('POLITYKA PRYWATNOŚCI')).toBeNull();
