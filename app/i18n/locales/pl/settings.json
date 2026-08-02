@@ -26,7 +26,9 @@
   },
   "data": {
     "trash": "Kosz",
-    "trashSub": "Odrzucone sesje"
+    "trashSub": "Odrzucone sesje",
+    "privacy": "Polityka prywatności",
+    "privacySub": "Jak przetwarzamy Twoje dane"
   },
   "connection": {
     "server": "Serwer"

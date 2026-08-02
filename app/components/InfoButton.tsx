@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 import { common } from '../theme/styles';
 import { colors } from '../theme/colors';
+import { bodyFont } from '../theme/fonts';
 
 // Small ⓘ glyph — outlined circle + dot/stem, matches the SVG icon set (TimeIcons).
 function InfoGlyph({ color, size = 15 }: { color: string; size?: number }) {
@@ -18,7 +20,11 @@ function InfoGlyph({ color, size = 15 }: { color: string; size?: number }) {
 
 // Self-contained info affordance: a muted ⓘ that opens a styled bottom sheet with
 // explanatory copy. Owns its own open state so callers stay stateless.
-export default function InfoButton({ title, body }: { title: string; body: string }) {
+// With `label`, it renders as a prominent tappable row (label + accent glyph)
+// instead of a bare glyph — for places where the explanation is the point rather
+// than a footnote, and a 15px icon would be too easy to miss.
+export default function InfoButton({ title, body, label }: { title: string; body: string; label?: string }) {
+    const { t } = useTranslation('common');
     const [open, setOpen] = useState(false);
     return (
         <>
@@ -26,8 +32,10 @@ export default function InfoButton({ title, body }: { title: string; body: strin
                 onPress={() => setOpen(true)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 activeOpacity={0.6}
+                style={label ? styles.labeledRow : undefined}
             >
-                <InfoGlyph color={colors.text3} />
+                {label && <Text style={styles.labelText}>{label}</Text>}
+                <InfoGlyph color={label ? colors.orange : colors.text3} size={label ? 17 : 15} />
             </TouchableOpacity>
             <BottomSheet visible={open} onClose={() => setOpen(false)} title={title}>
                 <Text style={sheetStyles.message}>{body}</Text>
@@ -36,7 +44,7 @@ export default function InfoButton({ title, body }: { title: string; body: strin
                     onPress={() => setOpen(false)}
                     activeOpacity={0.7}
                 >
-                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>ROZUMIEM</Text>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{t('actions.understood')}</Text>
                 </TouchableOpacity>
             </BottomSheet>
         </>
@@ -60,4 +68,6 @@ const styles = StyleSheet.create({
         marginTop: 20, marginBottom: 8,
     },
     labelReset: { marginTop: 0, marginBottom: 0 },
+    labeledRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
+    labelText: { fontFamily: bodyFont.regular, fontSize: 14, color: colors.orange },
 });

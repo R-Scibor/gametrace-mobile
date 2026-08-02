@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import RootNavigator from '../RootNavigator';
 import { useServerStore } from '../../store/serverStore';
 import { useAuthStore } from '../../store/authStore';
@@ -16,11 +16,20 @@ jest.mock('../../screens/VoiceScreen', () => () => null);
 // import chain (ESM) is never loaded in this suite.
 jest.mock('../../hooks/useDiscordOAuth', () => ({ useDiscordOAuth: () => ({ ready: true, promptDiscord: jest.fn() }) }));
 
-test('shows server setup when no serverUrl', async () => {
+test('shows the welcome choice when no serverUrl', async () => {
   useServerStore.setState({ serverUrl: null });
   useAuthStore.setState({ isAuthenticated: false, token: null, user: null });
   const { findByText } = await render(<RootNavigator />);
-  expect(await findByText('— POŁĄCZ Z SERWEREM —')).toBeTruthy();
+  expect(await findByText('UŻYJ OFICJALNEGO SERWERA')).toBeTruthy();
+});
+
+test('pressing official CTA on Welcome navigates to the official policy screen', async () => {
+  useServerStore.setState({ serverUrl: null });
+  useAuthStore.setState({ isAuthenticated: false, token: null, user: null });
+  const { findByText } = await render(<RootNavigator />);
+  const officialButton = await findByText('UŻYJ OFICJALNEGO SERWERA');
+  await fireEvent.press(officialButton);
+  expect(await findByText('OFICJALNY SERWER')).toBeTruthy();
 });
 
 test('shows auth when serverUrl set but not authenticated', async () => {

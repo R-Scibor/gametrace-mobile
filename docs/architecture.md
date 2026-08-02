@@ -20,7 +20,7 @@ Screens compose UI and delegate data work to hooks. Hooks call the typed `api/` 
 
 `RootNavigator` is a native stack with two gates, evaluated top-down:
 
-1. **No server URL** → `ServerSetupScreen` (nothing else is reachable).
+1. **No server URL** → `Welcome`, which offers the official server or self-hosting; `OfficialPolicy` and `CustomServer` are sibling routes in the same `!serverUrl` branch (nothing else is reachable).
 2. **Not authenticated** → `AuthScreen`.
 3. **Authenticated** → `Main` (the bottom tabs) plus the pushable stack screens `GameDetail`, `EditSession`, `Trash`, and `Voice`.
 

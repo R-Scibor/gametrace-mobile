@@ -1,0 +1,26 @@
+{
+  "welcome": {
+    "tagline": "— TRACK WHAT YOU PLAY —",
+    "official": "CONTINUE WITH OFFICIAL SERVER",
+    "custom": "Use my own server",
+    "policyLink": "Privacy policy",
+    "summary": "GameTrace is built for self-hosting. The official server is a free, best-effort convenience option.",
+    "infoTitle": "Which server?",
+    "infoBody": "GameTrace is designed mainly to be self-hosted: you run the server, your data stays on it.\n\nThe official server is a convenience option, run on a best-effort basis with no uptime guarantee. If you use it, your playtime and session data — and your Discord identity from linking — live on that server.\n\nSigning in uses a link code or Discord OAuth, so GameTrace never sees your Discord password."
+  },
+  "policy": {
+    "title": "OFFICIAL SERVER",
+    "intro": "Before you continue, the short version:",
+    "bullets": {
+      "selfHost": "GameTrace is built for self-hosting. The official server is a convenience option, not a paid service.",
+      "bestEffort": "It runs best-effort: no uptime guarantee, no SLA, and it can go down or be reset.",
+      "data": "Your playtime, sessions and Discord identity are stored on that server, operated by the GameTrace maintainer.",
+      "auth": "Sign-in uses a Discord link code or OAuth — your Discord password is never sent to GameTrace."
+    },
+    "fullTitle": "PRIVACY POLICY",
+    "fullBody": "DRAFT — this text is a placeholder and will be replaced with the final privacy policy before release.\n\nThe final version will describe what data GameTrace stores (Discord identity, game sessions, playtime), who operates the server holding it, how long it is kept, and how to request deletion.\n\nWhen you self-host, the operator of the server you connect to is responsible for that data — not the GameTrace maintainer.",
+    "accept": "ACCEPT AND CONTINUE",
+    "connecting": "CONNECTING...",
+    "error": "Couldn't reach the official server. Check your connection and try again."
+  }
+}

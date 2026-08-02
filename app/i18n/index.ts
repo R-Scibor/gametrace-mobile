@@ -29,6 +29,8 @@ import enDatetime from './locales/en/datetime.json';
 import plDatetime from './locales/pl/datetime.json';
 import enReport from './locales/en/report.json';
 import plReport from './locales/pl/report.json';
+import enOnboarding from './locales/en/onboarding.json';
+import plOnboarding from './locales/pl/onboarding.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
@@ -47,6 +49,7 @@ const resources = {
     trash: enTrash,
     datetime: enDatetime,
     report: enReport,
+    onboarding: enOnboarding,
   },
   pl: {
     common: plCommon,
@@ -62,6 +65,7 @@ const resources = {
     trash: plTrash,
     datetime: plDatetime,
     report: plReport,
+    onboarding: plOnboarding,
   },
 };
 

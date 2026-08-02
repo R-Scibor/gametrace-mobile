@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { resolveServer } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
 import ConfirmSheet from '../components/ConfirmSheet';
+import Wordmark from '../components/Wordmark';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import { OFFICIAL_SERVER_HOST } from '../config';
 
-export default function ServerSetupScreen() {
+export default function CustomServerScreen({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('server');
-  const [host, setHost] = useState('gametrace.rscibor.dev');
+  const { t: tCommon } = useTranslation('common');
+  const [host, setHost] = useState(OFFICIAL_SERVER_HOST);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insecureUrl, setInsecureUrl] = useState<string | null>(null);
@@ -41,19 +43,11 @@ export default function ServerSetupScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <TouchableOpacity style={styles.backRow} onPress={onBack} activeOpacity={0.7}>
+        <Text style={styles.back}>{tCommon('actions.back')}</Text>
+      </TouchableOpacity>
       <View style={styles.center}>
-        <View style={styles.wordmark}>
-          <Image
-            source={require('../../assets/splash-icon.png')}
-            style={styles.logo}
-            contentFit="contain"
-          />
-          <Text style={styles.title}>
-            Game<Text style={styles.titleAccent}>Trace</Text>
-          </Text>
-          <Text style={styles.tagline}>{t('tagline')}</Text>
-          <View style={styles.rule} />
-        </View>
+        <Wordmark tagline={t('tagline')} />
 
         <View style={styles.errorSlot}>
           {error && (
@@ -112,14 +106,10 @@ export default function ServerSetupScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  backRow: { paddingHorizontal: 28, paddingVertical: 8, alignSelf: 'flex-start' },
+  back: { fontFamily: displayFont.regular, fontSize: 12, letterSpacing: 1, color: colors.text3 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
-  wordmark: { alignItems: 'center', marginBottom: 20 },
-  logo: { width: 168, height: 168 },
   errorSlot: { height: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
-  title: { fontFamily: displayFont.bold, fontSize: 38, letterSpacing: -1, color: colors.text, lineHeight: 38 },
-  titleAccent: { color: colors.orange },
-  tagline: { fontFamily: bodyFont.regular, fontSize: 12, letterSpacing: 1, color: colors.text3, marginTop: 8 },
-  rule: { width: 40, height: 1, backgroundColor: colors.orange, marginTop: 16 },
   form: { width: '100%', gap: 12 },
   label: { fontFamily: displayFont.regular, fontSize: 11, letterSpacing: 1, color: colors.text3 },
   inputWrapper: {

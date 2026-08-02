@@ -3,7 +3,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { useServerStore } from '../store/serverStore';
-import ServerSetupScreen from '../screens/ServerSetupScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
+import OfficialPolicyScreen from '../screens/OfficialPolicyScreen';
+import CustomServerScreen from '../screens/CustomServerScreen';
 import AuthScreen from '../screens/AuthScreen';
 import TabNavigator from './TabNavigator';
 import GameDetailScreen from '../screens/GameDetailScreen';
@@ -35,11 +37,22 @@ export default function RootNavigator() {
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         {!serverUrl ? (
-          <Stack.Screen
-            name="ServerSetup"
-            component={ServerSetupScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen name="Welcome" options={{ headerShown: false }}>
+              {({ navigation }) => (
+                <WelcomeScreen
+                  onOfficial={() => navigation.navigate('OfficialPolicy')}
+                  onCustom={() => navigation.navigate('CustomServer')}
+                />
+              )}
+            </Stack.Screen>
+            <Stack.Screen name="OfficialPolicy" options={{ headerShown: false }}>
+              {({ navigation }) => <OfficialPolicyScreen onBack={navigation.goBack} />}
+            </Stack.Screen>
+            <Stack.Screen name="CustomServer" options={{ headerShown: false }}>
+              {({ navigation }) => <CustomServerScreen onBack={navigation.goBack} />}
+            </Stack.Screen>
+          </>
         ) : !isAuthenticated ? (
           <Stack.Screen
             name="Auth"

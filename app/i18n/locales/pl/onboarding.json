@@ -1,0 +1,26 @@
+{
+  "welcome": {
+    "tagline": "— ŚLEDŹ SWOJĄ ROZGRYWKĘ —",
+    "official": "UŻYJ OFICJALNEGO SERWERA",
+    "custom": "Użyj własnego serwera",
+    "policyLink": "Polityka prywatności",
+    "summary": "GameTrace powstał z myślą o samodzielnym hostowaniu. Oficjalny serwer to darmowa opcja dla wygody, utrzymywana w miarę możliwości.",
+    "infoTitle": "Który serwer?",
+    "infoBody": "GameTrace jest pomyślany przede wszystkim do samodzielnego hostowania: uruchamiasz własny serwer, a dane zostają na nim.\n\nOficjalny serwer to opcja dla wygody, utrzymywana w miarę możliwości, bez gwarancji dostępności. Jeśli z niej skorzystasz, Twoje dane o rozgrywce i sesjach — oraz tożsamość Discord z połączenia konta — będą przechowywane na tym serwerze.\n\nLogowanie odbywa się kodem połączenia lub przez Discord OAuth, więc GameTrace nigdy nie widzi Twojego hasła do Discorda."
+  },
+  "policy": {
+    "title": "OFICJALNY SERWER",
+    "intro": "Zanim przejdziesz dalej, w skrócie:",
+    "bullets": {
+      "selfHost": "GameTrace powstał z myślą o samodzielnym hostowaniu. Oficjalny serwer to opcja dla wygody, a nie płatna usługa.",
+      "bestEffort": "Działa w miarę możliwości: bez gwarancji dostępności ani SLA, może zostać wyłączony lub zresetowany.",
+      "data": "Twoja rozgrywka, sesje i tożsamość Discord są przechowywane na tym serwerze, prowadzonym przez autora GameTrace.",
+      "auth": "Logowanie odbywa się kodem połączenia Discord lub przez OAuth — hasło do Discorda nigdy nie trafia do GameTrace."
+    },
+    "fullTitle": "POLITYKA PRYWATNOŚCI",
+    "fullBody": "WERSJA ROBOCZA — ten tekst jest tymczasowy i zostanie zastąpiony finalną polityką prywatności przed wydaniem.\n\nFinalna wersja opisze, jakie dane przechowuje GameTrace (tożsamość Discord, sesje gier, czas gry), kto prowadzi serwer, na którym się znajdują, jak długo są przechowywane i jak zażądać ich usunięcia.\n\nPrzy samodzielnym hostowaniu za te dane odpowiada operator serwera, z którym się łączysz — nie autor GameTrace.",
+    "accept": "AKCEPTUJĘ I KONTYNUUJ",
+    "connecting": "ŁĄCZENIE...",
+    "error": "Nie można połączyć się z oficjalnym serwerem. Sprawdź połączenie i spróbuj ponownie."
+  }
+}

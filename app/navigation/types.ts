@@ -18,7 +18,9 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
-    ServerSetup: undefined;
+    Welcome: undefined;
+    OfficialPolicy: undefined;
+    CustomServer: undefined;
     Auth: undefined;
     Main: NavigatorScreenParams<TabParamList> | undefined;
     GameDetail: {

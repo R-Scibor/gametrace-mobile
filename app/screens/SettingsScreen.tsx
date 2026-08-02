@@ -17,6 +17,8 @@ import { HealthResponse } from '../types/api';
 import ConfirmSheet from '../components/ConfirmSheet';
 import AlertSheet from '../components/AlertSheet';
 import TimezonePicker from '../components/TimezonePicker';
+import PolicyBody from '../components/PolicyBody';
+import { BottomSheet } from '../components/BottomSheet';
 import { formatUptime, botColor } from '../utils/bot';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -86,6 +88,7 @@ export default function SettingsScreen() {
     const [loading, setLoading] = useState(false);
     const [tzPickerOpen, setTzPickerOpen] = useState(false);
     const [health, setHealth] = useState<HealthResponse | null>(null);
+    const [policyOpen, setPolicyOpen] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -202,6 +205,14 @@ export default function SettingsScreen() {
                     <Text style={styles.chevron}>→</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setPolicyOpen(true)}>
+                    <View style={styles.rowInfo}>
+                        <Text style={styles.rowLabel}>{t('data.privacy')}</Text>
+                        <Text style={styles.rowSubtext}>{t('data.privacySub')}</Text>
+                    </View>
+                    <Text style={styles.chevron}>→</Text>
+                </TouchableOpacity>
+
                 {/* Connection */}
                 <SectionHeaderLocal title={t('sections.connection')} />
                 <TouchableOpacity
@@ -252,6 +263,14 @@ export default function SettingsScreen() {
                 onSelect={(z) => { selectTimezone(z); setTzPickerOpen(false); }}
                 onClose={() => setTzPickerOpen(false)}
             />
+
+            <BottomSheet
+                visible={policyOpen}
+                onClose={() => setPolicyOpen(false)}
+                title={t('data.privacy')}
+            >
+                <PolicyBody showTitle={false} />
+            </BottomSheet>
 
             <AlertSheet
                 visible={tzError}
