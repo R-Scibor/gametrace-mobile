@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import OfficialPolicyScreen from '../OfficialPolicyScreen';
 import { resolveServer } from '../../api/resolveServer';
@@ -48,22 +48,61 @@ test('unreachable shows an error, saves nothing, and allows retry', async () => 
   );
 });
 
-test('insecure is treated as an error, never applied', async () => {
+test('insecure is treated as an error, never applied, and offers no connect-anyway escape hatch', async () => {
   mockedResolve.mockResolvedValue({ status: 'insecure', baseUrl: 'http://gametrace.rscibor.dev/api/v1' });
-  const { getByText, findByText } = await renderScreen();
+  const { getByText, findByText, queryByText } = await renderScreen();
   await fireEvent.press(getByText('AKCEPTUJĘ I KONTYNUUJ'));
   expect(await findByText(/Nie można połączyć się z oficjalnym serwerem/)).toBeTruthy();
   expect(useServerStore.getState().serverUrl).toBeNull();
+  expect(queryByText('Połącz mimo to')).toBeNull();
 });
 
-test('a second press while connecting does not fire a second resolve', async () => {
+test('while a resolve is pending the button reads connecting and cannot be tapped again', async () => {
+  let release: (v: unknown) => void = () => {};
+  mockedResolve.mockReturnValue(new Promise((res) => { release = res; }));
+  const { getByText, queryByText } = await renderScreen();
+  // Deliberately NOT awaited: fireEvent adopts the promise returned by the async
+  // onPress handler, so awaiting here would block until `release` is called.
+  const pending = fireEvent.press(getByText('AKCEPTUJĘ I KONTYNUUJ'));
+
+  await waitFor(() => expect(getByText('ŁĄCZENIE...')).toBeTruthy());
+  expect(queryByText('AKCEPTUJĘ I KONTYNUUJ')).toBeNull();
+
+  await fireEvent.press(getByText('ŁĄCZENIE...'));
+  expect(mockedResolve).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    release({ status: 'ok', baseUrl: 'https://gametrace.rscibor.dev/api/v1' });
+    await pending;
+  });
+});
+
+test('the re-entry guard drops a second onAccept invocation while loading', async () => {
   let release: (v: unknown) => void = () => {};
   mockedResolve.mockReturnValue(new Promise((res) => { release = res; }));
   const { getByText } = await renderScreen();
-  await fireEvent.press(getByText('AKCEPTUJĘ I KONTYNUUJ'));
-  await fireEvent.press(getByText('ŁĄCZENIE...'));
+  // Invoke the current onAccept directly, bypassing TouchableOpacity's `disabled`
+  // prop — RNTL refuses to dispatch to a disabled element, which would stop the
+  // second press before the re-entry guard is ever reached.
+  const pressAccept = (label: string) => {
+    let fiber = (getByText(label).parent as any).unstable_fiber;
+    while (fiber && !fiber.memoizedProps?.onPress) fiber = fiber.return;
+    return fiber.memoizedProps.onPress() as Promise<void>;
+  };
+
+  let first!: Promise<void>;
+  await act(() => { first = pressAccept('AKCEPTUJĘ I KONTYNUUJ'); });
+  expect(getByText('ŁĄCZENIE...')).toBeTruthy();
+
+  let second!: Promise<void>;
+  await act(() => { second = pressAccept('ŁĄCZENIE...'); });
+
   expect(mockedResolve).toHaveBeenCalledTimes(1);
-  release({ status: 'ok', baseUrl: 'https://gametrace.rscibor.dev/api/v1' });
+
+  await act(async () => {
+    release({ status: 'ok', baseUrl: 'https://gametrace.rscibor.dev/api/v1' });
+    await Promise.all([first, second]);
+  });
 });
 
 test('back calls onBack and writes nothing', async () => {

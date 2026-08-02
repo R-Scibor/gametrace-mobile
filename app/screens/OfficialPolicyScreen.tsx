@@ -17,26 +17,23 @@ export default function OfficialPolicyScreen({ onBack }: { onBack: () => void })
     const [error, setError] = useState<string | null>(null);
     const setServerUrl = useServerStore((s) => s.setServerUrl);
 
-    const onAccept = () => {
+    const onAccept = async () => {
         if (loading) return;
         setError(null);
         setLoading(true);
-        // Explicit https: the official server must use TLS, and the scheme
-        // also keeps resolveServer out of its plain-HTTP fallback branch.
-        // Note: kept as a .then()/.finally() chain rather than async/await so
-        // the onPress handler itself stays synchronous — with React 19's
-        // act(), an async onPress makes RNTL's fireEvent.press await the
-        // entire promise chain, which deadlocks the concurrent-press test.
-        resolveServer(`https://${OFFICIAL_SERVER_HOST}`)
-            .then((result) => {
-                if (result.status === 'ok') {
-                    setServerUrl(result.baseUrl);
-                } else {
-                    // 'insecure' cannot occur with an explicit scheme; folded in defensively.
-                    setError(t('policy.error'));
-                }
-            })
-            .finally(() => setLoading(false));
+        try {
+            // Explicit https: the official server must use TLS, and the scheme
+            // also keeps resolveServer out of its plain-HTTP fallback branch.
+            const result = await resolveServer(`https://${OFFICIAL_SERVER_HOST}`);
+            if (result.status === 'ok') {
+                setServerUrl(result.baseUrl);
+            } else {
+                // 'insecure' cannot occur with an explicit scheme; folded in defensively.
+                setError(t('policy.error'));
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
