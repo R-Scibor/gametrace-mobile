@@ -57,8 +57,6 @@ export default function DashboardScreen() {
         ? recents.find((s) => s.status === 'COMPLETED') ?? null
         : null;
     const { data: spotlightStats } = useGameStats(lastPlayed?.game_id);
-    // Don't repeat the spotlighted session in the list right below it.
-    const listedRecents = lastPlayed ? recents.filter((s) => s.id !== lastPlayed.id) : recents;
 
     const setIsEmpty = useEmptyAccountStore((s) => s.setIsEmpty);
     const isEmpty = useEmptyAccountStore((s) => s.isEmpty);
@@ -136,10 +134,9 @@ export default function DashboardScreen() {
     const month = preview ? SAMPLE_DASHBOARD.total_seconds_30d : (data?.total_seconds_30d ?? 0);
 
     // last row's trailing margin can hang into the bottom edge, so it doesn't need counting.
-    // Before the first `onLayout` pass, listHeight is still its initial 0 (this also
-    // never resolves under RNTL, which never runs a real layout pass) — fall back to
-    // the real recents fetch limit rather than rendering zero rows.
-    const rowCapacity = listHeight === 0 ? 5 : Math.floor((listHeight + 4) / ROW_HEIGHT);
+    const rowCapacity = Math.floor((listHeight + 4) / ROW_HEIGHT);
+    const visibleCount = Math.min(recents.length, rowCapacity);
+    const sampleVisibleCount = Math.min(SAMPLE_SESSIONS.length, rowCapacity);
     const pendingCount = data?.pending_errors?.length ?? 0;
 
     return (
@@ -262,15 +259,19 @@ export default function DashboardScreen() {
                     <View style={styles.sectionRule} />
                 </View>
 
-                <View style={styles.listRegion} onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}>
+                <View
+                    testID="listRegion"
+                    style={styles.listRegion}
+                    onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+                >
                     {preview ? (
-                        SAMPLE_SESSIONS.slice(0, rowCapacity).map((s) => (
+                        SAMPLE_SESSIONS.slice(0, sampleVisibleCount).map((s) => (
                             <RecentSessionRow key={s.id} session={s} />
                         ))
-                    ) : listedRecents.length === 0 ? (
+                    ) : recents.length === 0 ? (
                         <Text style={styles.emptyText}>{t('empty')}</Text>
                     ) : (
-                        listedRecents.slice(0, rowCapacity).map((s) => (
+                        recents.slice(0, visibleCount).map((s) => (
                             <RecentSessionRow key={s.id} session={s} onPress={() => openSession(s)} />
                         ))
                     )}

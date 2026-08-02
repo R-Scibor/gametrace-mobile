@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DashboardScreen from '../DashboardScreen';
@@ -60,9 +60,10 @@ function renderScreen() {
 }
 
 test('an empty account publishes the flag and shows guidance plus the sample preview', async () => {
-  const { getByText } = await renderScreen();
+  const { getByText, getByTestId } = await renderScreen();
 
   await waitFor(() => expect(useEmptyAccountStore.getState().isEmpty).toBe(true));
+  await fireEvent(getByTestId('listRegion'), 'layout', { nativeEvent: { layout: { height: 400 } } });
   expect(getByText('PIERWSZE KROKI')).toBeTruthy();
   expect(getByText('PRZYKŁADOWE DANE')).toBeTruthy();
   expect(getByText("Baldur's Gate 3")).toBeTruthy();
@@ -71,12 +72,14 @@ test('an empty account publishes the flag and shows guidance plus the sample pre
 test('an account with history publishes false and shows neither', async () => {
   (listSessions as jest.Mock).mockResolvedValue([completedSession]);
 
-  const { queryByText, getByText } = await renderScreen();
+  const { queryByText, getAllByText, getByTestId } = await renderScreen();
 
   await waitFor(() => expect(useEmptyAccountStore.getState().isEmpty).toBe(false));
+  await fireEvent(getByTestId('listRegion'), 'layout', { nativeEvent: { layout: { height: 400 } } });
   expect(queryByText('PIERWSZE KROKI')).toBeNull();
   expect(queryByText('PRZYKŁADOWE DANE')).toBeNull();
-  expect(getByText('Hollow Knight')).toBeTruthy();
+  // Hollow Knight is both the hero spotlight and the (only) row in the list below it.
+  expect(getAllByText('Hollow Knight')).toHaveLength(2);
 });
 
 test('stays undetermined while recents are still loading', async () => {
@@ -94,9 +97,10 @@ test('stays undetermined while recents are still loading', async () => {
 test('ERROR-only recents keep their real rows and get no sample overlay', async () => {
   (listSessions as jest.Mock).mockResolvedValue([errorSession]);
 
-  const { getByText, queryByText } = await renderScreen();
+  const { getByText, queryByText, getByTestId } = await renderScreen();
 
   await waitFor(() => expect(getByText('PIERWSZE KROKI')).toBeTruthy());
+  await fireEvent(getByTestId('listRegion'), 'layout', { nativeEvent: { layout: { height: 400 } } });
   expect(queryByText('PRZYKŁADOWE DANE')).toBeNull();
   expect(queryByText("Baldur's Gate 3")).toBeNull();
   expect(getByText('BŁĄD')).toBeTruthy();
