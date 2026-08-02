@@ -32,4 +32,6 @@ test('privacy policy link opens the shared policy body', async () => {
   expect(queryByText('POLITYKA PRYWATNOŚCI')).toBeNull();
   await fireEvent.press(getByText('Polityka prywatności'));
   expect(await findByText('POLITYKA PRYWATNOŚCI')).toBeTruthy();
+  // the sheet is headed by the policy's own name, not the official-server screen title
+  expect(queryByText('OFICJALNY SERWER')).toBeNull();
 });

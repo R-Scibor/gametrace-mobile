@@ -49,9 +49,9 @@ export default function WelcomeScreen({ onOfficial, onCustom }: {
             <BottomSheet
                 visible={policyOpen}
                 onClose={() => setPolicyOpen(false)}
-                title={t('policy.title')}
+                title={t('policy.fullTitle')}
             >
-                <PolicyBody />
+                <PolicyBody showTitle={false} />
             </BottomSheet>
         </SafeAreaView>
     );

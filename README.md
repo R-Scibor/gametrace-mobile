@@ -44,9 +44,9 @@ On first launch the app asks for your **GameTrace API server URL** (see [Configu
 
 ## Configuration
 
-There is no hardcoded server address. The API base URL is entered at runtime:
+The API base URL is chosen at runtime. The only hardcoded address is `OFFICIAL_SERVER_HOST` in `app/config.ts` — the official server offered on first run, also used as the format-example prefill on the self-host form:
 
-- **First run** — `ServerSetupScreen` gates the app until a server resolves. Enter a host (e.g. `gametrace.example.com` or `192.168.1.10:8010`); the app probes `<host>/health`, preferring `https://` and falling back to `http://` with an insecure-connection warning. The resolved `…/api/v1` base URL is persisted via `serverStore`.
+- **First run** — `WelcomeScreen` gates the app until a server resolves. Either take the official server (via `OfficialPolicyScreen`, which shows the policy summary before connecting over `https://`), or self-host: enter a host (e.g. `gametrace.example.com` or `192.168.1.10:8010`); the app probes `<host>/health`, preferring `https://` and falling back to `http://` with an insecure-connection warning. The resolved `…/api/v1` base URL is persisted via `serverStore`.
 - **Later** — change it from **Settings → server**. Switching servers clears auth and logs you out.
 
 Discord client id / invite URL and optional dev-login secret come from `EXPO_PUBLIC_*` env vars (see `.env.example`). Preview EAS builds set Discord vars in `eas.json`.

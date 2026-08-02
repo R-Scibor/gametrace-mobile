@@ -13,6 +13,7 @@ const BULLET_KEYS = ['selfHost', 'bestEffort', 'data', 'auth'] as const;
 
 export default function OfficialPolicyScreen({ onBack }: { onBack: () => void }) {
     const { t } = useTranslation('onboarding');
+    const { t: tCommon } = useTranslation('common');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const setServerUrl = useServerStore((s) => s.setServerUrl);
@@ -40,7 +41,7 @@ export default function OfficialPolicyScreen({ onBack }: { onBack: () => void })
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
             <ScrollView contentContainerStyle={styles.content}>
                 <TouchableOpacity style={styles.backRow} onPress={onBack} activeOpacity={0.7}>
-                    <Text style={styles.back}>{t('policy.back')}</Text>
+                    <Text style={styles.back}>{tCommon('actions.back')}</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.title}>{t('policy.title')}</Text>

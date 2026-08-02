@@ -7,11 +7,14 @@ import { displayFont, bodyFont } from '../theme/fonts';
 // link, the official-server Accept screen, and the Settings row all use this.
 // It is a component rather than a route because the setup stack is unmounted
 // once serverUrl is set. Caps its own height — BottomSheet does not.
-export default function PolicyBody({ maxHeight = 320 }: { maxHeight?: number }) {
+export default function PolicyBody({ maxHeight = 320, showTitle = true }: {
+    maxHeight?: number;
+    showTitle?: boolean;
+}) {
     const { t } = useTranslation('onboarding');
     return (
         <>
-            <Text style={styles.title}>{t('policy.fullTitle')}</Text>
+            {showTitle && <Text style={styles.title}>{t('policy.fullTitle')}</Text>}
             <ScrollView style={[styles.scroll, { maxHeight }]}>
                 <Text style={styles.body}>{t('policy.fullBody')}</Text>
             </ScrollView>

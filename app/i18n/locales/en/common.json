@@ -20,7 +20,8 @@
     "confirm": "CONFIRM",
     "cancel": "CANCEL",
     "loading": "LOADING...",
-    "understood": "GOT IT"
+    "understood": "GOT IT",
+    "back": "← BACK"
   },
   "alert": {
     "defaultTitle": "ERROR"

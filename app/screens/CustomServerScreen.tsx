@@ -12,7 +12,7 @@ import { OFFICIAL_SERVER_HOST } from '../config';
 
 export default function CustomServerScreen({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('server');
-  const { t: tOnboarding } = useTranslation('onboarding');
+  const { t: tCommon } = useTranslation('common');
   const [host, setHost] = useState(OFFICIAL_SERVER_HOST);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export default function CustomServerScreen({ onBack }: { onBack: () => void }) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <TouchableOpacity style={styles.backRow} onPress={onBack} activeOpacity={0.7}>
-        <Text style={styles.back}>{tOnboarding('policy.back')}</Text>
+        <Text style={styles.back}>{tCommon('actions.back')}</Text>
       </TouchableOpacity>
       <View style={styles.center}>
         <Wordmark tagline={t('tagline')} />

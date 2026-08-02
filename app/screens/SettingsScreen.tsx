@@ -269,7 +269,7 @@ export default function SettingsScreen() {
                 onClose={() => setPolicyOpen(false)}
                 title={t('data.privacy')}
             >
-                <PolicyBody />
+                <PolicyBody showTitle={false} />
             </BottomSheet>
 
             <AlertSheet

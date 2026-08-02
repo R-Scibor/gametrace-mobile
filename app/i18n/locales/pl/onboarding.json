@@ -20,7 +20,6 @@
     "fullBody": "WERSJA ROBOCZA — ten tekst jest tymczasowy i zostanie zastąpiony finalną polityką prywatności przed wydaniem.\n\nFinalna wersja opisze, jakie dane przechowuje GameTrace (tożsamość Discord, sesje gier, czas gry), kto prowadzi serwer, na którym się znajdują, jak długo są przechowywane i jak zażądać ich usunięcia.\n\nPrzy samodzielnym hostowaniu za te dane odpowiada operator serwera, z którym się łączysz — nie autor GameTrace.",
     "accept": "AKCEPTUJĘ I KONTYNUUJ",
     "connecting": "ŁĄCZENIE...",
-    "back": "← WSTECZ",
     "error": "Nie można połączyć się z oficjalnym serwerem. Sprawdź połączenie i spróbuj ponownie."
   }
 }

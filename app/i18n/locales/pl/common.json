@@ -20,7 +20,8 @@
     "confirm": "POTWIERDŹ",
     "cancel": "ANULUJ",
     "loading": "ŁADOWANIE...",
-    "understood": "ROZUMIEM"
+    "understood": "ROZUMIEM",
+    "back": "← WSTECZ"
   },
   "alert": {
     "defaultTitle": "BŁĄD"
