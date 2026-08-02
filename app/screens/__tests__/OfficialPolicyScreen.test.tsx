@@ -80,22 +80,27 @@ test('while a resolve is pending the button reads connecting and cannot be tappe
 test('the re-entry guard drops a second onAccept invocation while loading', async () => {
   let release: (v: unknown) => void = () => {};
   mockedResolve.mockReturnValue(new Promise((res) => { release = res; }));
-  const { getByText } = await renderScreen();
-  // Invoke the current onAccept directly, bypassing TouchableOpacity's `disabled`
-  // prop — RNTL refuses to dispatch to a disabled element, which would stop the
-  // second press before the re-entry guard is ever reached.
-  const pressAccept = (label: string) => {
-    let fiber = (getByText(label).parent as any).unstable_fiber;
+  const { getByText, getByTestId } = await renderScreen();
+  // Invoke onAccept directly, bypassing TouchableOpacity's `disabled` prop —
+  // RNTL refuses to dispatch a press to a disabled element, and even a raw
+  // onClick call on the underlying host node is itself gated by Touchable's
+  // own disabled check, either of which would stop the second press before
+  // the re-entry guard is ever reached. The host node (found by a stable
+  // testID rather than the label, which changes to "ŁĄCZENIE..." while
+  // loading) doesn't carry the undecorated onPress itself — TouchableOpacity
+  // holds it — so we walk up the fiber tree to find it.
+  const pressAccept = () => {
+    let fiber = (getByTestId('officialAccept') as any).unstable_fiber;
     while (fiber && !fiber.memoizedProps?.onPress) fiber = fiber.return;
     return fiber.memoizedProps.onPress() as Promise<void>;
   };
 
   let first!: Promise<void>;
-  await act(() => { first = pressAccept('AKCEPTUJĘ I KONTYNUUJ'); });
+  await act(() => { first = pressAccept(); });
   expect(getByText('ŁĄCZENIE...')).toBeTruthy();
 
   let second!: Promise<void>;
-  await act(() => { second = pressAccept('ŁĄCZENIE...'); });
+  await act(() => { second = pressAccept(); });
 
   expect(mockedResolve).toHaveBeenCalledTimes(1);
 

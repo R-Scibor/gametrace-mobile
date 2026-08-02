@@ -64,6 +64,7 @@ export default function OfficialPolicyScreen({ onBack }: { onBack: () => void })
                 </View>
 
                 <TouchableOpacity
+                    testID="officialAccept"
                     style={[styles.button, loading && styles.buttonDisabled]}
                     onPress={onAccept}
                     disabled={loading}
