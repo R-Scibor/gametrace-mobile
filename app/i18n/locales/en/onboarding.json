@@ -22,5 +22,12 @@
     "accept": "ACCEPT AND CONTINUE",
     "connecting": "CONNECTING...",
     "error": "Couldn't reach the official server. Check your connection and try again."
+  },
+  "getStarted": {
+    "title": "GET STARTED",
+    "intro": "Start building your play history.",
+    "bot": "Add the bot to a Discord server",
+    "session": "Or log a session yourself",
+    "voice": "Try a voice session"
   }
 }
