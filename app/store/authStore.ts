@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
 import { clearAllCache } from '../utils/cacheStorage';
+import { useEmptyAccountStore } from './emptyAccountStore';
 
 const secureStorage: StateStorage = {
     getItem: (name) => SecureStore.getItemAsync(name),
@@ -40,6 +41,8 @@ export const useAuthStore = create<AuthState>()(
                 // Sole clear site (spec): covers settings logout, the axios 401
                 // interceptor, and change-server. Fire-and-forget.
                 void clearAllCache();
+                // The next account must not inherit this account's verdict.
+                useEmptyAccountStore.getState().reset();
             },
         }),
         {
