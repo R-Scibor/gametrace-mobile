@@ -19,7 +19,8 @@
   "actions": {
     "confirm": "CONFIRM",
     "cancel": "CANCEL",
-    "loading": "LOADING..."
+    "loading": "LOADING...",
+    "understood": "GOT IT"
   },
   "alert": {
     "defaultTitle": "ERROR"

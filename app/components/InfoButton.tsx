@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 import { common } from '../theme/styles';
@@ -19,6 +20,7 @@ function InfoGlyph({ color, size = 15 }: { color: string; size?: number }) {
 // Self-contained info affordance: a muted ⓘ that opens a styled bottom sheet with
 // explanatory copy. Owns its own open state so callers stay stateless.
 export default function InfoButton({ title, body }: { title: string; body: string }) {
+    const { t } = useTranslation('common');
     const [open, setOpen] = useState(false);
     return (
         <>
@@ -36,7 +38,7 @@ export default function InfoButton({ title, body }: { title: string; body: strin
                     onPress={() => setOpen(false)}
                     activeOpacity={0.7}
                 >
-                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>ROZUMIEM</Text>
+                    <Text style={[sheetStyles.rowText, sheetStyles.rowMuted]}>{t('actions.understood')}</Text>
                 </TouchableOpacity>
             </BottomSheet>
         </>

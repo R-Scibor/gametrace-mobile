@@ -19,7 +19,8 @@
   "actions": {
     "confirm": "POTWIERDŹ",
     "cancel": "ANULUJ",
-    "loading": "ŁADOWANIE..."
+    "loading": "ŁADOWANIE...",
+    "understood": "ROZUMIEM"
   },
   "alert": {
     "defaultTitle": "BŁĄD"
