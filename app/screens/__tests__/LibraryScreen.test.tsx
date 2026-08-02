@@ -6,6 +6,7 @@ import LibraryScreen, { computeGrid } from '../LibraryScreen';
 import { getGames } from '../../api/games';
 import { useServerStore } from '../../store/serverStore';
 import { useAuthStore } from '../../store/authStore';
+import { useEmptyAccountStore } from '../../store/emptyAccountStore';
 
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('../../api/games', () => ({ getGames: jest.fn() }));
@@ -34,6 +35,7 @@ beforeEach(async () => {
     mockRouteParams = { ...mockRouteParams, ...updates };
   });
   mockRouteParams = undefined;
+  useEmptyAccountStore.setState({ isEmpty: null });
 });
 
 function renderScreen() {
@@ -140,4 +142,41 @@ test('offline revisit shows the cached first page with the stale banner', async 
 
   await waitFor(() => expect(getByText(/Dane offline/)).toBeTruthy());
   expect(getByText('Hollow Knight')).toBeTruthy();
+});
+
+test('an empty account sees the sample grid behind a banner', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+  (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('PRZYKŁADOWE DANE')).toBeTruthy());
+  expect(getByText("Baldur's Gate 3")).toBeTruthy();
+});
+
+test('real games always win over the preview', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+  (getGames as jest.Mock).mockResolvedValue({
+    total: 1,
+    items: [{
+      id: 9, primary_name: 'Hollow Knight', cover_image_url: null, cover_source: 'EXTERNAL',
+      enrichment_status: 'ENRICHED', is_ignored: false, is_accepted: true,
+      total_seconds: 3600, last_played: new Date().toISOString(),
+    }],
+  });
+
+  const { getByText, queryByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('Hollow Knight')).toBeTruthy());
+  expect(queryByText('PRZYKŁADOWE DANE')).toBeNull();
+  expect(queryByText("Baldur's Gate 3")).toBeNull();
+});
+
+test('an undetermined flag suppresses the preview', async () => {
+  useEmptyAccountStore.setState({ isEmpty: null });
+  (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+
+  const { queryByText } = await renderScreen();
+
+  await waitFor(() => expect(queryByText('PRZYKŁADOWE DANE')).toBeNull());
 });
