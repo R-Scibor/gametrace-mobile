@@ -8,10 +8,12 @@ import ConfirmSheet from '../components/ConfirmSheet';
 import Wordmark from '../components/Wordmark';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
+import { OFFICIAL_SERVER_HOST } from '../config';
 
-export default function ServerSetupScreen() {
+export default function CustomServerScreen({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation('server');
-  const [host, setHost] = useState('gametrace.rscibor.dev');
+  const { t: tOnboarding } = useTranslation('onboarding');
+  const [host, setHost] = useState(OFFICIAL_SERVER_HOST);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [insecureUrl, setInsecureUrl] = useState<string | null>(null);
@@ -41,6 +43,9 @@ export default function ServerSetupScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <TouchableOpacity style={styles.backRow} onPress={onBack} activeOpacity={0.7}>
+        <Text style={styles.back}>{tOnboarding('policy.back')}</Text>
+      </TouchableOpacity>
       <View style={styles.center}>
         <Wordmark tagline={t('tagline')} />
 
@@ -101,6 +106,8 @@ export default function ServerSetupScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  backRow: { paddingHorizontal: 28, paddingVertical: 8, alignSelf: 'flex-start' },
+  back: { fontFamily: displayFont.regular, fontSize: 12, letterSpacing: 1, color: colors.text3 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   errorSlot: { height: 20, justifyContent: 'center', marginBottom: 12, alignSelf: 'stretch' },
   form: { width: '100%', gap: 12 },

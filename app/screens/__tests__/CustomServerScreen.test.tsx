@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import ServerSetupScreen from '../ServerSetupScreen';
+import CustomServerScreen from '../CustomServerScreen';
 import { resolveServer } from '../../api/resolveServer';
 import { useServerStore } from '../../store/serverStore';
 
@@ -15,10 +15,10 @@ beforeEach(() => {
   useServerStore.setState({ serverUrl: null });
 });
 
-async function renderScreen() {
+async function renderScreen(onBack: () => void = jest.fn()) {
   return render(
     <SafeAreaProvider>
-      <ServerSetupScreen />
+      <CustomServerScreen onBack={onBack} />
     </SafeAreaProvider>
   );
 }
@@ -63,4 +63,17 @@ test('invalid input shows an error and does not save', async () => {
   await fireEvent.press(getByText('POŁĄCZ'));
   expect(await findByText('Podaj adres serwera (host:port)')).toBeTruthy();
   expect(useServerStore.getState().serverUrl).toBeNull();
+});
+
+test('back calls onBack and writes nothing', async () => {
+  const onBack = jest.fn();
+  const { getByText } = await renderScreen(onBack);
+  await fireEvent.press(getByText('← WSTECZ'));
+  expect(onBack).toHaveBeenCalledTimes(1);
+  expect(useServerStore.getState().serverUrl).toBeNull();
+});
+
+test('prefills the official host as a format example', async () => {
+  const { getByDisplayValue } = await renderScreen();
+  expect(getByDisplayValue('gametrace.rscibor.dev')).toBeTruthy();
 });
