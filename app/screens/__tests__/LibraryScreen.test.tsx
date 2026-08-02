@@ -11,10 +11,11 @@ import { useEmptyAccountStore } from '../../store/emptyAccountStore';
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('../../api/games', () => ({ getGames: jest.fn() }));
 
+const mockNavigate = jest.fn();
 const mockSetParams = jest.fn();
 let mockRouteParams: any = undefined;
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: jest.fn(), setParams: mockSetParams }),
+  useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
   useRoute: () => ({ params: mockRouteParams }),
   // Re-runs (cleanup then callback) whenever the memoized callback's identity
   // changes, matching @react-navigation/core's real useFocusEffect behavior.
@@ -30,6 +31,7 @@ beforeEach(async () => {
   useAuthStore.setState({ token: 't', user: { discordId: '1', username: 'u' }, isAdmin: false, isAuthenticated: true });
   (getGames as jest.Mock).mockReset();
   (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+  mockNavigate.mockReset();
   mockSetParams.mockReset();
   mockSetParams.mockImplementation((updates: any) => {
     mockRouteParams = { ...mockRouteParams, ...updates };
@@ -179,4 +181,30 @@ test('an undetermined flag suppresses the preview', async () => {
   const { queryByText } = await renderScreen();
 
   await waitFor(() => expect(queryByText('PRZYKŁADOWE DANE')).toBeNull());
+});
+
+test('typing a search query hides the preview', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+  (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+
+  const { getByText, getByPlaceholderText, queryByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('PRZYKŁADOWE DANE')).toBeTruthy());
+
+  await fireEvent.changeText(getByPlaceholderText('Szukaj gry...'), 'zelda');
+
+  await waitFor(() => expect(queryByText('PRZYKŁADOWE DANE')).toBeNull());
+  expect(queryByText("Baldur's Gate 3")).toBeNull();
+});
+
+test('pressing a sample cell during preview does not navigate to GameDetail', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+  (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText("Baldur's Gate 3")).toBeTruthy());
+  await fireEvent.press(getByText("Baldur's Gate 3"));
+
+  expect(mockNavigate).not.toHaveBeenCalledWith('GameDetail', expect.anything());
 });
