@@ -179,6 +179,25 @@ test('sample rows never navigate', async () => {
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
+test('sample game row tap does not navigate during preview', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+
+  const { getByText } = await renderScreen();
+  await waitFor(() => expect(getByText('Factorio')).toBeTruthy());
+
+  await fireEvent.press(getByText('Factorio'));
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+test('an empty account overview caption shows the sample 90-day window', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('w ciągu ostatnich 90 dni')).toBeTruthy());
+});
+
 test('a non-empty account keeps the live stats untouched', async () => {
   useEmptyAccountStore.setState({ isEmpty: false });
 
