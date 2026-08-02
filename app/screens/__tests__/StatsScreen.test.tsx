@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import StatsScreen from '../StatsScreen';
 import { useServerStore } from '../../store/serverStore';
 import { useAuthStore } from '../../store/authStore';
+import { useEmptyAccountStore } from '../../store/emptyAccountStore';
 
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 
@@ -32,6 +33,7 @@ beforeEach(async () => {
   useServerStore.setState({ serverUrl: 'https://s.example/api/v1' });
   useAuthStore.setState({ token: 't', user: { discordId: '1', username: 'u' }, isAdmin: false, isAuthenticated: true });
   mockNavigate.mockReset();
+  useEmptyAccountStore.setState({ isEmpty: null });
   (getStatsSummary as jest.Mock).mockResolvedValue({
     days: 7, window_start: null, window_end: '', total_seconds: 0, previous_total_seconds: 0,
     avg_session_seconds: 0, longest_session_seconds: 0, longest_session_game_id: null,
@@ -154,4 +156,34 @@ test('period change does not show the previous period payload under the new labe
   await fireEvent.press(getByText('30 DNI')); // days=30 — a key never cached
 
   await waitFor(() => expect(queryByText('Adventure')).toBeNull());
+});
+
+test('an empty account sees sample stats captioned with the sample window', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+
+  const { getByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('PRZYKŁADOWE DANE')).toBeTruthy());
+  expect(getByText('RPG')).toBeTruthy();          // sample genre, not the mocked 'Adventure'
+  expect(getByText('90 DNI')).toBeTruthy();       // sample window pill
+});
+
+test('sample rows never navigate', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+
+  const { getByText } = await renderScreen();
+  await waitFor(() => expect(getByText('RPG')).toBeTruthy());
+
+  await fireEvent.press(getByText('RPG'));
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+test('a non-empty account keeps the live stats untouched', async () => {
+  useEmptyAccountStore.setState({ isEmpty: false });
+
+  const { getByText, queryByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('Adventure')).toBeTruthy());
+  expect(queryByText('PRZYKŁADOWE DANE')).toBeNull();
 });
