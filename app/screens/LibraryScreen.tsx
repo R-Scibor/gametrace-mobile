@@ -172,7 +172,9 @@ export default function LibraryScreen() {
                     <Text style={styles.eyebrow}>◈ GAMETRACE</Text>
                     <Text style={styles.title}>{t('title')}</Text>
                 </View>
-                <Text style={styles.headerCount}>{t('gameCount', { count: total })}</Text>
+                <Text style={styles.headerCount}>
+                    {t('gameCount', { count: preview ? SAMPLE_GAMES.length : total })}
+                </Text>
             </View>
 
             {/* Tabs */}

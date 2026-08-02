@@ -156,6 +156,18 @@ test('an empty account sees the sample grid behind a banner', async () => {
   expect(getByText("Baldur's Gate 3")).toBeTruthy();
 });
 
+test('the header count follows the sample grid, not the live zero total', async () => {
+  useEmptyAccountStore.setState({ isEmpty: true });
+  (getGames as jest.Mock).mockResolvedValue({ total: 0, items: [] });
+
+  const { getByText, queryByText } = await renderScreen();
+
+  await waitFor(() => expect(getByText('PRZYKŁADOWE DANE')).toBeTruthy());
+  // "0 GIER" sitting above eight sample covers contradicts itself
+  expect(queryByText('0 GIER')).toBeNull();
+  expect(getByText('8 GIER')).toBeTruthy();
+});
+
 test('real games always win over the preview', async () => {
   useEmptyAccountStore.setState({ isEmpty: true });
   (getGames as jest.Mock).mockResolvedValue({
