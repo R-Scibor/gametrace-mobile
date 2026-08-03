@@ -161,21 +161,32 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
     const [selectedMeta, setSelectedMeta] = useState<SelectedGameMeta | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
+    // Same discard-if-abandoned pattern as `latestQuery` above, but keyed on the
+    // trimmed query rather than the debounced one: a match request stays in
+    // flight for as long as IGDB takes, and the box is still editable while it
+    // does, so the query at response time can differ from the one the request
+    // was issued for.
+    const latestTrimmed = useRef(trimmed);
+    useEffect(() => {
+        latestTrimmed.current = trimmed;
+    }, [trimmed]);
+
     const searchOnline = useCallback(() => {
         if (!trimmed) return;
+        const requestQuery = trimmed;
         setMode('searching');
         setCandidates([]);
         setError(null);
         (async () => {
             try {
-                const list = await matchGames(trimmed);
-                if (!mounted.current) return;
+                const list = await matchGames(requestQuery);
+                if (!mounted.current || latestTrimmed.current !== requestQuery) return;
                 // An empty list is a legitimate outcome, not an error: it is precisely
                 // the case the unrecognized-create rung exists for.
                 setCandidates(list);
                 setMode('online');
             } catch {
-                if (!mounted.current) return;
+                if (!mounted.current || latestTrimmed.current !== requestQuery) return;
                 // 503 (rate limit) and 502 (any other IGDB failure) are the same thing
                 // to the user and both are retryable — no status branching.
                 setCandidates([]);

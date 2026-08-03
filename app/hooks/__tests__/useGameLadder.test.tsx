@@ -230,6 +230,23 @@ test('a create failure returns null, keeps mode online and keeps the candidates'
   expect(onResolved).not.toHaveBeenCalled();
 });
 
+test('a stale match response for an abandoned query is discarded', async () => {
+  let resolveSlow: (v: unknown) => void = () => {};
+  match.mockImplementationOnce(() => new Promise((r) => { resolveSlow = r; }));
+
+  const { result } = await renderLadder();
+  await type(result, 'hades');
+  await act(async () => { result.current.searchOnline(); }); // slow, still in flight
+  await type(result, 'elden'); // query changed while the request was in flight
+
+  await act(async () => {
+    resolveSlow([{ igdb_id: 5, name: 'Hades', year: 2020, cover_url: null, score: 0.9 }]);
+  });
+
+  expect(result.current.candidates).toEqual([]);
+  expect(result.current.mode).toBe('browse');
+});
+
 test('a failed library load surfaces pickerError but leaves the ladder usable', async () => {
   getAll.mockRejectedValue(new Error('net'));
   suggest.mockResolvedValue({ total: 1, items: [makeSuggestion(99, 'Hades II')] });
