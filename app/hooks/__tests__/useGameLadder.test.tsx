@@ -230,25 +230,6 @@ test('a create failure returns null, keeps mode online and keeps the candidates'
   expect(onResolved).not.toHaveBeenCalled();
 });
 
-test('an in-flight suggest response resolving after unmount does not write state', async () => {
-  let resolveSuggest: (v: unknown) => void = () => {};
-  suggest.mockImplementationOnce(() => new Promise((r) => { resolveSuggest = r; }));
-  const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-  const { result, unmount } = await renderLadder();
-  await act(async () => { result.current.setQuery('hades'); });
-  await act(async () => { jest.advanceTimersByTime(300); }); // fires the debounced suggest call
-
-  await act(async () => { await unmount(); });
-
-  // Without the mounted guard, resolving here would call setSuggestions/setIsSuggesting
-  // on an unmounted component, which React reports as a console.error.
-  await act(async () => { resolveSuggest({ total: 1, items: [makeSuggestion(1, 'Hades')] }); });
-
-  expect(consoleError).not.toHaveBeenCalled();
-  consoleError.mockRestore();
-});
-
 test('a failed library load surfaces pickerError but leaves the ladder usable', async () => {
   getAll.mockRejectedValue(new Error('net'));
   suggest.mockResolvedValue({ total: 1, items: [makeSuggestion(99, 'Hades II')] });

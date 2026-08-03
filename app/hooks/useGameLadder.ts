@@ -47,11 +47,16 @@ export interface GameLadder {
 }
 
 export function useGameLadder(onResolved: (gameId: number) => void): GameLadder {
-    // Guards every state write below against firing after the hosting screen has
-    // unmounted (e.g. the user navigates away while a suggest/match/create request
-    // is in flight). Distinct from `latestQuery`: that guard discards a response
-    // for an abandoned query while the hook is still mounted; this one discards
-    // any write once the hook itself is gone.
+    // Belt-and-braces consistency with the `cancelled` flag in the picker-load
+    // effect below: skip state writes below after the hosting screen has
+    // unmounted (e.g. the user navigates away while a suggest/match/create
+    // request is in flight). On React 19 a setState call after unmount is
+    // already a silent no-op with no console warning or thrown error, so this
+    // guard is not fixing an observable bug here — it just keeps this hook's
+    // async paths uniformly defensive rather than only the picker-load effect
+    // being so. Distinct from `latestQuery`: that guard discards a response for
+    // an abandoned query while the hook is still mounted; this one is about the
+    // hook itself being gone.
     const mounted = useRef(true);
     useEffect(() => {
         mounted.current = true;
