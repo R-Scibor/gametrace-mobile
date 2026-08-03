@@ -20,10 +20,6 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
     const { t: tSessions } = useTranslation('sessions');
     const ladder = useGameLadder(onChange);
     const [open, setOpen] = useState(false);
-    const inputRef = useRef<TextInput>(null);
-    // Set on chip tap; consumed by the effect below once the search box has
-    // remounted, since the ref isn't attached to it yet at tap time.
-    const focusOnReopen = useRef(false);
 
     const { setQuery, reset } = ladder;
 
@@ -51,15 +47,6 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
 
     const closeAfterSelect = () => { setOpen(false); };
 
-    // The box remounts once `value` clears below, so the ref isn't attached
-    // yet at tap time — focus once it is.
-    useEffect(() => {
-        if (!selectedName && focusOnReopen.current) {
-            focusOnReopen.current = false;
-            inputRef.current?.focus();
-        }
-    }, [selectedName]);
-
     if (selectedName) {
         return (
             <TouchableOpacity
@@ -68,7 +55,6 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
                     reset();
                     onChange(null);
                     setOpen(true);
-                    focusOnReopen.current = true;
                 }}
                 disabled={disabled}
                 activeOpacity={0.8}
@@ -93,7 +79,6 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
             <View style={common.inputWrapper}>
                 <View style={common.orangeBar} />
                 <TextInput
-                    ref={inputRef}
                     style={common.input}
                     placeholder={t('select.placeholder')}
                     placeholderTextColor={colors.text3}
