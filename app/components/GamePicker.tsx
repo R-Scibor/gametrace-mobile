@@ -10,7 +10,7 @@ import { common } from '../theme/styles';
 
 type Props = {
     value: number | null;
-    onChange: (gameId: number) => void;
+    onChange: (gameId: number | null) => void;
     initialQuery?: string;
     disabled?: boolean;
 };
@@ -20,17 +20,20 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
     const { t: tSessions } = useTranslation('sessions');
     const ladder = useGameLadder(onChange);
     const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState(false);
     const inputRef = useRef<TextInput>(null);
+    // Set on chip tap; consumed by the effect below once the search box has
+    // remounted, since the ref isn't attached to it yet at tap time.
+    const focusOnReopen = useRef(false);
 
     const { setQuery, reset } = ladder;
 
-    // Mount-only. Deliberately NOT re-applied when the prop changes, so a
-    // re-render cannot overwrite what the user has since typed.
-    const seeded = useRef(false);
+    // Re-seeds whenever `initialQuery` changes to a new non-empty value (a
+    // second voice handoff), but a re-render with the SAME value must not
+    // clobber what the user has since typed.
+    const seededQuery = useRef<string | null>(null);
     useEffect(() => {
-        if (seeded.current || !initialQuery) return;
-        seeded.current = true;
+        if (!initialQuery || initialQuery === seededQuery.current) return;
+        seededQuery.current = initialQuery;
         setQuery(initialQuery);
         setOpen(true);
     }, [initialQuery, setQuery]);
@@ -46,13 +49,27 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
         return ladder.pickerGames.find(g => g.id === value)?.primary_name ?? null;
     }, [value, ladder.selectedMeta, ladder.pickerGames]);
 
-    const closeAfterSelect = () => { setOpen(false); setEditing(false); };
+    const closeAfterSelect = () => { setOpen(false); };
 
-    if (selectedName && !editing) {
+    // The box remounts once `value` clears below, so the ref isn't attached
+    // yet at tap time — focus once it is.
+    useEffect(() => {
+        if (!selectedName && focusOnReopen.current) {
+            focusOnReopen.current = false;
+            inputRef.current?.focus();
+        }
+    }, [selectedName]);
+
+    if (selectedName) {
         return (
             <TouchableOpacity
                 style={styles.chip}
-                onPress={() => { reset(); setEditing(true); setOpen(true); }}
+                onPress={() => {
+                    reset();
+                    onChange(null);
+                    setOpen(true);
+                    focusOnReopen.current = true;
+                }}
                 disabled={disabled}
                 activeOpacity={0.8}
             >
@@ -64,7 +81,8 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
     }
 
     const nothingInBrowse =
-        isBrowse && ladder.libraryMatches.length === 0 && ladder.catalogMatches.length === 0;
+        isBrowse && ladder.libraryMatches.length === 0 && ladder.catalogMatches.length === 0
+        && !ladder.isPickerLoading;
 
     return (
         <View>

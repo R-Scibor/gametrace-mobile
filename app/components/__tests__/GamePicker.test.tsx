@@ -90,6 +90,45 @@ test('picking a library game calls onChange and shows the chip', async () => {
   await waitFor(() => expect(utils.getByText('zmień')).toBeTruthy());
 });
 
+test('tapping the chip clears the selection instead of leaving it silently selected', async () => {
+  const onChange = jest.fn();
+  function Harness() {
+    const [gameId, setGameId] = useState<number | null>(null);
+    return (
+      <GamePicker
+        value={gameId}
+        onChange={(id) => { onChange(id); setGameId(id); }}
+      />
+    );
+  }
+
+  const utils = await render(<Harness />);
+  await waitFor(() => utils.getByPlaceholderText('Szukaj gry...'));
+  await fireEvent(utils.getByPlaceholderText('Szukaj gry...'), 'focus');
+  await fireEvent.press(utils.getByText('Hades'));
+  await waitFor(() => expect(utils.getByText('zmień')).toBeTruthy());
+
+  await fireEvent.press(utils.getByText('zmień'));
+
+  expect(onChange).toHaveBeenLastCalledWith(null);
+  expect(utils.queryByText('zmień')).toBeNull();
+});
+
+test('noResults does not flash while the picker library is still loading', async () => {
+  // A voice handoff opens the dropdown via `initialQuery` immediately on mount,
+  // without waiting for the library fetch — the exact window the finding covers.
+  let resolveGetAll: (v: unknown) => void = () => {};
+  getAll.mockImplementation(() => new Promise((r) => { resolveGetAll = r; }));
+
+  const utils = await render(<GamePicker value={null} onChange={jest.fn()} initialQuery="zzzz" />);
+  await act(async () => { jest.advanceTimersByTime(300); }); // let the debounced suggest settle
+
+  expect(utils.queryByText('Brak wyników')).toBeNull();
+
+  await act(async () => { resolveGetAll([]); });
+  await waitFor(() => expect(utils.getByText('Brak wyników')).toBeTruthy());
+});
+
 test('noResults does not flash while a suggest request is in flight', async () => {
   let resolveSuggest: (v: unknown) => void = () => {};
   suggest.mockImplementation(() => new Promise((r) => { resolveSuggest = r; }));
@@ -171,6 +210,22 @@ test('initialQuery seeds the search box and opens the dropdown', async () => {
 
   expect(utils.getByPlaceholderText('Szukaj gry...').props.value).toBe('Wiedzmin');
   await waitFor(() => expect(utils.getByText('Szukaj online')).toBeTruthy());
+});
+
+test('a changed initialQuery re-seeds the box, but an unchanged one does not clobber user input', async () => {
+  suggest.mockResolvedValue({ total: 0, items: [] });
+
+  const utils = await render(<GamePicker value={null} onChange={jest.fn()} initialQuery="Wiedzmin" />);
+  await waitFor(() => expect(utils.getByPlaceholderText('Szukaj gry...').props.value).toBe('Wiedzmin'));
+
+  // A re-render with the SAME initialQuery must not clobber what the user typed.
+  await fireEvent.changeText(utils.getByPlaceholderText('Szukaj gry...'), 'Wiedzmin 3');
+  await utils.rerender(<GamePicker value={null} onChange={jest.fn()} initialQuery="Wiedzmin" />);
+  expect(utils.getByPlaceholderText('Szukaj gry...').props.value).toBe('Wiedzmin 3');
+
+  // A genuinely new handoff (changed initialQuery) must re-seed.
+  await utils.rerender(<GamePicker value={null} onChange={jest.fn()} initialQuery="Baldur's Gate" />);
+  await waitFor(() => expect(utils.getByPlaceholderText('Szukaj gry...').props.value).toBe("Baldur's Gate"));
 });
 
 test('a failed library load shows the banner and still allows escalation', async () => {
