@@ -42,6 +42,42 @@ export interface GameListResponse {
 
 export type GameSort = 'name' | 'playtime' | 'last_played';
 
+export interface GameSuggestItem {
+  game_id: number;
+  primary_name: string;
+  cover_image_url: string | null;
+  enrichment_status: EnrichmentStatus;
+  score: number;
+}
+
+export interface GameSuggestResponse {
+  total: number;
+  items: GameSuggestItem[];
+}
+
+export interface IGDBCandidate {
+  igdb_id: number;
+  name: string;
+  year: number | null;
+  cover_url: string | null;
+  score: number;
+}
+
+/** Exactly one mode: igdb_id, or name + unrecognized. */
+export type CreateGamePayload =
+  | { igdb_id: number; query?: string }
+  | { name: string; unrecognized: true };
+
+/**
+ * POST /games response. is_ignored/is_accepted are ALWAYS false/null here
+ * regardless of the caller's real preferences — never read them off this type.
+ */
+export interface CreatedGame {
+  id: number;
+  primary_name: string;
+  cover_image_url: string | null;
+}
+
 export type LibraryFilter = {
   type: 'genre' | 'theme' | 'developer' | 'publisher' | 'release_decade';
   value: string;
