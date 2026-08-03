@@ -47,6 +47,17 @@ export interface GameLadder {
 }
 
 export function useGameLadder(onResolved: (gameId: number) => void): GameLadder {
+    // Guards every state write below against firing after the hosting screen has
+    // unmounted (e.g. the user navigates away while a suggest/match/create request
+    // is in flight). Distinct from `latestQuery`: that guard discards a response
+    // for an abandoned query while the hook is still mounted; this one discards
+    // any write once the hook itself is gone.
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => { mounted.current = false; };
+    }, []);
+
     const [pickerGames, setPickerGames] = useState<Game[]>([]);
     const [isPickerLoading, setIsPickerLoading] = useState(true);
     const [pickerError, setPickerError] = useState(false);
@@ -98,15 +109,15 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
         (async () => {
             try {
                 const data = await suggestGames(debounced);
-                if (latestQuery.current !== debounced) return;
+                if (!mounted.current || latestQuery.current !== debounced) return;
                 setSuggestions(data.items);
             } catch {
-                if (latestQuery.current !== debounced) return;
+                if (!mounted.current || latestQuery.current !== debounced) return;
                 // A suggest failure is not worth a visible error: the catalog group
                 // simply stays empty and the user can still escalate to IGDB.
                 setSuggestions([]);
             } finally {
-                if (latestQuery.current === debounced) setIsSuggesting(false);
+                if (mounted.current && latestQuery.current === debounced) setIsSuggesting(false);
             }
         })();
     }, [debounced]);
@@ -153,11 +164,13 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
         (async () => {
             try {
                 const list = await matchGames(trimmed);
+                if (!mounted.current) return;
                 // An empty list is a legitimate outcome, not an error: it is precisely
                 // the case the unrecognized-create rung exists for.
                 setCandidates(list);
                 setMode('online');
             } catch {
+                if (!mounted.current) return;
                 // 503 (rate limit) and 502 (any other IGDB failure) are the same thing
                 // to the user and both are retryable — no status branching.
                 setCandidates([]);
@@ -188,7 +201,7 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
     }, []);
 
     const select = useCallback(async (pick: LadderPick): Promise<number | null> => {
-        setError(null);
+        if (mounted.current) setError(null);
 
         let meta: SelectedGameMeta;
         if (pick.kind === 'library') {
@@ -208,7 +221,7 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
             const payload: CreateGamePayload = pick.kind === 'candidate'
                 ? { igdb_id: pick.candidate.igdb_id, query: trimmed }
                 : { name: trimmed, unrecognized: true };
-            setIsCreating(true);
+            if (mounted.current) setIsCreating(true);
             try {
                 const created = await createGame(payload);
                 // id and name only. is_ignored/is_accepted on this response are always
@@ -219,19 +232,23 @@ export function useGameLadder(onResolved: (gameId: number) => void): GameLadder 
                     cover_image_url: created.cover_image_url,
                 };
             } catch {
-                setError({ scope: 'create', key: 'select.createFailed' });
+                if (mounted.current) setError({ scope: 'create', key: 'select.createFailed' });
                 return null;
             } finally {
-                setIsCreating(false);
+                if (mounted.current) setIsCreating(false);
             }
         }
 
-        setSelectedMeta(meta);
-        setQueryState('');
-        setDebounced('');
-        setSuggestions([]);
-        setCandidates([]);
-        setMode('browse');
+        // The return value is the caller's contract and must resolve regardless of
+        // mount state; only the state writes below are guarded.
+        if (mounted.current) {
+            setSelectedMeta(meta);
+            setQueryState('');
+            setDebounced('');
+            setSuggestions([]);
+            setCandidates([]);
+            setMode('browse');
+        }
         onResolved(meta.id);
         return meta.id;
     }, [trimmed, onResolved]);
