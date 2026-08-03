@@ -23,5 +23,20 @@
     "other": "Brak gier poza biblioteką",
     "default": "Brak gier do wyświetlenia"
   },
-  "hidden": "UKRYTE"
+  "hidden": "UKRYTE",
+  "select": {
+    "change": "zmień",
+    "placeholder": "Szukaj gry...",
+    "noResults": "Brak wyników",
+    "groupLibrary": "Twoja biblioteka",
+    "groupCatalog": "Z katalogu",
+    "searchOnline": "Szukaj online",
+    "searching": "Szukam online...",
+    "onlineNoResults": "Brak wyników online",
+    "addUnrecognized": "Dodaj „{{name}}” mimo to",
+    "creating": "Dodawanie...",
+    "igdbUnavailable": "Nie udało się połączyć z bazą gier.",
+    "createFailed": "Nie udało się dodać gry.",
+    "retry": "Spróbuj ponownie"
+  }
 }

@@ -23,5 +23,20 @@
     "other": "No games outside your library",
     "default": "No games to display"
   },
-  "hidden": "HIDDEN"
+  "hidden": "HIDDEN",
+  "select": {
+    "change": "change",
+    "placeholder": "Search game...",
+    "noResults": "No results",
+    "groupLibrary": "Your library",
+    "groupCatalog": "From catalog",
+    "searchOnline": "Search online",
+    "searching": "Searching online...",
+    "onlineNoResults": "No online results",
+    "addUnrecognized": "Add \"{{name}}\" anyway",
+    "creating": "Adding...",
+    "igdbUnavailable": "Could not reach the game database.",
+    "createFailed": "Could not add the game.",
+    "retry": "Try again"
+  }
 }
