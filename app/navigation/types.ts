@@ -3,6 +3,7 @@ import type { EnrichmentStatus, LibraryFilter, SessionStatus } from '../types/ap
 
 export type AddSessionParams = {
     gameId?: number;
+    gameName?: string;
     date?: string | null;
     startTime?: string | null;
     endTime?: string | null;
