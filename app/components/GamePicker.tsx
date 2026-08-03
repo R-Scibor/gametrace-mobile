@@ -39,13 +39,10 @@ export default function GamePicker({ value, onChange, initialQuery, disabled }: 
     const isBrowse = ladder.mode === 'browse';
 
     const selectedName = useMemo(() => {
-        // selectedMeta names a game just picked via ladder.select(), which is not in
-        // the owned list yet (and may not have reached the parent's `value` prop on
-        // this render); the lookup below names one arriving via prefill.gameId.
-        if (ladder.selectedMeta && (value == null || ladder.selectedMeta.id === value)) {
-            return ladder.selectedMeta.primary_name;
-        }
         if (value == null) return null;
+        // selectedMeta names a game just created via POST /games, which is not in
+        // the owned list yet; the lookup names one arriving via prefill.gameId.
+        if (ladder.selectedMeta?.id === value) return ladder.selectedMeta.primary_name;
         return ladder.pickerGames.find(g => g.id === value)?.primary_name ?? null;
     }, [value, ladder.selectedMeta, ladder.pickerGames]);
 

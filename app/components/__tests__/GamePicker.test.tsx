@@ -5,6 +5,7 @@ jest.mock('../../api/games', () => ({
   createGame: jest.fn(),
 }));
 
+import { useState } from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import GamePicker from '../GamePicker';
 import { getAllGamesForPicker, suggestGames, matchGames, createGame } from '../../api/games';
@@ -69,12 +70,24 @@ test('blank query shows the library group and no search-online action', async ()
 });
 
 test('picking a library game calls onChange and shows the chip', async () => {
-  const utils = await renderPicker();
+  const onChange = jest.fn();
+  function Harness() {
+    const [gameId, setGameId] = useState<number | null>(null);
+    return (
+      <GamePicker
+        value={gameId}
+        onChange={(id) => { onChange(id); setGameId(id); }}
+      />
+    );
+  }
+
+  const utils = await render(<Harness />);
+  await waitFor(() => utils.getByPlaceholderText('Szukaj gry...'));
   await fireEvent(utils.getByPlaceholderText('Szukaj gry...'), 'focus');
   await fireEvent.press(utils.getByText('Hades'));
 
-  expect(utils.onChange).toHaveBeenCalledWith(1);
-  expect(utils.getByText('zmień')).toBeTruthy();
+  expect(onChange).toHaveBeenCalledWith(1);
+  await waitFor(() => expect(utils.getByText('zmień')).toBeTruthy());
 });
 
 test('noResults does not flash while a suggest request is in flight', async () => {
