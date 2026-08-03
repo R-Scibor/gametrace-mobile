@@ -85,11 +85,26 @@ export default function VoiceScreen() {
         setProcessing(true);
         try {
             const result = await transcribeAudio(uri);
-            const match = result.game ? await resolveGame(result.game) : null;
+
+            let gameId: number | undefined;
+            if (result.game) {
+                try {
+                    const match = await resolveGame(result.game);
+                    gameId = match?.game_id;
+                } catch {
+                    // Ignore: a resolve failure must escalate into the picker, not abort
+                    // the handoff and lose the transcription.
+                }
+            }
+            // On a miss (or a failed resolve) carry the transcribed title forward so the
+            // picker can escalate instead of dead-ending on an empty field.
+            const gameName = !gameId && result.game ? result.game : undefined;
+
             navigation.navigate('Main', {
                 screen: 'AddSession',
                 params: {
-                    gameId: match?.game_id,
+                    gameId,
+                    gameName,
                     date: result.date,
                     startTime: result.start_time,
                     endTime: result.end_time,
