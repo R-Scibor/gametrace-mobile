@@ -32,9 +32,7 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -45,7 +43,9 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Aplikacja używa mikrofonu do nagrywania sesji głosowych."
+          "microphonePermission": "Aplikacja używa mikrofonu do nagrywania sesji głosowych.",
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
         }
       ],
       [
