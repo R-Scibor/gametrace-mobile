@@ -4,6 +4,15 @@ export interface LoginRequest {
   timezone?: string;
 }
 
+export interface PendingDeletion {
+  deletion_requested_at: string;
+  purge_at: string;
+  days_left: number;
+}
+
+/** 202 body of POST /profile/me/deletion — same shape as PendingDeletion. */
+export type DeletionStatus = PendingDeletion;
+
 export interface LoginResponse {
   token: string;
   discord_id: string;
@@ -11,6 +20,8 @@ export interface LoginResponse {
   timezone: string;
   is_admin: boolean;
   needs_server_join?: boolean; // OAuth only; absent/false for link + username login
+  /** Absent on older self-host APIs — treat as null. */
+  pending_deletion?: PendingDeletion | null;
 }
 
 // Games
