@@ -12,8 +12,13 @@
     "user": "User",
     "userId": "ID: {{id}}",
     "permissions": "Permissions",
-    "admin": "ADMIN"
+    "admin": "ADMIN",
+    "delete": "Delete account",
+    "deleteSub": "The account is disabled immediately; data is permanently deleted after {{days}} days.",
+    "deleteAdmin": "Admin accounts cannot delete themselves.",
+    "deleteAction": "Delete"
   },
+
   "preferences": {
     "language": "Language",
     "timezone": "Timezone",

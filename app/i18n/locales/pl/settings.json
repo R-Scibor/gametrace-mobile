@@ -12,8 +12,13 @@
     "user": "Użytkownik",
     "userId": "ID: {{id}}",
     "permissions": "Uprawnienia",
-    "admin": "ADMIN"
+    "admin": "ADMIN",
+    "delete": "Usuń konto",
+    "deleteSub": "Konto jest wyłączane natychmiast; dane są trwale usuwane po {{days}} dniach.",
+    "deleteAdmin": "Konta administratora nie mogą usuwać się same.",
+    "deleteAction": "Usuń"
   },
+
   "preferences": {
     "language": "Język",
     "timezone": "Strefa czasowa",

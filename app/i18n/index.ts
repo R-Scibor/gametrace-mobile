@@ -31,6 +31,8 @@ import enReport from './locales/en/report.json';
 import plReport from './locales/pl/report.json';
 import enOnboarding from './locales/en/onboarding.json';
 import plOnboarding from './locales/pl/onboarding.json';
+import enAccount from './locales/en/account.json';
+import plAccount from './locales/pl/account.json';
 
 export const LANG_STORAGE_KEY = 'gt.lang';
 
@@ -50,6 +52,7 @@ const resources = {
     datetime: enDatetime,
     report: enReport,
     onboarding: enOnboarding,
+    account: enAccount,
   },
   pl: {
     common: plCommon,
@@ -66,6 +69,7 @@ const resources = {
     datetime: plDatetime,
     report: plReport,
     onboarding: plOnboarding,
+    account: plAccount,
   },
 };
 

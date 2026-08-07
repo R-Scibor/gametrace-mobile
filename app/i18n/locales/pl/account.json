@@ -1,0 +1,59 @@
+{
+  "dialog": {
+    "title": "Usunąć konto?",
+    "lead": "Ta operacja jest nieodwracalna po okresie karencji.",
+    "inventoryLabel": "Zostanie usunięte",
+    "consequencesLabel": "Co się stanie",
+    "consequences": {
+      "disabled": "Dostęp zostanie wyłączony natychmiast — zostaniesz wylogowany na wszystkich urządzeniach, a trwająca sesja gry zakończy się błędem.",
+      "purge": "Dane zostaną trwale usunięte po {{days}} dniach lub wkrótce po tym terminie.",
+      "cancel": "Możesz anulować usunięcie przed tym terminem, logując się ponownie kodem z Discorda."
+    },
+    "confirmLabel": "Wpisz {{username}}, aby potwierdzić",
+    "submit": "Usuń konto",
+    "cancel": "Anuluj",
+    "error": "Nie udało się zlecić usunięcia konta. Spróbuj ponownie."
+  },
+  "inventory": {
+    "sessions": "Sesje gry i cała historia grania",
+    "library": "Biblioteka i preferencje gier",
+    "tokens": "Tokeny logowania i zarejestrowane urządzenia (powiadomienia)",
+    "reports": "Zgłoszenia wysłane do administratora",
+    "voice": "Historia użycia funkcji głosowej"
+  },
+  "status": {
+    "purgeLabel": "Trwałe usunięcie",
+    "purgeValue": "{{date}} lub wkrótce po tej dacie",
+    "purgeNote": "Usuwanie uruchamiane jest raz na dobę, więc może nastąpić do doby później.",
+    "daysLeftLabel": "Pozostało",
+    "daysLeft_one": "{{count}} dzień",
+    "daysLeft_few": "{{count}} dni",
+    "daysLeft_many": "{{count}} dni",
+    "daysLeft_other": "{{count}} dni"
+  },
+  "scheduled": {
+    "eyebrow": "Konto zaplanowane do usunięcia",
+    "title": "Twoje konto zostanie usunięte",
+    "lead": "Dostęp został wyłączony. Zostałeś wylogowany na wszystkich urządzeniach.",
+    "cancelTitle": "Zmieniłeś zdanie?",
+    "cancelBody": "Zaloguj się ponownie kodem z Discorda przed tą datą — usunięcie zostanie anulowane. Nie ma tu przycisku anulowania, bo nie jesteś już zalogowany.",
+    "loginCta": "Zaloguj się, aby anulować",
+    "okCta": "OK"
+  },
+  "pending": {
+    "eyebrow": "Konto oczekuje na usunięcie",
+    "title": "Konto zostanie usunięte",
+    "lead": "Aplikacja jest niedostępna do czasu anulowania usunięcia.",
+    "caveatsLabel": "Zanim anulujesz",
+    "caveats": {
+      "restore": "Anulowanie przywraca dostęp natychmiast.",
+      "lost": "Sesje zakończone błędem przy zlecaniu usunięcia oraz wyrejestrowane urządzenia nie wracają.",
+      "permanent": "Po trwałym usunięciu danych nie da się odzyskać."
+    },
+    "cancelCta": "Anuluj usunięcie",
+    "logoutCta": "Wyloguj",
+    "cancelled": "Usuwanie konta zostało anulowane.",
+    "notScheduled": "To konto nie jest zaplanowane do usunięcia.",
+    "cancelFailed": "Nie udało się anulować usunięcia. Spróbuj ponownie."
+  }
+}

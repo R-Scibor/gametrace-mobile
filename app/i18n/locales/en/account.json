@@ -1,0 +1,59 @@
+{
+  "dialog": {
+    "title": "Delete your account?",
+    "lead": "This cannot be undone once the grace period ends.",
+    "inventoryLabel": "What gets deleted",
+    "consequencesLabel": "What happens",
+    "consequences": {
+      "disabled": "Access is disabled immediately — you are signed out everywhere, and any ongoing game session ends in an error.",
+      "purge": "Data is permanently deleted after {{days}} days, or shortly after.",
+      "cancel": "You can cancel the deletion before that date by signing in again with a Discord code."
+    },
+    "confirmLabel": "Type {{username}} to confirm",
+    "submit": "Delete account",
+    "cancel": "Cancel",
+    "error": "Could not schedule the deletion. Please try again."
+  },
+  "inventory": {
+    "sessions": "Game sessions and your full play history",
+    "library": "Library and game preferences",
+    "tokens": "Login tokens and registered devices (notifications)",
+    "reports": "Reports you sent to the administrator",
+    "voice": "Voice feature usage records"
+  },
+  "status": {
+    "purgeLabel": "Permanent deletion",
+    "purgeValue": "{{date}} or shortly after",
+    "purgeNote": "The deletion job runs once a day, so it may happen up to a day later.",
+    "daysLeftLabel": "Time left",
+    "daysLeft_one": "{{count}} day",
+    "daysLeft_few": "{{count}} days",
+    "daysLeft_many": "{{count}} days",
+    "daysLeft_other": "{{count}} days"
+  },
+  "scheduled": {
+    "eyebrow": "Account scheduled for deletion",
+    "title": "Your account will be deleted",
+    "lead": "Access has been disabled. You have been signed out on every device.",
+    "cancelTitle": "Changed your mind?",
+    "cancelBody": "Sign in again with a Discord code before that date and the deletion is cancelled. There is no cancel button here because you are no longer signed in.",
+    "loginCta": "Sign in to cancel",
+    "okCta": "OK"
+  },
+  "pending": {
+    "eyebrow": "Account pending deletion",
+    "title": "Your account will be deleted",
+    "lead": "The app stays unavailable until you cancel the deletion.",
+    "caveatsLabel": "Before you cancel",
+    "caveats": {
+      "restore": "Cancelling restores access immediately.",
+      "lost": "Sessions that were errored out when you requested deletion, and unregistered devices, do not come back.",
+      "permanent": "Once the data is permanently deleted it cannot be recovered."
+    },
+    "cancelCta": "Cancel deletion",
+    "logoutCta": "Sign out",
+    "cancelled": "Account deletion has been cancelled.",
+    "notScheduled": "This account is not scheduled for deletion.",
+    "cancelFailed": "Could not cancel the deletion. Please try again."
+  }
+}
