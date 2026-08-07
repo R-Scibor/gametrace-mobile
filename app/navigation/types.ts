@@ -35,6 +35,7 @@ export type RootStackParamList = {
     EditSession: { sessionId: number; status: SessionStatus };
     Trash: undefined;
     Voice: undefined;
+    DeleteAccount: undefined;
 };
 
 // Makes useNavigation()/navigate() typed against the root stack everywhere,

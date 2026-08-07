@@ -12,6 +12,7 @@ import GameDetailScreen from '../screens/GameDetailScreen';
 import EditSessionScreen from '../screens/EditSessionScreen';
 import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
+import DeleteAccountScreen from '../screens/DeleteAccountScreen';
 import GlobalAlertHost from '../components/GlobalAlertHost';
 import ServerJoinHost from '../components/ServerJoinHost';
 import ReportSheet from '../components/ReportSheet';
@@ -70,6 +71,7 @@ export default function RootNavigator() {
             <Stack.Screen name="EditSession" component={EditSessionScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Trash" component={TrashScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Voice" component={VoiceScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ headerShown: false }} />
           </>
         )}
       </Stack.Navigator>

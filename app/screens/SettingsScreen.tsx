@@ -20,6 +20,7 @@ import TimezonePicker from '../components/TimezonePicker';
 import PolicyBody from '../components/PolicyBody';
 import { BottomSheet } from '../components/BottomSheet';
 import { formatUptime, botColor } from '../utils/bot';
+import { ACCOUNT_DELETION_GRACE_DAYS } from '../utils/accountDeletion';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -137,6 +138,25 @@ export default function SettingsScreen() {
                         </View>
                     </SettingsRow>
                 )}
+                <SettingsRow
+                    label={t('account.delete')}
+                    subtext={
+                        isAdmin
+                            ? t('account.deleteAdmin')
+                            : t('account.deleteSub', { days: ACCOUNT_DELETION_GRACE_DAYS })
+                    }
+                >
+                    <TouchableOpacity
+                        style={[styles.deleteButton, isAdmin && styles.deleteButtonDisabled]}
+                        onPress={() => navigation.navigate('DeleteAccount')}
+                        disabled={isAdmin}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={[styles.deleteButtonText, isAdmin && styles.deleteButtonTextDisabled]}>
+                            {t('account.deleteAction')}
+                        </Text>
+                    </TouchableOpacity>
+                </SettingsRow>
 
                 {/* Appearance */}
                 <SectionHeaderLocal title={t('sections.preferences')} />
@@ -398,6 +418,29 @@ const styles = StyleSheet.create({
         fontSize: 10,
         letterSpacing: 1,
         color: colors.orange,
+    },
+
+    deleteButton: {
+        backgroundColor: colors.warnTint,
+        borderWidth: 1,
+        borderColor: colors.warnBorder,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 2,
+    },
+    deleteButtonDisabled: {
+        backgroundColor: colors.bg4,
+        borderColor: colors.border,
+        opacity: 0.6,
+    },
+    deleteButtonText: {
+        fontFamily: displayFont.bold,
+        fontSize: 11,
+        letterSpacing: 1,
+        color: colors.warn,
+    },
+    deleteButtonTextDisabled: {
+        color: colors.text3,
     },
 
     tzButton: {
