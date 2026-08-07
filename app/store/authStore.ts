@@ -3,6 +3,7 @@ import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
 import { clearAllCache } from '../utils/cacheStorage';
 import { useEmptyAccountStore } from './emptyAccountStore';
+import type { PendingDeletion } from '../types/api';
 
 const secureStorage: StateStorage = {
     getItem: (name) => SecureStore.getItemAsync(name),
@@ -21,8 +22,10 @@ type AuthState = {
     user: User | null;
     isAdmin: boolean;
     isAuthenticated: boolean;
-    login: (token: string, user: User, isAdmin?: boolean) => void;
+    pendingDeletion: PendingDeletion | null;
+    login: (token: string, user: User, isAdmin?: boolean, pendingDeletion?: PendingDeletion | null) => void;
     setIsAdmin: (isAdmin: boolean) => void;
+    setPendingDeletion: (pendingDeletion: PendingDeletion | null) => void;
     logout: () => void;
 };
 
@@ -33,11 +36,20 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAdmin: false,
             isAuthenticated: false,
+            pendingDeletion: null,
 
-            login: (token, user, isAdmin = false) => set({ token, user, isAdmin, isAuthenticated: true }),
+            login: (token, user, isAdmin = false, pendingDeletion = null) =>
+                set({ token, user, isAdmin, isAuthenticated: true, pendingDeletion }),
             setIsAdmin: (isAdmin) => set({ isAdmin }),
+            setPendingDeletion: (pendingDeletion) => set({ pendingDeletion }),
             logout: () => {
-                set({ token: null, user: null, isAdmin: false, isAuthenticated: false });
+                set({
+                    token: null,
+                    user: null,
+                    isAdmin: false,
+                    isAuthenticated: false,
+                    pendingDeletion: null,
+                });
                 // Sole clear site (spec): covers settings logout, the axios 401
                 // interceptor, and change-server. Fire-and-forget.
                 void clearAllCache();
