@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../store/authStore';
 import { useServerStore } from '../store/serverStore';
+import { useDeletionHandoffStore } from '../store/deletionHandoffStore';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import OfficialPolicyScreen from '../screens/OfficialPolicyScreen';
 import CustomServerScreen from '../screens/CustomServerScreen';
@@ -13,6 +14,8 @@ import EditSessionScreen from '../screens/EditSessionScreen';
 import TrashScreen from '../screens/TrashScreen';
 import VoiceScreen from '../screens/VoiceScreen';
 import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+import DeletionScheduledScreen from '../screens/DeletionScheduledScreen';
+import PendingDeletionScreen from '../screens/PendingDeletionScreen';
 import GlobalAlertHost from '../components/GlobalAlertHost';
 import ServerJoinHost from '../components/ServerJoinHost';
 import ReportSheet from '../components/ReportSheet';
@@ -32,6 +35,8 @@ function LanguageSyncHost() {
 export default function RootNavigator() {
     const serverUrl = useServerStore((state) => state.serverUrl);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const pendingDeletion = useAuthStore((state) => state.pendingDeletion);
+    const handoff = useDeletionHandoffStore((state) => state.status);
 
     return (
     <SafeAreaProvider>
@@ -54,10 +59,22 @@ export default function RootNavigator() {
               {({ navigation }) => <CustomServerScreen onBack={navigation.goBack} />}
             </Stack.Screen>
           </>
+        ) : !isAuthenticated && handoff ? (
+          <Stack.Screen
+            name="DeletionScheduled"
+            component={DeletionScheduledScreen}
+            options={{ headerShown: false }}
+          />
         ) : !isAuthenticated ? (
           <Stack.Screen
             name="Auth"
             component={AuthScreen}
+            options={{ headerShown: false }}
+          />
+        ) : pendingDeletion ? (
+          <Stack.Screen
+            name="PendingDeletion"
+            component={PendingDeletionScreen}
             options={{ headerShown: false }}
           />
         ) : (
@@ -76,7 +93,7 @@ export default function RootNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
-    {serverUrl && isAuthenticated && (
+    {serverUrl && isAuthenticated && !pendingDeletion && (
       <>
         {DEV_REPORT_FAB && <ReportFab />}
         <ReportSheet />

@@ -36,6 +36,8 @@ export type RootStackParamList = {
     Trash: undefined;
     Voice: undefined;
     DeleteAccount: undefined;
+    DeletionScheduled: undefined;
+    PendingDeletion: undefined;
 };
 
 // Makes useNavigation()/navigate() typed against the root stack everywhere,
