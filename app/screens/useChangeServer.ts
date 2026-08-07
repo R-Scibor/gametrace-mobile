@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { resolveServer, ResolveResult } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
 import { useAuthStore } from '../store/authStore';
+import { useDeletionHandoffStore } from '../store/deletionHandoffStore';
 
 export function useChangeServer() {
     const [loading, setLoading] = useState(false);
     const setServerUrl = useServerStore((s) => s.setServerUrl);
 
     const apply = (baseUrl: string) => {
+        useDeletionHandoffStore.getState().clear();
         setServerUrl(baseUrl);
         useAuthStore.getState().logout();
     };

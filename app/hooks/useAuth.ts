@@ -3,6 +3,7 @@ import { login, linkLogin, discordLogin } from '../api/auth';
 import { LoginResponse } from '../types/api';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useDeletionHandoffStore } from '../store/deletionHandoffStore';
 import { getDeviceTimezone } from '../utils/timezones';
 import { useDiscordOAuth } from './useDiscordOAuth';
 import { useServerJoinStore } from '../store/serverJoinStore';
@@ -51,10 +52,14 @@ export const useAuth = () => {
   const { login: storeLogin, logout, isAuthenticated, user } = useAuthStore();
 
   const seedSession = (data: LoginResponse) => {
-    storeLogin(data.token, {
-      discordId: data.discord_id,
-      username: data.username,
-    }, data.is_admin);
+    useDeletionHandoffStore.getState().clear();
+    const pending = data.pending_deletion ?? null;
+    storeLogin(
+      data.token,
+      { discordId: data.discord_id, username: data.username },
+      data.is_admin,
+      pending,
+    );
     useSettingsStore.getState().setTimezone(data.timezone);
   };
 
@@ -103,7 +108,9 @@ export const useAuth = () => {
       }
       const data = await discordLogin(result.code, result.codeVerifier, result.redirectUri);
       seedSession(data);
-      if (data.needs_server_join) useServerJoinStore.getState().show();
+      if (data.needs_server_join && !data.pending_deletion) {
+        useServerJoinStore.getState().show();
+      }
       return true;
     } catch (e: any) {
       setError(discordErrorMessage(e));
