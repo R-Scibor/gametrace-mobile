@@ -7,8 +7,11 @@ import {
   StyleSheet,
   ScrollView,
   BackHandler,
+  Keyboard,
+  Platform,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -27,16 +30,27 @@ import { common } from '../theme/styles';
 const INVENTORY_KEYS = ['sessions', 'library', 'tokens', 'reports', 'voice'] as const;
 const CONSEQUENCE_KEYS = ['disabled', 'purge', 'cancel'] as const;
 
+/** Extra lift so the last button is not clipped under the IME / nav scrim. */
+const KEYBOARD_EXTRA = 12;
+
 const matches = (typed: string, username: string) =>
   username.trim().length > 0 && typed.trim().toLowerCase() === username.trim().toLowerCase();
 
+/**
+ * Confirm UI is docked under a ScrollView and lifted with keyboard height.
+ * Scroll/measure hacks fail when the window does not resize under the IME
+ * (common with edge-to-edge RN/Expo). The list stays scrollable with the
+ * keyboard open; do not use keyboardDismissMode="on-drag".
+ */
 export default function DeleteAccountScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation('account');
   const username = useAuthStore((s) => s.user?.username ?? '');
   const [typed, setTyped] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const handedOff = useRef(false);
 
   useEffect(
@@ -60,7 +74,28 @@ export default function DeleteAccountScreen() {
     return () => sub.remove();
   }, [loading]);
 
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvt, (e) => {
+      // Prefer screenY vs window height: more reliable with edge-to-edge than
+      // endCoordinates.height alone (which can under-report and clip buttons).
+      const winH = Dimensions.get('window').height;
+      const fromScreenY = winH - e.endCoordinates.screenY;
+      const reported = e.endCoordinates.height;
+      setKeyboardHeight(Math.max(fromScreenY, reported, 0));
+    });
+    const hideSub = Keyboard.addListener(hideEvt, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const canSubmit = matches(typed, username) && !loading;
+  const keyboardOpen = keyboardHeight > 0;
 
   const onSubmit = async () => {
     if (loading || !matches(typed, username)) return;
@@ -96,11 +131,21 @@ export default function DeleteAccountScreen() {
 
   const confirmLabel = t('dialog.confirmLabel', { username });
 
+  // Keyboard open: pad by IME height (+ small extra so Usuń konto isn't clipped).
+  // Keyboard closed: home indicator / 3-button nav inset (never collapse to 0).
+  const footerPadBottom = keyboardOpen
+    ? keyboardHeight + KEYBOARD_EXTRA
+    : Math.max(insets.bottom, 16);
+
   return (
-    <SafeAreaView style={common.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={common.safe} edges={['top']}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+        // "always": taps on the list don't auto-dismiss the keyboard so the
+        // user can scroll inventory/consequences while typing. Drag-dismiss
+        // is intentionally off (on-drag made the keyboard vanish on scroll).
+        keyboardShouldPersistTaps="always"
       >
         <Text style={styles.title}>{t('dialog.title')}</Text>
         <Text style={styles.lead}>{t('dialog.lead')}</Text>
@@ -124,7 +169,9 @@ export default function DeleteAccountScreen() {
             </Text>
           </View>
         ))}
+      </ScrollView>
 
+      <View style={[styles.footer, { paddingBottom: footerPadBottom }]}>
         <Text style={styles.confirmLabel}>{confirmLabel}</Text>
         <View style={common.inputWrapper}>
           <View style={common.orangeBar} />
@@ -141,9 +188,15 @@ export default function DeleteAccountScreen() {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <View style={styles.actions}>
+        {/* Side-by-side when IME is open so the footer is shorter and more of
+            the policy text stays visible above. */}
+        <View style={keyboardOpen ? styles.actionsRow : styles.actionsCol}>
           <TouchableOpacity
-            style={common.secondaryButton}
+            style={[
+              common.secondaryButton,
+              keyboardOpen && styles.actionHalf,
+              keyboardOpen && styles.actionHalfSecondary,
+            ]}
             onPress={onCancel}
             disabled={loading}
             activeOpacity={0.7}
@@ -159,7 +212,12 @@ export default function DeleteAccountScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.dangerButton, !canSubmit && styles.dangerButtonDisabled]}
+            style={[
+              styles.dangerButton,
+              keyboardOpen && styles.actionHalf,
+              keyboardOpen && styles.dangerButtonRow,
+              !canSubmit && styles.dangerButtonDisabled,
+            ]}
             onPress={onSubmit}
             disabled={!canSubmit}
             activeOpacity={0.7}
@@ -175,13 +233,21 @@ export default function DeleteAccountScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 12 },
+  scroll: { flex: 1 },
+  content: { paddingHorizontal: 20, paddingBottom: 20, paddingTop: 12 },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
   title: {
     fontFamily: displayFont.bold,
     fontSize: 22,
@@ -234,7 +300,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1,
     color: colors.text3,
-    marginTop: 22,
     marginBottom: 8,
   },
   error: {
@@ -244,7 +309,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     lineHeight: 18,
   },
-  actions: { marginTop: 24, gap: 4 },
+  actionsCol: { marginTop: 16, gap: 4 },
+  actionsRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 8,
+  },
+  actionHalf: {
+    flex: 1,
+    marginTop: 0,
+  },
+  actionHalfSecondary: {
+    marginTop: 0,
+  },
   dangerButton: {
     backgroundColor: colors.dangerTint,
     borderWidth: 1,
@@ -253,6 +331,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     marginTop: 10,
+  },
+  dangerButtonRow: {
+    marginTop: 0,
+    justifyContent: 'center',
   },
   dangerButtonDisabled: {
     backgroundColor: colors.bg4,
