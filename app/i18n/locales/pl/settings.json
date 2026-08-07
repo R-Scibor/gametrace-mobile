@@ -21,9 +21,7 @@
 
   "preferences": {
     "language": "Język",
-    "timezone": "Strefa czasowa",
-    "darkMode": "Tryb ciemny",
-    "darkModeSub": "Interfejs aplikacji"
+    "timezone": "Strefa czasowa"
   },
   "status": {
     "bot": "Bot",

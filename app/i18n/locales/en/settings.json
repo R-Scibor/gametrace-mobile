@@ -21,9 +21,7 @@
 
   "preferences": {
     "language": "Language",
-    "timezone": "Timezone",
-    "darkMode": "Dark mode",
-    "darkModeSub": "App interface"
+    "timezone": "Timezone"
   },
   "status": {
     "bot": "Bot",

@@ -76,7 +76,7 @@ Selected list/summary fetches go through `useCachedFetch`. On success, a snapsho
 
 ## Theming
 
-`theme/colors.ts` defines the palette — a dark base (`bg`…`bg4`), warm orange accent (`orange`), and muted text ramp (`text`…`text3`). `theme/fonts.ts` wires the Google fonts (Space Grotesk / DM Sans) loaded in `App.tsx`, and `theme/styles.ts` holds shared style fragments. There is no component library; UI is built directly from React Native `StyleSheet`. The Settings dark-mode switch is currently non-functional (dark-only product).
+`theme/colors.ts` defines the palette — a dark base (`bg`…`bg4`), warm orange accent (`orange`), and muted text ramp (`text`…`text3`). `theme/fonts.ts` wires the Google fonts (Space Grotesk / DM Sans) loaded in `App.tsx`, and `theme/styles.ts` holds shared style fragments. There is no component library; UI is built directly from React Native `StyleSheet`. Settings no longer exposes a dark-mode control (dark-only product until a real light theme ships).
 
 ## Alerts
 

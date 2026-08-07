@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { useSettingsStore } from '../store/settingsStore';
 import { useServerStore } from '../store/serverStore';
 import { useReportStore } from '../store/reportStore';
 import { useChangeServer } from './useChangeServer';
@@ -55,7 +54,6 @@ export default function SettingsScreen() {
     const { t: ts } = useTranslation('server');
     const { user, isAdmin, logout } = useAuthStore();
     const openReport = useReportStore((s) => s.open);
-    const { isDarkMode, toggleDarkMode } = useSettingsStore();
     const { timezone, select: selectTimezone, sync: syncTimezone, error: tzError, clearError: clearTzError } = useTimezone();
     const {
         select: selectLanguage,
@@ -160,16 +158,6 @@ export default function SettingsScreen() {
 
                 {/* Appearance */}
                 <SectionHeaderLocal title={t('sections.preferences')} />
-                <SettingsRow label={t('preferences.darkMode')} subtext={t('preferences.darkModeSub')}>
-                    <Switch
-                        value={isDarkMode}
-                        onValueChange={toggleDarkMode}
-                        trackColor={{ false: colors.bg4, true: colors.orangeDim }}
-                        thumbColor={isDarkMode ? colors.orange : colors.text3}
-                        ios_backgroundColor={colors.bg4}
-                    />
-                </SettingsRow>
-
                 <SettingsRow label={t('preferences.language')}>
                     <View style={styles.langChips}>
                         {(['pl', 'en'] as const).map((lng) => {
