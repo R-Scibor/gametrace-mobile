@@ -107,6 +107,21 @@ test('error shows PL inline message and keeps session', async () => {
   expect(isAuthTeardownSuspended()).toBe(false);
 });
 
+test('invalid deletion status body keeps session and shows error', async () => {
+  mockRequestDeletion.mockResolvedValue({ purge_at: 123, days_left: 'x' });
+  const { getByText, getByLabelText, findByText } = await render(<DeleteAccountScreen />);
+
+  await fireEvent.changeText(getByLabelText(/Wpisz testuser/), 'testuser');
+  await fireEvent.press(getByText('Usuń konto'));
+
+  expect(
+    await findByText('Nie udało się zlecić usunięcia konta. Spróbuj ponownie.'),
+  ).toBeTruthy();
+  expect(useAuthStore.getState().isAuthenticated).toBe(true);
+  expect(useDeletionHandoffStore.getState().status).toBeNull();
+  expect(isAuthTeardownSuspended()).toBe(false);
+});
+
 test('unmount without handoff resumes teardown', async () => {
   let resolveRequest!: (v: typeof sampleStatus) => void;
   mockRequestDeletion.mockReturnValue(

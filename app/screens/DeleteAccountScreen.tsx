@@ -15,7 +15,10 @@ import axios from 'axios';
 import { requestDeletion } from '../api/profile';
 import { useAuthStore } from '../store/authStore';
 import { useDeletionHandoffStore } from '../store/deletionHandoffStore';
-import { ACCOUNT_DELETION_GRACE_DAYS } from '../utils/accountDeletion';
+import {
+  ACCOUNT_DELETION_GRACE_DAYS,
+  isDeletionStatus,
+} from '../utils/accountDeletion';
 import { resumeAuthTeardown, suspendAuthTeardown } from '../utils/authTeardown';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -66,6 +69,11 @@ export default function DeleteAccountScreen() {
     suspendAuthTeardown();
     try {
       const status = await requestDeletion();
+      if (!isDeletionStatus(status)) {
+        resumeAuthTeardown();
+        setError(t('dialog.error'));
+        return;
+      }
       handedOff.current = true;
       useDeletionHandoffStore.getState().save(status);
       useAuthStore.getState().logout();
