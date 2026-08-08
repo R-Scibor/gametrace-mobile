@@ -13,6 +13,7 @@ import { isLanguage, type Language } from '../i18n/resolve';
 import { logout as logoutApi } from '../api/profile';
 import { getHealth } from '../api/health';
 import { HealthResponse } from '../types/api';
+import { useAlertStore } from '../store/alertStore';
 import ConfirmSheet from '../components/ConfirmSheet';
 import AlertSheet from '../components/AlertSheet';
 import TimezonePicker from '../components/TimezonePicker';
@@ -89,6 +90,7 @@ export default function SettingsScreen() {
     const [tzPickerOpen, setTzPickerOpen] = useState(false);
     const [health, setHealth] = useState<HealthResponse | null>(null);
     const [policyOpen, setPolicyOpen] = useState(false);
+    const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -103,11 +105,15 @@ export default function SettingsScreen() {
 
     const handleLogout = async () => {
         if (loading) return;
+        setLogoutConfirmOpen(false);
         setLoading(true);
         try {
             await logoutApi();
         } catch {
-            // TODO
+            // Local logout still proceeds — never strand someone in a signed-in
+            // shell because the network failed — but the server session may live
+            // on, which the user needs to know about.
+            useAlertStore.getState().showAlert(t('logoutFailed.title'), t('logoutFailed.message'));
         }
         logout();
     };
@@ -249,7 +255,7 @@ export default function SettingsScreen() {
                 {/* Logout */}
                 <TouchableOpacity
                     style={[common.secondaryButton, styles.logout]}
-                    onPress={handleLogout}
+                    onPress={() => setLogoutConfirmOpen(true)}
                     disabled={loading}
                     activeOpacity={0.7}
                 >
@@ -273,6 +279,15 @@ export default function SettingsScreen() {
                 currentValue={timezone}
                 onSelect={(z) => { selectTimezone(z); setTzPickerOpen(false); }}
                 onClose={() => setTzPickerOpen(false)}
+            />
+
+            <ConfirmSheet
+                visible={logoutConfirmOpen}
+                title={t('logoutConfirm.title')}
+                message={t('logoutConfirm.message')}
+                confirmLabel={t('logoutConfirm.confirm')}
+                onConfirm={handleLogout}
+                onCancel={() => setLogoutConfirmOpen(false)}
             />
 
             <BottomSheet

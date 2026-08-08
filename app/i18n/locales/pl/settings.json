@@ -42,6 +42,15 @@
   },
   "logout": "WYLOGUJ SIĘ",
   "logoutPending": "WYLOGOWYWANIE...",
+  "logoutConfirm": {
+    "title": "Wylogować się?",
+    "message": "Wrócisz do ekranu logowania. Twoje dane pozostaną na koncie.",
+    "confirm": "Wyloguj się"
+  },
+  "logoutFailed": {
+    "title": "Wylogowano lokalnie",
+    "message": "Nie udało się powiadomić serwera. Sesja może tam nadal być aktywna."
+  },
   "serverModal": {
     "title": "Zmień serwer",
     "hint": "Po zmianie serwera zostaniesz wylogowany."

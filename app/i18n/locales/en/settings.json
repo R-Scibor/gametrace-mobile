@@ -42,6 +42,15 @@
   },
   "logout": "LOG OUT",
   "logoutPending": "LOGGING OUT...",
+  "logoutConfirm": {
+    "title": "Log out?",
+    "message": "You'll return to the sign-in screen. Your data stays on your account.",
+    "confirm": "Log out"
+  },
+  "logoutFailed": {
+    "title": "Logged out locally",
+    "message": "We couldn't reach the server. The session may still be active there."
+  },
   "serverModal": {
     "title": "Change server",
     "hint": "Changing server will log you out."
