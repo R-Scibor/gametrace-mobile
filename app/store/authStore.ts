@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
 
             login: (token, user, isAdmin = false, pendingDeletion = null) => {
                 set({ token, user, isAdmin, isAuthenticated: true, pendingDeletion });
-                // Sole set site: every login path funnels through useAuth.seedSession.
+                // One of three set sites in this module (see onRehydrateStorage below).
                 // discordId only — never the username (spec: Sentry PII).
                 Sentry.setUser({ id: user.discordId });
             },
@@ -68,6 +68,14 @@ export const useAuthStore = create<AuthState>()(
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => secureStorage),
+            onRehydrateStorage: () => (state) => {
+                // Third identity site, same module: persist rehydrates a signed-in
+                // session by setting state directly and never calls login(), so a
+                // returning user would otherwise report crashes anonymously.
+                if (state?.isAuthenticated && state.user) {
+                    Sentry.setUser({ id: state.user.discordId });
+                }
+            },
         }
     )
 );
