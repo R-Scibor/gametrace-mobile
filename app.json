@@ -58,7 +58,8 @@
       "expo-image",
       "expo-web-browser",
       "expo-asset",
-      "expo-localization"
+      "expo-localization",
+      "@sentry/react-native/expo"
     ],
     "extra": {
       "eas": {

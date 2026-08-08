@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
+import * as Sentry from '@sentry/react-native';
 import { clearAllCache } from '../utils/cacheStorage';
 import { useEmptyAccountStore } from './emptyAccountStore';
 import type { PendingDeletion } from '../types/api';
@@ -38,8 +39,12 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             pendingDeletion: null,
 
-            login: (token, user, isAdmin = false, pendingDeletion = null) =>
-                set({ token, user, isAdmin, isAuthenticated: true, pendingDeletion }),
+            login: (token, user, isAdmin = false, pendingDeletion = null) => {
+                set({ token, user, isAdmin, isAuthenticated: true, pendingDeletion });
+                // Sole set site: every login path funnels through useAuth.seedSession.
+                // discordId only — never the username (spec: Sentry PII).
+                Sentry.setUser({ id: user.discordId });
+            },
             setIsAdmin: (isAdmin) => set({ isAdmin }),
             setPendingDeletion: (pendingDeletion) => set({ pendingDeletion }),
             logout: () => {
@@ -55,6 +60,9 @@ export const useAuthStore = create<AuthState>()(
                 void clearAllCache();
                 // The next account must not inherit this account's verdict.
                 useEmptyAccountStore.getState().reset();
+                // Sole clear site: settings logout, axios 401, change-server,
+                // and both deletion screens all land here.
+                Sentry.setUser(null);
             },
         }),
         {

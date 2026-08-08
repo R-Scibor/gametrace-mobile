@@ -11,3 +11,9 @@ jest.mock('expo-secure-store', () => ({
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'pl', languageTag: 'pl-PL' }],
 }));
+
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  wrap: (component) => component,
+  setUser: jest.fn(),
+}));
