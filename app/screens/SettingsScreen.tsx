@@ -20,6 +20,7 @@ import PolicyBody from '../components/PolicyBody';
 import { BottomSheet } from '../components/BottomSheet';
 import { formatUptime, botColor } from '../utils/bot';
 import { ACCOUNT_DELETION_GRACE_DAYS } from '../utils/accountDeletion';
+import { formatAppVersion } from '../utils/appVersion';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -259,7 +260,9 @@ export default function SettingsScreen() {
 
                 <View style={styles.footer}>
                     <View style={styles.hairline} />
-                    <Text style={styles.version}>GAMETRACE {health?.version ?? '—'}</Text>
+                    <Text style={styles.version}>
+                        {`GAMETRACE ${formatAppVersion()} · API ${health?.version ?? '—'}`}
+                    </Text>
                     <View style={styles.hairline} />
                 </View>
 
