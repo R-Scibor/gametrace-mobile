@@ -4,6 +4,8 @@
     "slug": "gametrace-app",
     "scheme": "gametrace",
     "version": "0.4.3",
+    "runtimeVersion": { "policy": "fingerprint" },
+    "updates": { "url": "https://u.expo.dev/df4f365e-1c8a-4a74-bb3a-d59dc2d562d2" },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
