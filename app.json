@@ -23,6 +23,7 @@
     },
     "android": {
       "package": "com.gametrace.app",
+      "//versionCode": "eas.json sets appVersionSource: remote, so EAS owns the real versionCode at build time; this literal is never read (see app/utils/appVersion.ts, which reads expo-application instead).",
       "versionCode": 1,
       "backgroundColor": "#14110f",
       "adaptiveIcon": {

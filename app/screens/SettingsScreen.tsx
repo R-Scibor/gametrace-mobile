@@ -115,6 +115,10 @@ export default function SettingsScreen() {
             // on, which the user needs to know about.
             useAlertStore.getState().showAlert(t('logoutFailed.title'), t('logoutFailed.message'));
         }
+        // `loading` is intentionally never reset here: logout() unmounts this
+        // screen via the auth tree swap, so there is no setState-after-unmount
+        // and no stuck button. Do not add a `finally { setLoading(false) }` —
+        // it would fire after unmount.
         logout();
     };
 

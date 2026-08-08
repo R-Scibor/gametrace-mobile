@@ -20,6 +20,12 @@ jest.mock('expo-constants', () => ({
   default: { expoConfig: { version: require('./app.json').expo.version } },
 }));
 
+// expo-application has no native module in Jest; default nativeBuildVersion to
+// null (no native binary) unless a test mocks it itself.
+jest.mock('expo-application', () => ({
+  nativeBuildVersion: null,
+}));
+
 jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   wrap: (component) => component,

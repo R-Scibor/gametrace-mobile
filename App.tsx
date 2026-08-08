@@ -15,6 +15,12 @@ Sentry.init({
   // Crashes and release health only — no performance tracing.
   tracesSampleRate: 0,
   beforeSend(event) {
+    // Scrubs request headers/body only. Sentry RN's default breadcrumbs record
+    // XHR url/method/status, not headers or bodies, so the Authorization
+    // scrub below is not bypassed by a breadcrumb today — and app/ console.*
+    // calls are __DEV__-gated while enabled: !__DEV__ excludes dev anyway.
+    // The residual risk is a future token-in-query-parameter; considered,
+    // not stripped, since no such risk exists yet.
     const headers = event.request?.headers;
     if (headers) {
       delete headers.Authorization;
