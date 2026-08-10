@@ -86,6 +86,25 @@ Native `Alert` is not used for app chrome. `alertStore` holds an alert/confirm q
 
 `@sentry/react-native` is initialized at module scope in `App.tsx` (`Sentry.wrap` on the default export). Config is intentionally lean: `enabled: !__DEV__`, `tracesSampleRate: 0`, `sendDefaultPii: false`, and `beforeSend` strips auth headers/bodies. DSN comes from `EXPO_PUBLIC_SENTRY_DSN` (set in `eas.json` for preview/production). Org/project live in the `app.json` plugin options; `SENTRY_AUTH_TOKEN` is an EAS secret for sourcemap upload only (never `EXPO_PUBLIC_`). User identity is set only in `authStore` (`login` / `logout` / persist rehydrate) as `{ id: discordId }` — never the username. Product feedback stays on the backend `/reports` path, not Sentry User Feedback.
 
+## Versioning
+
+Two numbers, deliberately from different sources, and both shown in the Settings footer as `GAMETRACE v<version> (<build>)`.
+
+- **`expo.version`** (`app.json`) — the marketing version. `appVersion()` reads it via `expo-constants`, which resolves against the **currently loaded manifest**, so an OTA update carries its own version. Bump **minor** for a new binary, **patch** for an OTA fix.
+- **`versionCode`** — the Android build number, owned entirely by EAS (`appVersionSource: "remote"` in `eas.json`) and auto-incremented per build. `buildNumber()` reads it via `expo-application`, which reports the **installed binary**, not the manifest. Never hand-edit it, and never reintroduce `android.versionCode` to `app.json` — a literal there is ignored for versioning but still lands in the manifest, where `Constants.expoConfig` would report it as truth.
+
+The split is the point: `v0.5.1 (10)` means "JS bundle 0.5.1 running on binary 10", which is enough for a tester to report and for us to locate the exact code.
+
+**Bumping `expo.version` invalidates OTA delivery to existing binaries.** `runtimeVersion` uses the **fingerprint** policy, and `expo.version` is part of the native config the fingerprint hashes — measured, not assumed:
+
+| Tree state | Fingerprint |
+|---|---|
+| `0.4.3`, `android.versionCode` present | `12342c3c…` |
+| `0.4.3`, `android.versionCode` removed | `34487b23…` |
+| `0.5.0`, `android.versionCode` removed | `50d106c5…` |
+
+So a version bump — or removing `android.versionCode` — means `eas update` produces a bundle the installed app will not accept. It fails **silently**: the publish succeeds and simply reaches nobody. Check with `npx @expo/fingerprint .` before publishing an update, and treat a version bump as belonging to the same change-set as a new build, never as an OTA. This is the fingerprint policy working correctly: it is what stops an OTA shipping JS that assumes native code the binary lacks.
+
 ## Testing
 
 Jest with `jest-expo` and `@testing-library/react-native`. Tests sit in `__tests__/` folders beside the code under test and cover API modules, stores, hooks (including language and cache), screens, i18n parity/resolve, and navigation smoke. Run with `npm test`.
