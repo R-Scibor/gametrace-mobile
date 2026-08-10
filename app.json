@@ -3,7 +3,7 @@
     "name": "GameTrace",
     "slug": "gametrace-app",
     "scheme": "gametrace",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "runtimeVersion": { "policy": "fingerprint" },
     "updates": { "url": "https://u.expo.dev/df4f365e-1c8a-4a74-bb3a-d59dc2d562d2" },
     "orientation": "portrait",
@@ -23,8 +23,7 @@
     },
     "android": {
       "package": "com.gametrace.app",
-      "//versionCode": "eas.json sets appVersionSource: remote, so EAS owns the real versionCode at build time; this literal is never read (see app/utils/appVersion.ts, which reads expo-application instead).",
-      "versionCode": 1,
+      "//versionCode": "Deliberately absent. eas.json sets appVersionSource: remote, so EAS owns versionCode and auto-increments it per build. A literal here is ignored for versioning but still lands in the manifest, where Constants.expoConfig reports it as truth — read expo-application instead (app/utils/appVersion.ts). Do not add it back.",
       "backgroundColor": "#14110f",
       "adaptiveIcon": {
         "backgroundColor": "#14110f",
@@ -60,7 +59,6 @@
       [
         "@sentry/react-native/expo",
         {
-          "url": "https://sentry.io/",
           "project": "gametrace-mobile",
           "organization": "rafa-scibor"
         }

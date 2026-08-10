@@ -33,8 +33,7 @@
       "env": {
         "EXPO_PUBLIC_DISCORD_CLIENT_ID": "1486092367072334014",
         "EXPO_PUBLIC_DISCORD_INVITE_URL": "https://discord.com/oauth2/authorize?client_id=1486092367072334014&permissions=2048&integration_type=0&scope=bot+applications.commands",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://d5e91b160d82778f955de3cc9ad6bf62@o4511666752782336.ingest.de.sentry.io/4511886728953936",
-        "EXPO_PUBLIC_SENTRY_SMOKE": "1"
+        "EXPO_PUBLIC_SENTRY_DSN": "https://d5e91b160d82778f955de3cc9ad6bf62@o4511666752782336.ingest.de.sentry.io/4511886728953936"
       }
     }
   },
