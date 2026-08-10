@@ -271,35 +271,16 @@ export default function SettingsScreen() {
                 <View style={styles.footer}>
                     <View style={styles.hairline} />
                     <View style={styles.footerIdentity}>
-                    {/* Smoke trigger, off unless EXPO_PUBLIC_SENTRY_SMOKE=1 at bundle
-                        time. Long-press throws a plain JS error to prove, on a real
-                        production build, that Sentry ingests it AND that sourcemaps
-                        resolve to app/ paths. A JS throw is deliberate:
-                        Sentry.nativeCrash() would prove the native pipeline but says
-                        nothing about JS sourcemaps, which is what breaks silently.
-
-                        The flag is set in eas.json build.production.env, which
-                        `eas update` deliberately cannot read — so the first OTA
-                        disables this by construction, with no revert to remember. */}
-                    <Text
-                        style={styles.version}
-                        onLongPress={
-                            process.env.EXPO_PUBLIC_SENTRY_SMOKE === '1'
-                                ? () => {
-                                    throw new Error('Sentry smoke test — Settings version long-press');
-                                }
-                                : undefined
-                        }
-                    >
-                        {`GAMETRACE ${formatAppVersion()}`}
-                    </Text>
-                    {/* Second line, not appended to the first: at fontSize 10 with
-                        letterSpacing 2 a single line overflows a short screen. */}
-                    <Text style={styles.versionDetail}>
-                        {[updateLabel(), `API ${health?.version ?? '—'}`]
-                            .filter(Boolean)
-                            .join(' · ')}
-                    </Text>
+                        <Text style={styles.version}>
+                            {`GAMETRACE ${formatAppVersion()}`}
+                        </Text>
+                        {/* Second line, not appended to the first: at fontSize 10 with
+                            letterSpacing 2 a single line overflows a short screen. */}
+                        <Text style={styles.versionDetail}>
+                            {[updateLabel(), `API ${health?.version ?? '—'}`]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        </Text>
                     </View>
                     <View style={styles.hairline} />
                 </View>
