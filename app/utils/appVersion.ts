@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as Application from 'expo-application';
+import * as Updates from 'expo-updates';
 
 // EAS remote versioning does not touch expo.version, so Constants.expoConfig
 // stays accurate across OTAs — safe to read here.
@@ -22,4 +23,12 @@ export function buildNumber(): string | null {
 export function formatAppVersion(): string {
     const build = buildNumber();
     return build == null ? `v${appVersion()}` : `v${appVersion()} (${build})`;
+}
+
+// Short prefix of the running bundle's id. Both values above are pinned to the
+// installed binary, so this is the only one that changes when an OTA lands —
+// without it there is no way to tell a shipped build from the same build plus
+// three updates. Null in Expo Go / dev client, where updates are disabled.
+export function updateLabel(): string | null {
+    return Updates.updateId ? Updates.updateId.slice(0, 7) : null;
 }

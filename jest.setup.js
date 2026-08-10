@@ -23,7 +23,15 @@ jest.mock('expo-constants', () => ({
 // expo-application has no native module in Jest; default nativeBuildVersion to
 // null (no native binary) unless a test mocks it itself.
 jest.mock('expo-application', () => ({
+  __esModule: true,
   nativeBuildVersion: null,
+}));
+
+// No updates runtime in Jest. Default to the dev-client shape (no update id);
+// tests that care about the OTA label override this per file.
+jest.mock('expo-updates', () => ({
+  __esModule: true,
+  updateId: null,
 }));
 
 jest.mock('@sentry/react-native', () => ({

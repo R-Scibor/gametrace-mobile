@@ -21,7 +21,7 @@ import PolicyBody from '../components/PolicyBody';
 import { BottomSheet } from '../components/BottomSheet';
 import { formatUptime, botColor } from '../utils/bot';
 import { ACCOUNT_DELETION_GRACE_DAYS } from '../utils/accountDeletion';
-import { formatAppVersion } from '../utils/appVersion';
+import { formatAppVersion, updateLabel } from '../utils/appVersion';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -270,6 +270,7 @@ export default function SettingsScreen() {
 
                 <View style={styles.footer}>
                     <View style={styles.hairline} />
+                    <View style={styles.footerIdentity}>
                     {/* Smoke trigger, off unless EXPO_PUBLIC_SENTRY_SMOKE=1 at bundle
                         time. Long-press throws a plain JS error to prove, on a real
                         production build, that Sentry ingests it AND that sourcemaps
@@ -290,8 +291,16 @@ export default function SettingsScreen() {
                                 : undefined
                         }
                     >
-                        {`GAMETRACE ${formatAppVersion()} · API ${health?.version ?? '—'}`}
+                        {`GAMETRACE ${formatAppVersion()}`}
                     </Text>
+                    {/* Second line, not appended to the first: at fontSize 10 with
+                        letterSpacing 2 a single line overflows a short screen. */}
+                    <Text style={styles.versionDetail}>
+                        {[updateLabel(), `API ${health?.version ?? '—'}`]
+                            .filter(Boolean)
+                            .join(' · ')}
+                    </Text>
+                    </View>
                     <View style={styles.hairline} />
                 </View>
 
@@ -539,12 +548,23 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: colors.border,
     },
+    footerIdentity: {
+        alignItems: 'center',
+    },
     version: {
         fontFamily: displayFont.bold,
         fontSize: 10,
         color: colors.text3,
         letterSpacing: 2,
         paddingHorizontal: 16,
+    },
+    versionDetail: {
+        fontFamily: bodyFont.regular,
+        fontSize: 9,
+        color: colors.text3,
+        letterSpacing: 1,
+        paddingHorizontal: 16,
+        marginTop: 3,
     },
 
     inputWrapper: {
