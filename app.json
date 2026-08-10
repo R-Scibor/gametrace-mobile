@@ -57,12 +57,19 @@
           "photosPermission": "Aplikacja potrzebuje dostępu do zdjęć, aby ustawić własną okładkę gry."
         }
       ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "gametrace-mobile",
+          "organization": "rafa-scibor"
+        }
+      ],
       "expo-secure-store",
       "expo-image",
       "expo-web-browser",
       "expo-asset",
-      "expo-localization",
-      "@sentry/react-native/expo"
+      "expo-localization"
     ],
     "extra": {
       "eas": {

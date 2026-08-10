@@ -82,6 +82,10 @@ Selected list/summary fetches go through `useCachedFetch`. On success, a snapsho
 
 Native `Alert` is not used for app chrome. `alertStore` holds an alert/confirm queue; `GlobalAlertHost` (mounted once in `RootNavigator`) renders them as styled bottom sheets (`AlertSheet` / `ConfirmSheet`, built on `BottomSheet`). This lets non-React code (e.g. the Axios `401` interceptor) raise UI by calling `alertStore.getState().showAlert(...)`.
 
+## Crash reporting (Sentry)
+
+`@sentry/react-native` is initialized at module scope in `App.tsx` (`Sentry.wrap` on the default export). Config is intentionally lean: `enabled: !__DEV__`, `tracesSampleRate: 0`, `sendDefaultPii: false`, and `beforeSend` strips auth headers/bodies. DSN comes from `EXPO_PUBLIC_SENTRY_DSN` (set in `eas.json` for preview/production). Org/project live in the `app.json` plugin options; `SENTRY_AUTH_TOKEN` is an EAS secret for sourcemap upload only (never `EXPO_PUBLIC_`). User identity is set only in `authStore` (`login` / `logout` / persist rehydrate) as `{ id: discordId }` — never the username. Product feedback stays on the backend `/reports` path, not Sentry User Feedback.
+
 ## Testing
 
 Jest with `jest-expo` and `@testing-library/react-native`. Tests sit in `__tests__/` folders beside the code under test and cover API modules, stores, hooks (including language and cache), screens, i18n parity/resolve, and navigation smoke. Run with `npm test`.

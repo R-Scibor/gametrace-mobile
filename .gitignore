@@ -45,3 +45,5 @@ yarn-error.*
 docs/internal
 # Isolated git worktrees
 .worktrees/
+
+.env.local
