@@ -95,15 +95,22 @@ Two numbers, deliberately from different sources, and both shown in the Settings
 
 The split is the point: `v0.5.1 (10)` means "JS bundle 0.5.1 running on binary 10", which is enough for a tester to report and for us to locate the exact code.
 
-**Bumping `expo.version` invalidates OTA delivery to existing binaries.** `runtimeVersion` uses the **fingerprint** policy, and `expo.version` is part of the native config the fingerprint hashes — measured, not assumed:
+**Bumping `expo.version` invalidates OTA delivery to existing binaries.** `runtimeVersion` uses the **fingerprint** policy, and the app config is part of what the fingerprint hashes. Measured against the `0.4.3+10` build:
 
 | Tree state | Fingerprint |
 |---|---|
-| `0.4.3`, `android.versionCode` present | `12342c3c…` |
-| `0.4.3`, `android.versionCode` removed | `34487b23…` |
-| `0.5.0`, `android.versionCode` removed | `50d106c5…` |
+| `0.4.3` — as built | `df9faf9c…` |
+| `0.5.0` | `1a90de29…` |
 
-So a version bump — or removing `android.versionCode` — means `eas update` produces a bundle the installed app will not accept. It fails **silently**: the publish succeeds and simply reaches nobody. Check with `npx @expo/fingerprint .` before publishing an update, and treat a version bump as belonging to the same change-set as a new build, never as an OTA. This is the fingerprint policy working correctly: it is what stops an OTA shipping JS that assumes native code the binary lacks.
+So a version bump means `eas update` produces a bundle the installed app will not accept. It fails **silently**: the publish succeeds and reaches nobody. Treat a version bump as part of the same change-set as a new build, never as an OTA. This is the fingerprint policy working as intended — it is what stops an OTA shipping JS that assumes native code the binary lacks.
+
+**Check compatibility with `eas fingerprint:compare`, not the bare CLI:**
+
+```bash
+eas fingerprint:compare --build-id <build-id>
+```
+
+It reports match/differ against a real build and prints the offending config diff. Do **not** use `npx @expo/fingerprint .` for this — it computes different hashes from EAS (which fingerprints on its builder, post-prebuild, with remote versioning resolved), so it will report a mismatch against a perfectly compatible build and send you chasing a problem that does not exist.
 
 ## Testing
 
