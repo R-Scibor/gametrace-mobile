@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import PolicyBody from '../components/PolicyBody';
+import PolicyLink from '../components/PolicyLink';
 import { resolveServer } from '../api/resolveServer';
 import { useServerStore } from '../store/serverStore';
 import { OFFICIAL_SERVER_HOST } from '../config';
@@ -57,7 +57,7 @@ export default function OfficialPolicyScreen({ onBack }: { onBack: () => void })
                 </View>
 
                 <View style={styles.policyBlock}>
-                    <PolicyBody maxHeight={220} />
+                    <PolicyLink />
                 </View>
 
                 <View style={styles.errorSlot}>

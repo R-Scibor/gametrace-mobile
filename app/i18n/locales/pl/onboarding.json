@@ -18,7 +18,8 @@
       "auth": "Logowanie odbywa się kodem połączenia Discord lub przez OAuth — hasło do Discorda nigdy nie trafia do GameTrace."
     },
     "fullTitle": "POLITYKA PRYWATNOŚCI",
-    "fullBody": "WERSJA ROBOCZA — ten tekst jest tymczasowy i zostanie zastąpiony finalną polityką prywatności przed wydaniem.\n\nFinalna wersja opisze, jakie dane przechowuje GameTrace (tożsamość Discord, sesje gier, czas gry), kto prowadzi serwer, na którym się znajdują, jak długo są przechowywane i jak zażądać ich usunięcia.\n\nPrzy samodzielnym hostowaniu za te dane odpowiada operator serwera, z którym się łączysz — nie autor GameTrace.",
+    "summary": "Oficjalny serwer GameTrace przechowuje Twoją tożsamość Discord, sesje gier i ustawienia. Jest prowadzony jako osobisty projekt, w miarę możliwości — nie jest firmą — a Twoje dane nigdy nie są sprzedawane.\n\nKonto możesz usunąć w każdej chwili w Ustawieniach. Jeśli łączysz się z własnym serwerem, za dane na nim odpowiada jego operator.",
+    "openFull": "Przeczytaj pełną politykę prywatności",
     "accept": "AKCEPTUJĘ I KONTYNUUJ",
     "connecting": "ŁĄCZENIE...",
     "error": "Nie można połączyć się z oficjalnym serwerem. Sprawdź połączenie i spróbuj ponownie."

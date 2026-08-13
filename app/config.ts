@@ -35,3 +35,9 @@ export const DISCORD_INVITE_URL = process.env.EXPO_PUBLIC_DISCORD_INVITE_URL ?? 
 // example; the official connect path prepends https:// at the call site so the
 // probe never falls back to plain HTTP.
 export const OFFICIAL_SERVER_HOST = 'gametrace.rscibor.dev';
+
+// Full privacy notice, opened in the browser from the in-app summary. It lives
+// on the web so it can be revised without shipping an app build. Fixed public
+// URL rather than one derived from the connected server: a self-hosted instance
+// has no /privacy page, and the notice describes the official service anyway.
+export const PRIVACY_POLICY_URL = 'https://gametrace.rscibor.dev/privacy';

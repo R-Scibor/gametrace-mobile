@@ -18,7 +18,8 @@
       "auth": "Sign-in uses a Discord link code or OAuth — your Discord password is never sent to GameTrace."
     },
     "fullTitle": "PRIVACY POLICY",
-    "fullBody": "DRAFT — this text is a placeholder and will be replaced with the final privacy policy before release.\n\nThe final version will describe what data GameTrace stores (Discord identity, game sessions, playtime), who operates the server holding it, how long it is kept, and how to request deletion.\n\nWhen you self-host, the operator of the server you connect to is responsible for that data — not the GameTrace maintainer.",
+    "summary": "The official GameTrace server stores your Discord identity, your game sessions, and your settings. It is run as a personal, best-effort project — not a company — and your data is never sold.\n\nYou can delete your account at any time in Settings. If you connect to your own server instead, its operator is responsible for the data on it.",
+    "openFull": "Read the full privacy policy",
     "accept": "ACCEPT AND CONTINUE",
     "connecting": "CONNECTING...",
     "error": "Couldn't reach the official server. Check your connection and try again."

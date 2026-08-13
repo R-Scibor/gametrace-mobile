@@ -1,4 +1,5 @@
 import React from 'react';
+import { Linking } from 'react-native';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import OfficialPolicyScreen from '../OfficialPolicyScreen';
@@ -108,6 +109,16 @@ test('the re-entry guard drops a second onAccept invocation while loading', asyn
     release({ status: 'ok', baseUrl: 'https://gametrace.rscibor.dev/api/v1' });
     await Promise.all([first, second]);
   });
+});
+
+test('the gate links out to the full notice without connecting', async () => {
+  const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
+  const { getByText } = await renderScreen();
+  await fireEvent.press(getByText('Przeczytaj pełną politykę prywatności'));
+  expect(openURL).toHaveBeenCalledWith('https://gametrace.rscibor.dev/privacy');
+  expect(mockedResolve).not.toHaveBeenCalled();
+  expect(useServerStore.getState().serverUrl).toBeNull();
+  openURL.mockRestore();
 });
 
 test('back calls onBack and writes nothing', async () => {
