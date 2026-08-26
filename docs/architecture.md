@@ -112,6 +112,8 @@ eas fingerprint:compare --build-id <build-id>
 
 It reports match/differ against a real build and prints the offending config diff. Do **not** use `npx @expo/fingerprint .` for this — it computes different hashes from EAS (which fingerprints on its builder, post-prebuild, with remote versioning resolved), so it will report a mismatch against a perfectly compatible build and send you chasing a problem that does not exist.
 
+Preview APKs for testers are built on EAS (`eas.json` profile `preview`) and published by a `workflow_dispatch` job on a **self-hosted** runner that can write the file nginx serves. The workflow YAML is in git; the runner process is not. Setup and the git-vs-host split: [shipping-preview-apk.md](shipping-preview-apk.md).
+
 ## Testing
 
 Jest with `jest-expo` and `@testing-library/react-native`. Tests sit in `__tests__/` folders beside the code under test and cover API modules, stores, hooks (including language and cache), screens, i18n parity/resolve, and navigation smoke. Run with `npm test`.

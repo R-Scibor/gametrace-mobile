@@ -16,6 +16,7 @@ Most recent first. Dates are approximate when several commits landed together.
 
 | Date | Item |
 |------|------|
+| 2026-08 | **Preview APK ship from Actions** — `workflow_dispatch` on `main` starts EAS `preview` (cloud APK), waits, atomically replaces the nginx-served file. Self-hosted runner on the APK host; setup in `docs/shipping-preview-apk.md`. |
 | 2026-08 | **Tester-release readiness** — Sentry crash reporting (`discordId`-only identity, set/cleared solely in `authStore`), `expo-updates` OTA on fingerprint runtime versions with per-profile channels, app version + EAS build number in the Settings footer, compact `DateTimeSheet` metrics for short screens, logout confirm with server-failure warning. |
 | 2026-08 | **Empty states + sample preview** — get-started card on the empty dashboard, plus a labelled sample-data preview on Dashboard / Library / Stats built from fabricated seeds (`app/utils/sampleData.ts`). Emptiness published once by the Dashboard via `emptyAccountStore`, so Library and Stats add no fetches or polls. |
 | 2026-08 | **Bilingual UI (pl / en)** — `i18next` + catalogs, Settings language control, profile sync (`useLanguage` / `useLanguageSync`), device-locale hydrate, parity tests. Default remains **pl**. |

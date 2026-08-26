@@ -48,10 +48,9 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "20"
-          cache: npm
+          node-version: "24"
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
@@ -59,6 +58,8 @@ jobs:
           eas-version: latest
           packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
+          patch-watchers: false
+          eas-cache: false
 
       - name: Install JS dependencies
         run: npm ci

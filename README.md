@@ -53,6 +53,12 @@ Discord client id / invite URL and optional dev-login secret come from `EXPO_PUB
 
 See `app/api/resolveServer.ts` for the resolution rules.
 
+## Preview APK (testers)
+
+Publishing the Android APK that **gametrace-web** serves at `/download/gametrace.apk` is a manual GitHub Actions job: [docs/shipping-preview-apk.md](docs/shipping-preview-apk.md).
+
+The workflow file lives in **git**. A **self-hosted runner** on the machine that bind-mounts that APK does the wait and the file replace. Pushing `main` does not ship a build; dispatch **Ship preview APK** from `main` after the runner, `EXPO_TOKEN`, and dest path are set.
+
 ## Project structure
 
 ```
@@ -84,6 +90,7 @@ Jest with `jest-expo` and `@testing-library/react-native`. Tests live in `__test
 | Document | Description |
 |----------|-------------|
 | [docs/architecture.md](docs/architecture.md) | App architecture — navigation gates, stores, API layer, i18n, theming |
+| [docs/shipping-preview-apk.md](docs/shipping-preview-apk.md) | Operator setup: self-hosted runner vs git, `EXPO_TOKEN`, dest path, dispatch |
 | [docs/roadmap.md](docs/roadmap.md) | Planned work and a log of what has shipped |
 | [docs/internal/TechDebt.md](docs/internal/TechDebt.md) | Known gaps (internal) |
 | [docs/internal/Gotchas.md](docs/internal/Gotchas.md) | Platform quirks worth knowing before debugging |
