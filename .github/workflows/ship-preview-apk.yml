@@ -1,0 +1,103 @@
+name: Ship preview APK
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ship-preview-apk
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ship:
+    runs-on: self-hosted
+    timeout-minutes: 120
+    env:
+      APK_DEST: ${{ vars.APK_DEST_PATH }}
+      APK_PUBLIC_URL: ${{ vars.APK_PUBLIC_URL }}
+    steps:
+      - name: Require main
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "Refusing to ship from ${GITHUB_REF}; dispatch from main."
+            exit 1
+          fi
+
+      - name: Require EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EXPO_TOKEN}" ]; then
+            echo "Missing repository secret EXPO_TOKEN"
+            exit 1
+          fi
+
+      - name: Require writable APK dest
+        run: |
+          set -euo pipefail
+          DEST="${APK_DEST:-/home/endmin/homelab/gametrace-web/downloads/gametrace.apk}"
+          DIR="$(dirname "$DEST")"
+          echo "APK dest: $DEST"
+          test -d "$DIR"
+          touch "$DIR/.gha-write-test"
+          rm -f "$DIR/.gha-write-test"
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          packager: npm
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: EAS preview Android APK
+        run: |
+          set -euo pipefail
+          eas build --profile preview --platform android --non-interactive --wait --json \
+            > "$RUNNER_TEMP/eas-build.json"
+          STATUS="$(jq -r 'if type=="array" then .[0].status else .status end' "$RUNNER_TEMP/eas-build.json")"
+          URL="$(jq -r 'if type=="array" then (.[0].artifacts.buildUrl // .[0].artifacts.applicationArchiveUrl) else (.artifacts.buildUrl // .artifacts.applicationArchiveUrl) end' "$RUNNER_TEMP/eas-build.json")"
+          echo "EAS status=${STATUS}"
+          if [ "${STATUS^^}" != "FINISHED" ]; then
+            echo "EAS build did not finish successfully"
+            cat "$RUNNER_TEMP/eas-build.json"
+            exit 1
+          fi
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "No APK artifact URL in EAS JSON"
+            cat "$RUNNER_TEMP/eas-build.json"
+            exit 1
+          fi
+          echo "EAS_APK_URL=$URL" >> "$GITHUB_ENV"
+
+      - name: Atomic replace live APK
+        run: |
+          set -euo pipefail
+          DEST="${APK_DEST:-/home/endmin/homelab/gametrace-web/downloads/gametrace.apk}"
+          TMP="${DEST}.tmp"
+          trap 'rm -f "$TMP"' EXIT
+          curl --fail --location --retry 3 --retry-delay 5 -o "$TMP" "$EAS_APK_URL"
+          test -s "$TMP"
+          mv -f "$TMP" "$DEST"
+          stat -c 'published %n size=%s mtime=%y' "$DEST"
+
+      - name: HEAD public URL
+        run: |
+          set -euo pipefail
+          URL="${APK_PUBLIC_URL:-https://gametrace.rscibor.dev/download/gametrace.apk}"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' -I "$URL")"
+          echo "HEAD $URL -> $code"
+          test "$code" = "200"
