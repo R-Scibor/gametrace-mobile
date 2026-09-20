@@ -149,7 +149,7 @@ test('401 error logs out after resume', async () => {
   const err = Object.assign(new Error('unauthorized'), {
     response: { status: 401 },
   });
-  (axios.isAxiosError as jest.Mock).mockReturnValue(true);
+  (axios.isAxiosError as unknown as jest.Mock).mockReturnValue(true);
   mockRequestDeletion.mockRejectedValue(err);
 
   const { getByText, getByLabelText, findByText } = await render(<DeleteAccountScreen />);
@@ -162,5 +162,5 @@ test('401 error logs out after resume', async () => {
   expect(useAuthStore.getState().isAuthenticated).toBe(false);
   expect(isAuthTeardownSuspended()).toBe(false);
 
-  (axios.isAxiosError as jest.Mock).mockReturnValue(false);
+  (axios.isAxiosError as unknown as jest.Mock).mockReturnValue(false);
 });

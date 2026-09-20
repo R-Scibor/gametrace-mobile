@@ -16,7 +16,7 @@ import axios from 'axios';
 
 const mockPost = client.post as jest.Mock;
 const mockDelete = client.delete as jest.Mock;
-const isAxiosError = axios.isAxiosError as jest.Mock;
+const isAxiosError = axios.isAxiosError as unknown as jest.Mock;
 
 beforeEach(() => {
   mockPost.mockReset();

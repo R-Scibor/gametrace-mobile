@@ -4,26 +4,20 @@
     "slug": "gametrace-app",
     "scheme": "gametrace",
     "version": "0.5.0",
-    "runtimeVersion": { "policy": "fingerprint" },
-    "updates": { "url": "https://u.expo.dev/df4f365e-1c8a-4a74-bb3a-d59dc2d562d2" },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/df4f365e-1c8a-4a74-bb3a-d59dc2d562d2"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#14110f"
-    },
     "ios": {
       "supportsTablet": true
     },
-    "androidNavigationBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#14110f"
-    },
     "android": {
       "package": "com.gametrace.app",
-      "//versionCode": "Deliberately absent. eas.json sets appVersionSource: remote, so EAS owns versionCode and auto-increments it per build. A literal here is ignored for versioning but still lands in the manifest, where Constants.expoConfig reports it as truth — read expo-application instead (app/utils/appVersion.ts). Do not add it back.",
       "backgroundColor": "#14110f",
       "adaptiveIcon": {
         "backgroundColor": "#14110f",
@@ -67,7 +61,22 @@
       "expo-image",
       "expo-web-browser",
       "expo-asset",
-      "expo-localization"
+      "expo-localization",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#14110f",
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "style": "light"
+        }
+      ]
     ],
     "extra": {
       "eas": {

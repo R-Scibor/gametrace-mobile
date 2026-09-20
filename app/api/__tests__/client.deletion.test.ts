@@ -36,7 +36,7 @@ import {
   resumeAuthTeardown,
 } from '../../utils/authTeardown';
 
-const isAxiosError = axios.isAxiosError as jest.Mock;
+const isAxiosError = axios.isAxiosError as unknown as jest.Mock;
 
 const sample = {
   deletion_requested_at: '2026-08-04T12:00:00Z',

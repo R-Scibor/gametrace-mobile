@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
         height: 30, marginBottom: 8, borderRadius: 2,
         backgroundColor: colors.bg3, overflow: 'hidden', justifyContent: 'center',
     },
-    tagFill: { ...StyleSheet.absoluteFillObject, right: undefined, borderRadius: 2 },
+    tagFill: { ...StyleSheet.absoluteFill, right: undefined, borderRadius: 2 },
     tagOverlay: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 10,
