@@ -26,6 +26,10 @@
   "alert": {
     "defaultTitle": "ERROR"
   },
+  "conflict": {
+    "heading": "Overlapping sessions",
+    "edit": "Edit →"
+  },
   "confirm": {
     "defaultCancel": "Cancel"
   },

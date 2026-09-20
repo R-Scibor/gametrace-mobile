@@ -11,8 +11,9 @@ import Cover from '../components/Cover';
 import ErrorBanner from '../components/ErrorBanner';
 import { BottomSheet, sheetStyles } from '../components/BottomSheet';
 import ConfirmSheet from '../components/ConfirmSheet';
-import AlertSheet from '../components/AlertSheet';
+import SaveErrorSheet from '../components/SaveErrorSheet';
 import { apiErrorMessage } from '../utils/apiError';
+import { sessionSaveError, type SaveError } from '../utils/conflict';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
 import { common } from '../theme/styles';
@@ -35,7 +36,7 @@ export default function TrashScreen() {
     const [menuSession, setMenuSession] = useState<TrashedSession | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<TrashedSession | null>(null);
     const [busy, setBusy] = useState(false);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<SaveError | null>(null);
 
     const purgeLabel = (iso?: string): string => {
         if (!iso) return '';
@@ -84,7 +85,7 @@ export default function TrashScreen() {
             useSessionsStore.getState().invalidate();
             useGamesStore.getState().invalidate();
         } catch (e) {
-            setErrorMsg(apiErrorMessage(e, t('errors.restore')));
+            setSaveError(sessionSaveError(e, t('errors.restore')));
         } finally {
             setBusy(false);
             setMenuSession(null);
@@ -98,7 +99,7 @@ export default function TrashScreen() {
             await hardDeleteSession(s.id);
             setSessions(prev => prev.filter(x => x.id !== s.id));
         } catch (e) {
-            setErrorMsg(apiErrorMessage(e, t('errors.delete')));
+            setSaveError({ kind: 'message', message: apiErrorMessage(e, t('errors.delete')) });
         } finally {
             setBusy(false);
             setConfirmDelete(null);
@@ -185,7 +186,14 @@ export default function TrashScreen() {
                 onCancel={() => setConfirmDelete(null)}
             />
 
-            <AlertSheet visible={errorMsg != null} message={errorMsg ?? undefined} onDismiss={() => setErrorMsg(null)} />
+            <SaveErrorSheet
+                error={saveError}
+                onDismiss={() => setSaveError(null)}
+                onEdit={(session) => {
+                    setSaveError(null);
+                    navigation.navigate('EditSession', { sessionId: session.id, status: session.status });
+                }}
+            />
         </SafeAreaView>
     );
 }

@@ -134,9 +134,22 @@ export interface TrashedSession extends Session {
   purges_at: string;
 }
 
+/** Fields the overlap UI and Edit navigation actually read from a 409. */
+export interface ConflictingSession {
+  id: number;
+  status: SessionStatus;
+  game_id: number;
+  game: {
+    primary_name: string;
+    cover_image_url: string | null;
+  };
+  start_time: string;
+  end_time: string | null;
+}
+
 export interface ConflictResponse {
   detail: string;
-  conflicting_session: Session;
+  conflicting_session: ConflictingSession;
 }
 
 // Stats

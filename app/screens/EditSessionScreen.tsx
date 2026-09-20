@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../navigation/types';
 import DateTimeField from '../components/DateTimeField';
 import Cover from '../components/Cover';
 import ConfirmSheet from '../components/ConfirmSheet';
-import AlertSheet from '../components/AlertSheet';
+import SaveErrorSheet from '../components/SaveErrorSheet';
 import { formatDuration } from '../utils/duration';
 import { apiErrorMessage } from '../utils/apiError';
+import { sessionSaveError, type SaveError } from '../utils/conflict';
 import { getSession, patchSession, deleteSession } from '../api/sessions';
 import { Session } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
@@ -25,7 +27,7 @@ const fmtDateTime = (iso: string) =>
 
 export default function EditSessionScreen() {
     const route = useRoute<RouteProp<RootStackParamList, 'EditSession'>>();
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'EditSession'>>();
     const { sessionId, status } = route.params;
     const { t } = useTranslation('sessions');
 
@@ -36,7 +38,7 @@ export default function EditSessionScreen() {
     const [loadError, setLoadError] = useState(false);
     const [confirmVisible, setConfirmVisible] = useState(false);
     const [discardVisible, setDiscardVisible] = useState(false);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<SaveError | null>(null);
 
     useEffect(() => {
         if (status === 'ONGOING') return;
@@ -74,7 +76,7 @@ export default function EditSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('[patchSession] save failed', e?.response?.status, e?.response?.data, e?.message);
-            setErrorMsg(apiErrorMessage(e, t('errors.saveFailed')));
+            setSaveError(sessionSaveError(e, t('errors.saveFailed')));
         }
         setLoading(false);
     };
@@ -96,7 +98,7 @@ export default function EditSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('[discard] DELETE failed', e?.response?.status, JSON.stringify(e?.response?.data), e?.message);
-            setErrorMsg(apiErrorMessage(e, t('errors.discardFailed')));
+            setSaveError({ kind: 'message', message: apiErrorMessage(e, t('errors.discardFailed')) });
         }
         setLoading(false);
     };
@@ -225,10 +227,13 @@ export default function EditSessionScreen() {
                 onCancel={() => setDiscardVisible(false)}
             />
 
-            <AlertSheet
-                visible={errorMsg != null}
-                message={errorMsg ?? undefined}
-                onDismiss={() => setErrorMsg(null)}
+            <SaveErrorSheet
+                error={saveError}
+                onDismiss={() => setSaveError(null)}
+                onEdit={(blocker) => {
+                    setSaveError(null);
+                    navigation.push('EditSession', { sessionId: blocker.id, status: blocker.status });
+                }}
             />
         </SafeAreaView>
     );

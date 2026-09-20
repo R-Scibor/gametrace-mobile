@@ -10,7 +10,8 @@ import { createSession } from '../api/sessions';
 import { useSessionsStore } from '../store/sessionsStore';
 import { colors } from '../theme/colors';
 import { common } from '../theme/styles';
-import AlertSheet from '../components/AlertSheet';
+import SaveErrorSheet from '../components/SaveErrorSheet';
+import { sessionSaveError, type SaveError } from '../utils/conflict';
 
 function combineDateTime(date?: string | null, time?: string | null): Date | null {
     if (!date || !time) return null;
@@ -29,7 +30,7 @@ export default function AddSessionScreen() {
     const [endTime, setEndTime] = useState<Date | null>(null);
     const [notes, setNotes] = useState(prefill?.note ?? '');
     const [loading, setLoading] = useState(false);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [saveError, setSaveError] = useState<SaveError | null>(null);
 
     useEffect(() => {
         const start = combineDateTime(prefill?.date, prefill?.startTime);
@@ -42,7 +43,7 @@ export default function AddSessionScreen() {
     const handleSubmit = async () => {
         if (loading) return;
         if (!gameId || !startTime || !endTime) {
-            setErrorMsg(t('validation'));
+            setSaveError({ kind: 'message', message: t('validation') });
             return;
         }
         setLoading(true);
@@ -57,9 +58,7 @@ export default function AddSessionScreen() {
             navigation.goBack();
         } catch (e: any) {
             if (__DEV__) console.log('createSession failed', e?.response?.status, e?.response?.data, e?.message);
-            const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : detail?.detail ?? t('errors.createFailed');
-            setErrorMsg(msg);
+            setSaveError(sessionSaveError(e, t('errors.createFailed')));
         }
         setLoading(false);
     };
@@ -130,10 +129,13 @@ export default function AddSessionScreen() {
 
             </ScrollView>
 
-            <AlertSheet
-                visible={errorMsg != null}
-                message={errorMsg ?? undefined}
-                onDismiss={() => setErrorMsg(null)}
+            <SaveErrorSheet
+                error={saveError}
+                onDismiss={() => setSaveError(null)}
+                onEdit={(session) => {
+                    setSaveError(null);
+                    navigation.navigate('EditSession', { sessionId: session.id, status: session.status });
+                }}
             />
         </SafeAreaView>
     );

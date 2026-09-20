@@ -26,6 +26,10 @@
   "alert": {
     "defaultTitle": "BŁĄD"
   },
+  "conflict": {
+    "heading": "Nakładające się sesje",
+    "edit": "Edytuj →"
+  },
   "confirm": {
     "defaultCancel": "Anuluj"
   },
