@@ -53,6 +53,12 @@ Discord client id / invite URL and optional dev-login secret come from `EXPO_PUB
 
 See `app/api/resolveServer.ts` for the resolution rules.
 
+## Preview APK
+
+Tester builds use the EAS `preview` profile (APK). Publishing is a manual GitHub Actions job (`.github/workflows/ship-preview-apk.yml`): dispatch **Ship preview APK** from `main`. A self-hosted runner on the machine that serves the file does the wait and the replace. Pushing `main` does not ship.
+
+Needs repository secret `EXPO_TOKEN` and variables `APK_DEST_PATH` / `APK_PUBLIC_URL`.
+
 ## Project structure
 
 ```
