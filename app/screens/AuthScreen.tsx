@@ -1,15 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
+import { getHealth } from '../api/health';
 import { colors } from '../theme/colors';
 import { displayFont, bodyFont } from '../theme/fonts';
 import { formatLinkCode, normalizeLinkCode, isCompleteLinkCode } from '../utils/linkCode';
 import { DEV_USERNAME_LOGIN, DISCORD_OAUTH_LOGIN, DISCORD_CLIENT_ID, APP_VERSION } from '../config';
 
 type Mode = 'link' | 'username';
+type LinkState = 'checking' | 'up' | 'down';
+
+function useServerLink(): LinkState {
+  const [link, setLink] = useState<LinkState>('checking');
+  useEffect(() => {
+    let cancelled = false;
+    getHealth()
+      .then((health) => {
+        if (!cancelled) setLink(health.status === 'ok' ? 'up' : 'down');
+      })
+      .catch(() => {
+        if (!cancelled) setLink('down');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return link;
+}
 
 export default function AuthScreen() {
   const { t } = useTranslation('auth');
@@ -17,6 +37,9 @@ export default function AuthScreen() {
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
   const { handleLinkLogin, handleLogin, handleDiscordLogin, discordReady, loading, error } = useAuth();
+  const link = useServerLink();
+  const linkLabel =
+    link === 'up' ? t('footerLinkStable') : link === 'down' ? t('footerLinkDown') : t('footerLinkChecking');
 
   const canSubmit =
     !loading && (mode === 'link' ? isCompleteLinkCode(code) : username.trim().length > 0);
@@ -148,8 +171,15 @@ export default function AuthScreen() {
 
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          <View style={styles.footerDot} />
-          <Text style={styles.footerText}>{t('footerLinkStable')}</Text>
+          <View
+            style={[
+              styles.footerDot,
+              link === 'up' ? styles.footerDotUp : link === 'down' ? styles.footerDotDown : styles.footerDotChecking,
+            ]}
+          />
+          <Text style={[styles.footerText, link === 'up' && styles.footerTextUp, link === 'down' && styles.footerTextDown]}>
+            {linkLabel}
+          </Text>
         </View>
         <Text style={styles.footerText}>v{APP_VERSION}</Text>
       </View>
@@ -246,9 +276,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 16,
   },
   footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  footerDot: { width: 6, height: 6, backgroundColor: colors.orange },
+  footerDot: { width: 6, height: 6 },
+  footerDotChecking: { backgroundColor: colors.text3 },
+  footerDotUp: { backgroundColor: colors.orange },
+  footerDotDown: { backgroundColor: colors.danger },
   footerText: {
     fontFamily: displayFont.bold, fontSize: 9, letterSpacing: 2,
     color: colors.text3,
   },
+  footerTextUp: { color: colors.orange },
+  footerTextDown: { color: colors.danger },
 });

@@ -9,6 +9,14 @@ const mockHandleLinkLogin = jest.fn();
 const mockHandleLogin = jest.fn();
 const mockHandleDiscordLogin = jest.fn();
 const mockAuthState: { loading: boolean; error: string | null } = { loading: false, error: null };
+jest.mock('../../api/health', () => ({
+  getHealth: jest.fn(),
+}));
+
+import { getHealth } from '../../api/health';
+
+const mockGetHealth = getHealth as jest.Mock;
+
 jest.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({
     handleLinkLogin: mockHandleLinkLogin,
@@ -36,6 +44,7 @@ beforeEach(() => {
   mockAuthState.error = null;
   mockDevUsernameLogin = true;
   mockDiscordOAuth = true;
+  mockGetHealth.mockReturnValue(new Promise(() => {}));
 });
 
 function renderScreen() {
@@ -104,6 +113,20 @@ test('the Discord button is hidden when the OAuth flag is off', async () => {
   mockDiscordOAuth = false;
   const { queryByText } = await renderScreen();
   expect(queryByText(/przez Discord/i)).toBeNull();
+});
+
+test('the footer shows the server link is up after /health succeeds', async () => {
+  mockGetHealth.mockResolvedValue({ status: 'ok' });
+  const { findByText, queryByText } = await renderScreen();
+  expect(await findByText('LINK STABLE')).toBeTruthy();
+  expect(queryByText('CHECKING')).toBeNull();
+});
+
+test('the footer shows the server link is down when /health fails', async () => {
+  mockGetHealth.mockRejectedValue(new Error('network'));
+  const { findByText, queryByText } = await renderScreen();
+  expect(await findByText('LINK DOWN')).toBeTruthy();
+  expect(queryByText('LINK STABLE')).toBeNull();
 });
 
 test('tapping the Discord button calls the OAuth handler', async () => {
