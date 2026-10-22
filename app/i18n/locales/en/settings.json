@@ -60,8 +60,10 @@
     "timezoneSave": "Couldn't save timezone. Try again."
   },
   "timezonePicker": {
-    "close": "← CLOSE",
-    "search": "Search..."
+    "change": "change",
+    "search": "Search timezone...",
+    "noResults": "No results",
+    "groupCommon": "COMMON"
   }
 }
 

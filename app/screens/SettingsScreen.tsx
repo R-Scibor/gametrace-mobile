@@ -87,7 +87,6 @@ export default function SettingsScreen() {
     };
 
     const [loading, setLoading] = useState(false);
-    const [tzPickerOpen, setTzPickerOpen] = useState(false);
     const [health, setHealth] = useState<HealthResponse | null>(null);
     const [policyOpen, setPolicyOpen] = useState(false);
     const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -190,16 +189,10 @@ export default function SettingsScreen() {
                     </View>
                 </SettingsRow>
 
-                <SettingsRow label={t('preferences.timezone')} subtext={timezone}>
-                    <TouchableOpacity
-                        style={styles.tzButton}
-                        onPress={() => setTzPickerOpen(true)}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.tzButtonText}>{timezone.split('/').pop()?.replace(/_/g, ' ')}</Text>
-                        <Text style={styles.chevron}>▾</Text>
-                    </TouchableOpacity>
-                </SettingsRow>
+                <View style={styles.tzBlock}>
+                    <Text style={styles.rowLabel}>{t('preferences.timezone')}</Text>
+                    <TimezonePicker value={timezone} onSelect={selectTimezone} />
+                </View>
 
                 {/* Status */}
                 <SectionHeaderLocal title={t('sections.status')} />
@@ -286,13 +279,6 @@ export default function SettingsScreen() {
                 </View>
 
             </ScrollView>
-
-            <TimezonePicker
-                visible={tzPickerOpen}
-                currentValue={timezone}
-                onSelect={(z) => { selectTimezone(z); setTzPickerOpen(false); }}
-                onClose={() => setTzPickerOpen(false)}
-            />
 
             <ConfirmSheet
                 visible={logoutConfirmOpen}
@@ -462,20 +448,9 @@ const styles = StyleSheet.create({
         color: colors.text3,
     },
 
-    tzButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.bg3,
-        borderWidth: 1,
-        borderColor: colors.border,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 2,
-    },
-    tzButtonText: {
-        fontFamily: bodyFont.regular,
-        fontSize: 12,
-        color: colors.text,
+    tzBlock: {
+        paddingVertical: 14,
+        gap: 10,
     },
     langChips: {
         flexDirection: 'row',

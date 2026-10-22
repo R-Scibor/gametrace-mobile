@@ -60,8 +60,10 @@
     "timezoneSave": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
   },
   "timezonePicker": {
-    "close": "← ZAMKNIJ",
-    "search": "Szukaj..."
+    "change": "zmień",
+    "search": "Szukaj strefy...",
+    "noResults": "Brak wyników",
+    "groupCommon": "CZĘSTE"
   }
 }
 
