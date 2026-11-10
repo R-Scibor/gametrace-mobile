@@ -29,11 +29,13 @@ export const discordLogin = async (
     code: string,
     codeVerifier: string,
     redirectUri: string,
+    timezone?: string,
 ): Promise<LoginResponse> => {
     const response = await client.post<LoginResponse>('/auth/discord', {
         code,
         code_verifier: codeVerifier,
         redirect_uri: redirectUri,
+        timezone,
     });
     return response.data;
 };
