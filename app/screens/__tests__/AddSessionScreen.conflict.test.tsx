@@ -12,17 +12,27 @@ jest.mock('../../components/GamePicker', () => {
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
-  useRoute: () => ({
-    params: {
-      gameId: 1,
-      date: '2026-08-02',
-      startTime: '20:00',
-      endTime: '22:00',
-    },
-  }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const start = new Date();
+  start.setDate(start.getDate() - 1);
+  start.setHours(1, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(3, 0, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const date = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`;
+  const hm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {
+    useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
+    useRoute: () => ({
+      params: {
+        gameId: 1,
+        date,
+        startTime: hm(start),
+        endTime: hm(end),
+      },
+    }),
+  };
+});
 
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import AddSessionScreen from '../AddSessionScreen';

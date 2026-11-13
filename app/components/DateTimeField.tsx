@@ -11,9 +11,11 @@ type Props = {
     value: Date | null;
     onChange: (d: Date) => void;
     placeholder?: string;
+    /** Sheet seed when value is empty. Avoids defaulting an over-long ERROR row to now. */
+    emptySeed?: Date | null;
 };
 
-export default function DateTimeField({ value, onChange, placeholder }: Props) {
+export default function DateTimeField({ value, onChange, placeholder, emptySeed }: Props) {
     const { t } = useTranslation('datetime');
     const [open, setOpen] = useState(false);
     const displayPlaceholder = placeholder ?? t('placeholder');
@@ -28,7 +30,7 @@ export default function DateTimeField({ value, onChange, placeholder }: Props) {
             </TouchableOpacity>
             <DateTimeSheet
                 visible={open}
-                value={value}
+                value={value ?? emptySeed ?? null}
                 onConfirm={(d) => { onChange(d); setOpen(false); }}
                 onCancel={() => setOpen(false)}
             />

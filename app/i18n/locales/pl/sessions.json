@@ -35,5 +35,12 @@
     "title": "Odrzucić sesję?",
     "message": "Sesja zostanie odrzucona i nie będzie wliczana do statystyk.",
     "confirm": "Odrzuć sesję"
+  },
+  "bounds": {
+    "lookback": "Rozpoczęcie jest starsze niż 30 dni.",
+    "duration": "Sesja nie może trwać dłużej niż 48 godzin.",
+    "futureStart": "Rozpoczęcie nie może być dalej niż 5 minut w przyszłości.",
+    "futureEnd": "Zakończenie nie może być dalej niż 5 minut w przyszłości.",
+    "closeOrDiscard": "Ta sesja zaczęła się ponad 48 godzin temu, więc nie da się jej zamknąć na bieżący czas. Ustaw zakończenie w ciągu 48 godzin od startu albo odrzuć sesję."
   }
 }

@@ -35,5 +35,12 @@
     "title": "Discard session?",
     "message": "The session will be discarded and won't count toward stats.",
     "confirm": "Discard session"
+  },
+  "bounds": {
+    "lookback": "Start time is older than 30 days.",
+    "duration": "Session duration exceeds 48 hours.",
+    "futureStart": "Start time can't be more than 5 minutes in the future.",
+    "futureEnd": "End time can't be more than 5 minutes in the future.",
+    "closeOrDiscard": "This session started more than 48 hours ago, so it can't be closed at the current time. Set an end within 48 hours of the start, or discard it."
   }
 }

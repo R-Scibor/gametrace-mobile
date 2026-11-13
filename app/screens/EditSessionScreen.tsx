@@ -12,6 +12,7 @@ import SaveErrorSheet from '../components/SaveErrorSheet';
 import { formatDuration } from '../utils/duration';
 import { apiErrorMessage } from '../utils/apiError';
 import { sessionSaveError, type SaveError } from '../utils/conflict';
+import { boundsI18nKey, emptyEndSeed, sessionBounds, toApiInstant } from '../utils/sessionBounds';
 import { getSession, patchSession, deleteSession } from '../api/sessions';
 import { Session } from '../types/api';
 import { useSessionsStore } from '../store/sessionsStore';
@@ -65,11 +66,16 @@ export default function EditSessionScreen() {
     }
 
     const doSave = async () => {
-        if (loading) return;
+        if (loading || !session || !endTime) return;
+        const code = sessionBounds(new Date(session.start_time), endTime, { create: false });
+        if (code) {
+            setSaveError({ kind: 'message', message: t(boundsI18nKey(code)) });
+            return;
+        }
         setLoading(true);
         try {
             await patchSession(sessionId, {
-                end_time: endTime ? endTime.toISOString() : undefined,
+                end_time: toApiInstant(endTime),
                 notes: notes.trim(),
             });
             useSessionsStore.getState().invalidate();
@@ -103,12 +109,14 @@ export default function EditSessionScreen() {
         setLoading(false);
     };
 
+    const startDate = session ? new Date(session.start_time) : null;
+    const bounds = startDate && endTime ? sessionBounds(startDate, endTime, { create: false }) : null;
+    const closeOrDiscard = startDate != null && endTime == null && emptyEndSeed(startDate) != null;
     const rawDuration = session && endTime
         ? Math.round((endTime.getTime() - new Date(session.start_time).getTime()) / 1000)
         : null;
     const durationValid = rawDuration != null && rawDuration >= 0;
-    const endBeforeStart = rawDuration != null && rawDuration < 0;
-    const saveDisabled = loading || endBeforeStart;
+    const saveDisabled = loading || bounds != null || !endTime;
 
     return (
         <SafeAreaView style={common.safe} edges={['top']}>
@@ -164,9 +172,16 @@ export default function EditSessionScreen() {
 
                 {/* End time */}
                 <Text style={common.label}>{t('endLabel')}</Text>
-                <DateTimeField value={endTime} onChange={setEndTime} />
-                {endBeforeStart && (
-                    <Text style={styles.warnText}>{t('endBeforeStart')}</Text>
+                <DateTimeField
+                    value={endTime}
+                    onChange={setEndTime}
+                    emptySeed={startDate ? emptyEndSeed(startDate) : null}
+                />
+                {bounds && (
+                    <Text style={styles.warnText}>{t(boundsI18nKey(bounds))}</Text>
+                )}
+                {closeOrDiscard && (
+                    <Text style={styles.warnText}>{t('bounds.closeOrDiscard')}</Text>
                 )}
 
                 {/* Notes */}

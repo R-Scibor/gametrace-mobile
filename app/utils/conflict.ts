@@ -1,5 +1,6 @@
 import type { ConflictResponse, ConflictingSession, SessionStatus } from '../types/api';
 import { apiErrorMessage } from './apiError';
+import { boundsCodeFromDetail, boundsMessage } from './sessionBounds';
 
 export type SaveError =
   | { kind: 'conflict'; conflict: ConflictResponse }
@@ -50,9 +51,20 @@ export function parseConflict(error: unknown): ConflictResponse | null {
   };
 }
 
+function responseDetail(error: unknown): { status?: number; detail?: unknown } {
+  if (!error || typeof error !== 'object') return {};
+  const response = (error as { response?: { status?: number; data?: { detail?: unknown } } }).response;
+  return { status: response?.status, detail: response?.data?.detail };
+}
+
 export function sessionSaveError(e: unknown, fallback: string): SaveError {
   const conflict = parseConflict(e);
-  return conflict
-    ? { kind: 'conflict', conflict }
-    : { kind: 'message', message: apiErrorMessage(e, fallback) };
+  if (conflict) return { kind: 'conflict', conflict };
+
+  const { status, detail } = responseDetail(e);
+  if (status === 422) {
+    const code = boundsCodeFromDetail(detail);
+    if (code) return { kind: 'message', message: boundsMessage(code) };
+  }
+  return { kind: 'message', message: apiErrorMessage(e, fallback) };
 }

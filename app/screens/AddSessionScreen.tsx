@@ -9,9 +9,11 @@ import GamePicker from '../components/GamePicker';
 import { createSession } from '../api/sessions';
 import { useSessionsStore } from '../store/sessionsStore';
 import { colors } from '../theme/colors';
+import { bodyFont } from '../theme/fonts';
 import { common } from '../theme/styles';
 import SaveErrorSheet from '../components/SaveErrorSheet';
 import { sessionSaveError, type SaveError } from '../utils/conflict';
+import { boundsI18nKey, sessionBounds, toApiInstant } from '../utils/sessionBounds';
 
 function combineDateTime(date?: string | null, time?: string | null): Date | null {
     if (!date || !time) return null;
@@ -40,18 +42,24 @@ export default function AddSessionScreen() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const bounds = startTime && endTime ? sessionBounds(startTime, endTime, { create: true }) : null;
+
     const handleSubmit = async () => {
         if (loading) return;
         if (!gameId || !startTime || !endTime) {
             setSaveError({ kind: 'message', message: t('validation') });
             return;
         }
+        if (bounds) {
+            setSaveError({ kind: 'message', message: t(boundsI18nKey(bounds)) });
+            return;
+        }
         setLoading(true);
         try {
             await createSession({
                 game_id: gameId,
-                start_time: startTime.toISOString(),
-                end_time: endTime.toISOString(),
+                start_time: toApiInstant(startTime),
+                end_time: toApiInstant(endTime),
                 notes: notes.trim() || undefined,
             });
             useSessionsStore.getState().invalidate();
@@ -89,6 +97,9 @@ export default function AddSessionScreen() {
                 {/* End time */}
                 <Text style={common.label}>{t('endLabel')}</Text>
                 <DateTimeField value={endTime} onChange={setEndTime} />
+                {bounds && (
+                    <Text style={styles.warnText}>{t(boundsI18nKey(bounds))}</Text>
+                )}
 
                 {/* Notes */}
                 <Text style={common.label}>{t('notesLabel')}</Text>
@@ -145,4 +156,5 @@ const styles = StyleSheet.create({
     content: { paddingHorizontal: 20, paddingBottom: 40 },
     header: { paddingTop: 0, paddingBottom: 20 },
     textArea: { height: 80, paddingTop: 12 },
+    warnText: { fontFamily: bodyFont.regular, fontSize: 12, color: colors.warn, marginTop: 6 },
 });
