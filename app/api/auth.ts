@@ -12,7 +12,7 @@ export const login = async (username: string, timezone = 'UTC'): Promise<LoginRe
     return response.data;
 };
 
-// Redeem a one-time 6-digit code from the Discord /login command. The code is
+// Redeem a one-time 6-digit code from the Discord panel (or /login). The code is
 // sent digit-only (internal spaces stripped) — the backend accepts either.
 export const linkLogin = async (code: string, timezone = 'UTC'): Promise<LoginResponse> => {
     const response = await client.post<LoginResponse>('/auth/link', {

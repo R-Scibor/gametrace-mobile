@@ -77,6 +77,14 @@ test('the code field displays the grouped XXX XXX format', async () => {
   expect(input.props.value).toBe('231 996');
 });
 
+test('the code helper points at the panel and keeps /login as a fallback', async () => {
+  const { getByText } = await renderScreen();
+  expect(getByText(/▶ START/)).toBeTruthy();
+  expect(getByText(/Get a code/)).toBeTruthy();
+  expect(getByText(/Weź kod/)).toBeTruthy();
+  expect(getByText(/\/login/)).toBeTruthy();
+});
+
 test('the dev username toggle is shown when the flag is on', async () => {
   const { getByText } = await renderScreen();
   expect(getByText(/nazwą/i)).toBeTruthy();

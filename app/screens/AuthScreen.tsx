@@ -145,12 +145,8 @@ export default function AuthScreen() {
         <View style={styles.helper}>
           {mode === 'link' ? (
             <>
-              <Text style={styles.helperLine}>
-                {t('helperLinkPrefix')}{' '}
-                <Text style={styles.helperAccent}>/login</Text>{' '}
-                {t('helperLinkSuffix')}
-              </Text>
-              <Text style={styles.helperLine}>{t('helperLinkLine2')}</Text>
+              <Text style={styles.helperLine}>{t('helperLink')}</Text>
+              <Text style={styles.helperLine}>{t('helperLinkAlt')}</Text>
             </>
           ) : (
             <Text style={styles.helperLine}>{t('helperUsername')}</Text>
@@ -265,7 +261,6 @@ const styles = StyleSheet.create({
     fontFamily: bodyFont.regular, fontSize: 11, color: colors.text3,
     lineHeight: 18, textAlign: 'center',
   },
-  helperAccent: { color: colors.orangeDim },
   switcher: { marginTop: 16, paddingVertical: 6 },
   switcherText: {
     fontFamily: displayFont.regular, fontSize: 11, letterSpacing: 1,

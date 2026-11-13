@@ -1,4 +1,4 @@
-// Discord /login issues a 6-digit code shown as "XXX XXX". The backend accepts
+// The Discord panel (or /login) issues a 6-digit code shown as "XXX XXX". The backend accepts
 // the code with or without the internal space; we normalize to bare digits for
 // transport and format for display.
 
