@@ -15,13 +15,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { getHealth } from '../api/health';
 import { requestDeletion } from '../api/profile';
 import { useAuthStore } from '../store/authStore';
 import { useDeletionHandoffStore } from '../store/deletionHandoffStore';
-import {
-  ACCOUNT_DELETION_GRACE_DAYS,
-  isDeletionStatus,
-} from '../utils/accountDeletion';
+import { graceDaysFrom, isDeletionStatus } from '../utils/accountDeletion';
 import { resumeAuthTeardown, suspendAuthTeardown } from '../utils/authTeardown';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -48,6 +46,7 @@ export default function DeleteAccountScreen() {
   const { t } = useTranslation('account');
   const username = useAuthStore((s) => s.user?.username ?? '');
   const [typed, setTyped] = useState('');
+  const [graceDays, setGraceDays] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -59,6 +58,18 @@ export default function DeleteAccountScreen() {
     },
     [],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    getHealth()
+      .then((health) => {
+        if (!cancelled) setGraceDays(graceDaysFrom(health));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = navigation.addListener('beforeRemove', (e) => {
@@ -161,14 +172,17 @@ export default function DeleteAccountScreen() {
         </View>
 
         <Text style={styles.sectionLabel}>{t('dialog.consequencesLabel')}</Text>
-        {CONSEQUENCE_KEYS.map((key) => (
-          <View key={key} style={styles.bulletRow}>
-            <Text style={styles.bullet}>—</Text>
-            <Text style={styles.bulletText}>
-              {t(`dialog.consequences.${key}`, { days: ACCOUNT_DELETION_GRACE_DAYS })}
-            </Text>
-          </View>
-        ))}
+        {CONSEQUENCE_KEYS.map((key) => {
+          if (key === 'purge' && graceDays == null) return null;
+          return (
+            <View key={key} style={styles.bulletRow}>
+              <Text style={styles.bullet}>—</Text>
+              <Text style={styles.bulletText}>
+                {t(`dialog.consequences.${key}`, { days: graceDays ?? undefined })}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: footerPadBottom }]}>

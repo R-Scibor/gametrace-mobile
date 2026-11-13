@@ -31,6 +31,11 @@ jest.mock('../../api/profile', () => ({
   requestDeletion: (...args: unknown[]) => mockRequestDeletion(...args),
 }));
 
+const mockGetHealth = jest.fn();
+jest.mock('../../api/health', () => ({
+  getHealth: (...args: unknown[]) => mockGetHealth(...args),
+}));
+
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import axios from 'axios';
 import DeleteAccountScreen from '../DeleteAccountScreen';
@@ -51,6 +56,8 @@ beforeEach(() => {
   mockGoBack.mockReset();
   mockAddListener.mockClear();
   mockRequestDeletion.mockReset();
+  mockGetHealth.mockReset();
+  mockGetHealth.mockResolvedValue({ grace_days: 14 });
   resumeAuthTeardown();
   useDeletionHandoffStore.getState().clear();
   useAuthStore.setState({
@@ -60,6 +67,22 @@ beforeEach(() => {
     isAuthenticated: true,
     pendingDeletion: null,
   });
+});
+
+test('purge copy uses grace_days from /health', async () => {
+  mockGetHealth.mockResolvedValue({ grace_days: 3 });
+  const { findByText, queryByText } = await render(<DeleteAccountScreen />);
+
+  expect(await findByText(/po 3 dniach/)).toBeTruthy();
+  expect(queryByText(/po 7 dniach/)).toBeNull();
+});
+
+test('purge copy stays hidden when /health has no grace_days', async () => {
+  mockGetHealth.mockResolvedValue({ status: 'ok' });
+  const { findByText, queryByText } = await render(<DeleteAccountScreen />);
+
+  expect(await findByText('Co się stanie')).toBeTruthy();
+  expect(queryByText(/trwale usunięte po/)).toBeNull();
 });
 
 test('submit stays disabled until typed username matches (case-insensitive)', async () => {

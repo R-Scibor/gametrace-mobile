@@ -8,6 +8,8 @@ export interface PendingDeletion {
   deletion_requested_at: string;
   purge_at: string;
   days_left: number;
+  /** Window this account was scheduled under. Absent on older APIs. */
+  grace_days?: number;
 }
 
 /** 202 body of POST /profile/me/deletion — same shape as PendingDeletion. */
@@ -303,6 +305,8 @@ export interface HealthResponse {
     uptime_seconds: number | null;
     last_heartbeat_seconds_ago: number | null;
   };
+  /** Current account-deletion window. Absent on older APIs. */
+  grace_days?: number;
 }
 
 // Voice

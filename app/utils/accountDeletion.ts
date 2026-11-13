@@ -3,8 +3,6 @@ import i18n from '../i18n';
 import { intlLocale } from '../i18n/resolve';
 import type { DeletionStatus, PendingDeletion } from '../types/api';
 
-export const ACCOUNT_DELETION_GRACE_DAYS = 7;
-
 export function daysUntil(iso: string): number {
   return Math.ceil((Date.parse(iso) - Date.now()) / 86_400_000);
 }
@@ -13,6 +11,17 @@ export function daysLeftUntil(purgeAt: string, fallback: number): number {
   const days = daysUntil(purgeAt);
   if (Number.isNaN(days)) return fallback;
   return Math.max(1, days);
+}
+
+/** First finite `grace_days` wins. A scheduled payload outranks `/health`. */
+export function graceDaysFrom(
+  ...sources: Array<{ grace_days?: number | null } | null | undefined>
+): number | null {
+  for (const source of sources) {
+    const days = source?.grace_days;
+    if (typeof days === 'number' && Number.isFinite(days)) return days;
+  }
+  return null;
 }
 
 export const isDeletionStatus = (value: unknown): value is DeletionStatus =>
@@ -39,6 +48,11 @@ export function pendingDeletionFromError(err: unknown): PendingDeletion | null {
   if ((detail as { detail?: unknown }).detail !== 'Account scheduled for deletion') return null;
   if (!isDeletionStatus(detail)) return null;
 
-  const { deletion_requested_at, purge_at, days_left } = detail;
-  return { deletion_requested_at, purge_at, days_left };
+  const { deletion_requested_at, purge_at, days_left, grace_days } = detail;
+  return {
+    deletion_requested_at,
+    purge_at,
+    days_left,
+    ...(typeof grace_days === 'number' ? { grace_days } : {}),
+  };
 }

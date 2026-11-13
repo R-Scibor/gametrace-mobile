@@ -7,8 +7,8 @@ jest.mock('axios', () => ({
 
 import axios from 'axios';
 import {
-  ACCOUNT_DELETION_GRACE_DAYS,
   daysLeftUntil,
+  graceDaysFrom,
   isDeletionStatus,
   pendingDeletionFromError,
 } from '../accountDeletion';
@@ -21,8 +21,11 @@ const sample = {
   days_left: 7,
 };
 
-test('grace days is 7', () => {
-  expect(ACCOUNT_DELETION_GRACE_DAYS).toBe(7);
+test('graceDaysFrom prefers a scheduled payload over /health', () => {
+  expect(graceDaysFrom({ grace_days: 3 }, { grace_days: 14 })).toBe(3);
+  expect(graceDaysFrom(null, { grace_days: 14 })).toBe(14);
+  expect(graceDaysFrom({ grace_days: null }, {})).toBeNull();
+  expect(graceDaysFrom(undefined)).toBeNull();
 });
 
 test('isDeletionStatus accepts a valid payload', () => {
@@ -50,6 +53,21 @@ test('pendingDeletionFromError only matches nested grace 403', () => {
   });
   isAxiosError.mockReturnValue(true);
   expect(pendingDeletionFromError(err)).toEqual(sample);
+
+  const withWindow = {
+    ...err,
+    response: {
+      status: 403,
+      data: {
+        detail: {
+          detail: 'Account scheduled for deletion',
+          ...sample,
+          grace_days: 3,
+        },
+      },
+    },
+  };
+  expect(pendingDeletionFromError(withWindow)).toEqual({ ...sample, grace_days: 3 });
 
   expect(
     pendingDeletionFromError({

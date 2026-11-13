@@ -20,7 +20,7 @@ import TimezonePicker from '../components/TimezonePicker';
 import PolicyBody from '../components/PolicyBody';
 import { BottomSheet } from '../components/BottomSheet';
 import { formatUptime, botColor } from '../utils/bot';
-import { ACCOUNT_DELETION_GRACE_DAYS } from '../utils/accountDeletion';
+import { graceDaysFrom } from '../utils/accountDeletion';
 import { formatAppVersion, updateLabel } from '../utils/appVersion';
 import { colors } from '../theme/colors';
 import { bodyFont, displayFont } from '../theme/fonts';
@@ -88,6 +88,7 @@ export default function SettingsScreen() {
 
     const [loading, setLoading] = useState(false);
     const [health, setHealth] = useState<HealthResponse | null>(null);
+    const graceDays = graceDaysFrom(health);
     const [policyOpen, setPolicyOpen] = useState(false);
     const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
@@ -151,7 +152,9 @@ export default function SettingsScreen() {
                     subtext={
                         isAdmin
                             ? t('account.deleteAdmin')
-                            : t('account.deleteSub', { days: ACCOUNT_DELETION_GRACE_DAYS })
+                            : graceDays == null
+                              ? undefined
+                              : t('account.deleteSub', { days: graceDays })
                     }
                 >
                     <TouchableOpacity
