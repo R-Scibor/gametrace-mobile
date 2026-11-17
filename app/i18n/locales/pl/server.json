@@ -20,5 +20,15 @@
     "message": "Aby GameTrace śledził Twoją rozgrywkę, dodaj bota do swojego serwera Discord.",
     "confirm": "Dodaj bota",
     "cancel": "Później"
+  },
+  "botReminder": {
+    "title": "Bot cię nie widzi",
+    "message": "Bez wspólnego serwera bot nie zapisze grania. Dołącz do serwera GameTrace albo zaproś bota na swój serwer. Ręczne sesje w aplikacji dalej działają.",
+    "join": "Dołącz do serwera",
+    "addBot": "Dodaj bota do serwera",
+    "snooze": "Przypomnij za 7 dni",
+    "close": "Zamknij",
+    "snoozeFailedTitle": "Nie udało się wyciszyć",
+    "snoozeFailed": "Przypomnienie wróci jutro. Spróbuj ponownie później."
   }
 }
