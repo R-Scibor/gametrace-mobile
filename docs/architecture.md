@@ -28,7 +28,9 @@ Screens compose UI and delegate data work to hooks. Hooks call the typed `api/` 
 
 Because the gates key off `serverStore.serverUrl` and `authStore.isAuthenticated`, clearing either value (e.g. logging out, or changing servers) automatically returns the user to the right screen — there are no imperative `navigate` calls for auth transitions.
 
-On the authenticated tree, `useLanguageSync` runs so profile language can adopt into i18n after login. Global hosts (`GlobalAlertHost`, report FAB / sheet, server-join host) sit at the navigator level.
+On the authenticated tree, `useLanguageSync` runs so profile language can adopt into i18n after login. Global hosts (`GlobalAlertHost`, report FAB / sheet, server-join host, bot visibility reminder) sit at the navigator level.
+
+`BotReminderHost` reads the profile once per app start and shows a sheet when the backend reports `bot_can_see_user: false`, reminders are on and there is no active snooze. It shows at most once per day in the user's timezone (AsyncStorage key `gt.botReminder.shownOn.<discordId>`), waits while the server-join sheet is open, and offers joining the GameTrace server, adding the bot, or a 7-day snooze saved through `updateSettings`. A missing or `null` field (older backend, unknown visibility) never shows it. Rules live in `utils/botReminder.ts` and match the web app.
 
 ## State (Zustand)
 
@@ -59,7 +61,7 @@ Per-domain modules (`auth`, `games`, `sessions`, `stats`, `profile`, `voice`, `h
 Screen-facing hooks own data fetching and derived state so screens stay declarative:
 
 - **Domain (`app/hooks`):** `useAuth`, `useDashboard`, `useGameStats`, `useRecentSessions`, `useVoiceRecord`, `useDiscordOAuth`
-- **Preferences:** `useLanguage` / `useLanguageSync` in `app/hooks`; `useTimezone` and `useChangeServer` live next to Settings under `app/screens/`
+- **Preferences:** `useLanguage` / `useLanguageSync` in `app/hooks`; `useTimezone`, `useChangeServer` and `useBotReminderSetting` live next to Settings under `app/screens/`
 - **Caching:** `useCachedFetch` — read-through AsyncStorage snapshots (`utils/cacheStorage`) with stale metadata for offline banners
 
 ## i18n
@@ -68,7 +70,7 @@ Screen-facing hooks own data fetching and derived state so screens stay declarat
 
 Catalogs live in `app/i18n/locales/{pl,en}/*.json`. A parity test keeps pl/en key trees aligned. Dates and collations use `intlLocale(i18n.language)` rather than hard-coded `'pl'`.
 
-Settings language chips call `updateSettings({ language })` optimistically; timezone uses the same profile settings path.
+Settings language chips call `updateSettings({ language })` optimistically; timezone uses the same profile settings path. The bot reminder switch saves `bot_visibility_reminders_enabled` the same way and hides itself on a backend without that setting.
 
 ## Offline read cache
 
