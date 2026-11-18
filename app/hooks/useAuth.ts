@@ -106,7 +106,12 @@ export const useAuth = () => {
         setError(i18n.t('auth:errors.discord401'));
         return false;
       }
-      const data = await discordLogin(result.code, result.codeVerifier, result.redirectUri);
+      const data = await discordLogin(
+        result.code,
+        result.codeVerifier,
+        result.redirectUri,
+        getDeviceTimezone(),
+      );
       seedSession(data);
       if (data.needs_server_join && !data.pending_deletion) {
         useServerJoinStore.getState().show();
