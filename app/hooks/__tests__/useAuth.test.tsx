@@ -4,6 +4,7 @@ import { login, linkLogin, discordLogin } from '../../api/auth';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuthStore } from '../../store/authStore';
 import { useServerJoinStore } from '../../store/serverJoinStore';
+import { getDeviceTimezone } from '../../utils/timezones';
 
 jest.mock('axios', () => ({ __esModule: true, default: { create: () => ({ interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } } }) } }));
 jest.mock('../../api/auth');
@@ -133,7 +134,7 @@ describe('handleDiscordLogin', () => {
 
     await act(async () => { await result.current.handleDiscordLogin(); });
 
-    expect(mockedDiscordLogin).toHaveBeenCalledWith('c', 'v', 'r');
+    expect(mockedDiscordLogin).toHaveBeenCalledWith('c', 'v', 'r', getDeviceTimezone());
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     expect(useServerJoinStore.getState().visible).toBe(false);
   });
