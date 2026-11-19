@@ -20,5 +20,15 @@
     "message": "For GameTrace to track your play, add the bot to your Discord server.",
     "confirm": "Add bot",
     "cancel": "Later"
+  },
+  "botReminder": {
+    "title": "The bot cannot see you",
+    "message": "Without a shared server the bot cannot record your play. Join the GameTrace server or invite the bot to your own. Manual sessions in the app still work.",
+    "join": "Join the server",
+    "addBot": "Add the bot to a server",
+    "snooze": "Remind me in 7 days",
+    "close": "Close",
+    "snoozeFailedTitle": "Could not snooze",
+    "snoozeFailed": "The reminder will come back tomorrow. Try again later."
   }
 }

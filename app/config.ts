@@ -30,6 +30,10 @@ export const DISCORD_OAUTH_LOGIN = true;
 export const DISCORD_CLIENT_ID = process.env.EXPO_PUBLIC_DISCORD_CLIENT_ID ?? '';
 export const DISCORD_INVITE_URL = process.env.EXPO_PUBLIC_DISCORD_INVITE_URL ?? '';
 
+// Invite to the public GameTrace Discord server, where the bot already is.
+// Offered by the "bot cannot see you" reminder; empty hides that button.
+export const DISCORD_SERVER_INVITE_URL = process.env.EXPO_PUBLIC_DISCORD_SERVER_INVITE_URL ?? '';
+
 // Host of the official GameTrace server offered on the first-run Welcome screen.
 // Stored bare (no scheme) because the self-host form prefills it as a format
 // example; the official connect path prepends https:// at the call site so the

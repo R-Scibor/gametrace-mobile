@@ -281,6 +281,8 @@ export type ProfileSettings = {
   timezone: string;
   language: 'pl' | 'en';
   notifications_enabled: boolean;
+  bot_visibility_reminders_enabled: boolean;
+  bot_visibility_reminder_snoozed_until: string | null;
 };
 
 export interface ProfileMe {
@@ -290,6 +292,11 @@ export interface ProfileMe {
   language?: string | null;
   notifications_enabled: boolean;
   is_admin: boolean;
+  // Bot visibility (backend docs/api.md "Bot visibility"). Optional so an older
+  // self-hosted server without these fields never triggers the reminder.
+  bot_can_see_user?: boolean | null;
+  bot_visibility_reminders_enabled?: boolean;
+  bot_visibility_reminder_snoozed_until?: string | null;
 }
 
 export type BotStatus = 'online' | 'offline' | 'unknown';

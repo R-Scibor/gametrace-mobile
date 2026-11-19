@@ -18,6 +18,7 @@ import DeletionScheduledScreen from '../screens/DeletionScheduledScreen';
 import PendingDeletionScreen from '../screens/PendingDeletionScreen';
 import GlobalAlertHost from '../components/GlobalAlertHost';
 import ServerJoinHost from '../components/ServerJoinHost';
+import BotReminderHost from '../components/BotReminderHost';
 import ReportSheet from '../components/ReportSheet';
 import ReportFab from '../components/ReportFab';
 import { useLanguageSync } from '../hooks/useLanguageSync';
@@ -98,6 +99,7 @@ export default function RootNavigator() {
         {DEV_REPORT_FAB && <ReportFab />}
         <ReportSheet />
         <LanguageSyncHost />
+        <BotReminderHost />
       </>
     )}
     <GlobalAlertHost />

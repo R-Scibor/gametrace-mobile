@@ -21,7 +21,9 @@
 
   "preferences": {
     "language": "Język",
-    "timezone": "Strefa czasowa"
+    "timezone": "Strefa czasowa",
+    "botReminder": "Przypomnienie o bocie",
+    "botReminderSub": "Pokazuje komunikat, gdy bot nie widzi twojego konta. Nie wyłącza bota."
   },
   "status": {
     "bot": "Bot",
@@ -57,7 +59,8 @@
   },
   "errors": {
     "languageSave": "Nie udało się zapisać języka. Spróbuj ponownie.",
-    "timezoneSave": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie."
+    "timezoneSave": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie.",
+    "botReminderSave": "Nie udało się zapisać przypomnienia. Spróbuj ponownie."
   },
   "timezonePicker": {
     "change": "zmień",

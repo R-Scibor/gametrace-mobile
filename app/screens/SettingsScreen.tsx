@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { useServerStore } from '../store/serverStore';
 import { useReportStore } from '../store/reportStore';
 import { useChangeServer } from './useChangeServer';
 import { useTimezone } from './useTimezone';
+import { useBotReminderSetting } from './useBotReminderSetting';
 import { useLanguage } from '../hooks/useLanguage';
 import { isLanguage, type Language } from '../i18n/resolve';
 import { logout as logoutApi } from '../api/profile';
@@ -63,6 +64,12 @@ export default function SettingsScreen() {
         error: langError,
         clearError: clearLangError,
     } = useLanguage();
+    const {
+        enabled: botReminders,
+        toggle: toggleBotReminders,
+        error: botReminderError,
+        clearError: clearBotReminderError,
+    } = useBotReminderSetting();
     const activeLanguage: Language = isLanguage(i18n.language) ? i18n.language : 'pl';
     const serverUrl = useServerStore((s) => s.serverUrl);
     const { change, confirmInsecure, loading: changeLoading } = useChangeServer();
@@ -197,6 +204,18 @@ export default function SettingsScreen() {
                     <TimezonePicker value={timezone} onSelect={selectTimezone} />
                 </View>
 
+                {botReminders != null && (
+                    <SettingsRow label={t('preferences.botReminder')} subtext={t('preferences.botReminderSub')}>
+                        <Switch
+                            value={botReminders}
+                            onValueChange={(next) => void toggleBotReminders(next)}
+                            trackColor={{ false: colors.bg4, true: colors.orangeDim }}
+                            thumbColor={botReminders ? colors.orange : colors.text3}
+                            accessibilityLabel={t('preferences.botReminder')}
+                        />
+                    </SettingsRow>
+                )}
+
                 {/* Status */}
                 <SectionHeaderLocal title={t('sections.status')} />
                 <SettingsRow label={t('status.bot')}>
@@ -310,6 +329,12 @@ export default function SettingsScreen() {
                 visible={langError}
                 message={t('errors.languageSave')}
                 onDismiss={clearLangError}
+            />
+
+            <AlertSheet
+                visible={botReminderError}
+                message={t('errors.botReminderSave')}
+                onDismiss={clearBotReminderError}
             />
 
             <Modal visible={serverModalOpen} transparent animationType="fade" onRequestClose={() => setServerModalOpen(false)}>
