@@ -78,10 +78,10 @@ test('the code field displays the grouped XXX XXX format', async () => {
 });
 
 test('the code helper points at the panel and keeps /login as a fallback', async () => {
-  const { getByText } = await renderScreen();
+  const { getByText, queryByText } = await renderScreen();
   expect(getByText(/▶ START/)).toBeTruthy();
-  expect(getByText(/Get a code/)).toBeTruthy();
   expect(getByText(/Weź kod/)).toBeTruthy();
+  expect(queryByText(/Get a code/)).toBeNull();
   expect(getByText(/\/login/)).toBeTruthy();
 });
 
