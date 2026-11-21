@@ -18,6 +18,9 @@
     "permissionTitle": "No access",
     "permissionMessage": "Allow microphone access in settings.",
     "recordFailed": "Recording failed.",
-    "sendFailed": "Couldn't send the recording."
+    "sendFailed": "Couldn't send the recording.",
+    "quotaExceeded": "Recording limit reached. Try again later.",
+    "badRecording": "Couldn't read the recording. Record it again.",
+    "processingFailed": "Couldn't process the recording. Try again in a moment."
   }
 }

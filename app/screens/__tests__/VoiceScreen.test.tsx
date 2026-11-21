@@ -74,3 +74,33 @@ test('a resolve throw still navigates and still seeds the title', async () => {
   const params = mockNavigate.mock.calls[0][1].params;
   expect(params.gameName).toBe('Wiedzmin 3');
 });
+
+function httpError(status: number, detail: unknown) {
+  return Object.assign(new Error(`HTTP ${status}`), { response: { status, data: { detail } } });
+}
+
+test.each([
+  [429, 'Voice quota exceeded', 'Wykorzystano limit nagrań. Spróbuj ponownie później.'],
+  [422, 'Uploaded file is not a recognized audio format.', 'Nie udało się odczytać nagrania. Nagraj je jeszcze raz.'],
+  [400, 'Uploaded file is empty.', 'Nie udało się odczytać nagrania. Nagraj je jeszcze raz.'],
+  [502, 'Transcription failed.', 'Nie udało się przetworzyć nagrania. Spróbuj ponownie za chwilę.'],
+  [500, 'Internal Server Error', 'Nie udało się wysłać nagrania.'],
+])('a %i transcribe error shows translated copy, not the raw detail', async (status, detail, expected) => {
+  transcribe.mockRejectedValue(httpError(status, detail));
+
+  const utils = await render(<VoiceScreen />);
+  await stopRecording(utils);
+
+  await waitFor(() => expect(utils.getByText(expected)).toBeTruthy());
+  expect(utils.queryByText(detail)).toBeNull();
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+test('a network error without a response shows the send failure copy', async () => {
+  transcribe.mockRejectedValue(new Error('Network Error'));
+
+  const utils = await render(<VoiceScreen />);
+  await stopRecording(utils);
+
+  await waitFor(() => expect(utils.getByText('Nie udało się wysłać nagrania.')).toBeTruthy());
+});

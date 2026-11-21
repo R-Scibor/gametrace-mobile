@@ -18,6 +18,9 @@
     "permissionTitle": "Brak dostępu",
     "permissionMessage": "Zezwól na mikrofon w ustawieniach.",
     "recordFailed": "Nagrywanie nie powiodło się.",
-    "sendFailed": "Nie udało się wysłać nagrania."
+    "sendFailed": "Nie udało się wysłać nagrania.",
+    "quotaExceeded": "Wykorzystano limit nagrań. Spróbuj ponownie później.",
+    "badRecording": "Nie udało się odczytać nagrania. Nagraj je jeszcze raz.",
+    "processingFailed": "Nie udało się przetworzyć nagrania. Spróbuj ponownie za chwilę."
   }
 }

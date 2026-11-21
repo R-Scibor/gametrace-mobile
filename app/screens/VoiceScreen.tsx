@@ -13,6 +13,14 @@ import { common } from '../theme/styles';
 
 const BAR_COUNT = 9;
 
+/** The backend's English `detail` never reaches the UI. Status picks the copy. */
+export function transcribeErrorKey(status: number | undefined): string {
+    if (status === 429) return 'alerts.quotaExceeded';
+    if (status === 400 || status === 422) return 'alerts.badRecording';
+    if (status === 502 || status === 503) return 'alerts.processingFailed';
+    return 'alerts.sendFailed';
+}
+
 export default function VoiceScreen() {
     const navigation = useNavigation();
     const { t } = useTranslation('voice');
@@ -113,9 +121,7 @@ export default function VoiceScreen() {
             });
         } catch (e: any) {
             if (__DEV__) console.log('transcribe failed', e?.response?.status, e?.response?.data, e?.message);
-            const detail = e?.response?.data?.detail;
-            const msg = typeof detail === 'string' ? detail : t('alerts.sendFailed');
-            setAlert({ title: t('alerts.errorTitle'), message: msg });
+            setAlert({ title: t('alerts.errorTitle'), message: t(transcribeErrorKey(e?.response?.status)) });
         } finally {
             setProcessing(false);
         }
