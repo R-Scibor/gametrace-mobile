@@ -70,6 +70,10 @@ Screen-facing hooks own data fetching and derived state so screens stay declarat
 
 Catalogs live in `app/i18n/locales/{pl,en}/*.json`. A parity test keeps pl/en key trees aligned. Dates and collations use `intlLocale(i18n.language)` rather than hard-coded `'pl'`.
 
+### Error messages
+
+Backend `detail` strings are frozen English and never reach the UI raw. Session saves go through `sessionSaveError` (`app/utils/conflict.ts`): a full 409 opens `ConflictSheet`, which maps the overlap and lost update details to `common:conflict.*` copy (unknown details read as overlap). A 409 without a usable `conflicting_session` shows `common:conflict.incompleteMessage`. Known 422 bounds strings map to translated `sessions` copy via `boundsMessage`. Everything else goes through `apiErrorMessage`, which only logs the raw response in dev and returns the caller's translated fallback, with no status code prefix. Voice transcription picks its copy from the HTTP status (`transcribeErrorKey` in `VoiceScreen`: 429 quota, 400 and 422 unreadable recording, 502 and 503 processing failed, anything else send failed).
+
 Settings language chips call `updateSettings({ language })` optimistically; timezone uses the same profile settings path. The bot reminder switch saves `bot_visibility_reminders_enabled` the same way and hides itself on a backend without that setting.
 
 ## Offline read cache
