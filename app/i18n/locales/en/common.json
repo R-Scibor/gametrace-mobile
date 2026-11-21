@@ -28,7 +28,10 @@
   },
   "conflict": {
     "heading": "Overlapping sessions",
-    "edit": "Edit →"
+    "edit": "Edit →",
+    "overlapMessage": "This session overlaps with another saved session.",
+    "staleHeading": "Session changed in the meantime",
+    "staleMessage": "This session was changed in the meantime, for example by the bot. Its current version is below."
   },
   "confirm": {
     "defaultCancel": "Cancel"

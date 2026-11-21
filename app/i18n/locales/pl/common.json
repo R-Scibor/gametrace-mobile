@@ -28,7 +28,10 @@
   },
   "conflict": {
     "heading": "Nakładające się sesje",
-    "edit": "Edytuj →"
+    "edit": "Edytuj →",
+    "overlapMessage": "Ta sesja nakłada się na inną zapisaną sesję.",
+    "staleHeading": "Sesja zmieniła się w międzyczasie",
+    "staleMessage": "Ta sesja została w międzyczasie zmieniona, na przykład przez bota. Poniżej jest jej aktualna wersja."
   },
   "confirm": {
     "defaultCancel": "Anuluj"

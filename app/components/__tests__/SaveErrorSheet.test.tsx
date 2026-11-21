@@ -31,7 +31,7 @@ test('message kind shows the alert text', async () => {
 
 test('conflict kind shows the blocker and Edit fires onEdit', async () => {
   const onEdit = jest.fn();
-  const { getByText } = await render(
+  const { getByText, queryByText } = await render(
     <SaveErrorSheet
       error={{ kind: 'conflict', conflict }}
       onDismiss={jest.fn()}
@@ -40,7 +40,8 @@ test('conflict kind shows the blocker and Edit fires onEdit', async () => {
   );
   expect(getByText('Nakładające się sesje')).toBeTruthy();
   expect(getByText('Wiedźmin 3')).toBeTruthy();
-  expect(getByText('Session overlaps with an existing session')).toBeTruthy();
+  expect(getByText('Ta sesja nakłada się na inną zapisaną sesję.')).toBeTruthy();
+  expect(queryByText('Session overlaps with an existing session')).toBeNull();
 
   const start = new Date(session.start_time).toLocaleString('pl-PL', {
     day: '2-digit',
@@ -80,3 +81,30 @@ test('an ONGOING blocker shows times but no Edit', async () => {
   expect(getByText('ROZUMIEM')).toBeTruthy();
 });
 
+test('a lost-update 409 gets its own translated heading and message', async () => {
+  const { getByText, queryByText } = await render(
+    <SaveErrorSheet
+      error={{ kind: 'conflict', conflict: { ...conflict, detail: 'Session was updated by another writer' } }}
+      onDismiss={jest.fn()}
+      onEdit={jest.fn()}
+    />,
+  );
+  expect(getByText('Sesja zmieniła się w międzyczasie')).toBeTruthy();
+  expect(
+    getByText('Ta sesja została w międzyczasie zmieniona, na przykład przez bota. Poniżej jest jej aktualna wersja.'),
+  ).toBeTruthy();
+  expect(queryByText('Session was updated by another writer')).toBeNull();
+  expect(queryByText('Nakładające się sesje')).toBeNull();
+});
+
+test('an unknown 409 detail falls back to the overlap copy, never the raw string', async () => {
+  const { getByText, queryByText } = await render(
+    <SaveErrorSheet
+      error={{ kind: 'conflict', conflict: { ...conflict, detail: 'Something new from the API' } }}
+      onDismiss={jest.fn()}
+      onEdit={jest.fn()}
+    />,
+  );
+  expect(getByText('Ta sesja nakłada się na inną zapisaną sesję.')).toBeTruthy();
+  expect(queryByText('Something new from the API')).toBeNull();
+});

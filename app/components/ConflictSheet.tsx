@@ -19,6 +19,17 @@ function formatRange(startIso: string, endIso: string | null): string {
     return endIso ? `${fmt(startIso)} – ${fmt(endIso)}` : fmt(startIso);
 }
 
+/** Backend 409 `detail` strings are frozen English. Map them to copy keys and
+ *  never render them raw. Anything unknown reads as the common overlap case. */
+const WRITER_CONFLICT_DETAIL = 'Session was updated by another writer';
+
+export function conflictCopyKeys(detail: string): { heading: string; message: string } {
+    if (detail === WRITER_CONFLICT_DETAIL) {
+        return { heading: 'conflict.staleHeading', message: 'conflict.staleMessage' };
+    }
+    return { heading: 'conflict.heading', message: 'conflict.overlapMessage' };
+}
+
 export default function ConflictSheet({
     conflict,
     onDismiss,
@@ -31,10 +42,11 @@ export default function ConflictSheet({
     const { t } = useTranslation('common');
     const session = conflict.conflicting_session;
     const editable = session.status === 'COMPLETED' || session.status === 'ERROR';
+    const copy = conflictCopyKeys(conflict.detail);
 
     return (
-        <BottomSheet visible onClose={onDismiss} title={t('conflict.heading')}>
-            <Text style={[sheetStyles.message, { marginBottom: 16 }]}>{conflict.detail}</Text>
+        <BottomSheet visible onClose={onDismiss} title={t(copy.heading)}>
+            <Text style={[sheetStyles.message, { marginBottom: 16 }]}>{t(copy.message)}</Text>
             <View style={styles.row}>
                 <Cover
                     gameId={session.game_id}
