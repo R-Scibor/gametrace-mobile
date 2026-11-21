@@ -89,7 +89,7 @@ test('sessionSaveError is a conflict when parseConflict matches', () => {
   });
 });
 
-test('sessionSaveError maps a bounds 422 string and leaves a pydantic list generic', () => {
+test('sessionSaveError maps a bounds 422 string and turns a pydantic list into the fallback', () => {
   expect(sessionSaveError(httpError(422, { detail: 'start_time is older than 30 days' }), 'fallback')).toEqual({
     kind: 'message',
     message: 'Rozpoczęcie jest starsze niż 30 dni.',
@@ -98,19 +98,19 @@ test('sessionSaveError maps a bounds 422 string and leaves a pydantic list gener
     detail: [{ msg: 'datetime must include a timezone offset' }],
   }), 'fallback')).toEqual({
     kind: 'message',
-    message: '422: datetime must include a timezone offset',
+    message: 'fallback',
   });
 });
 
-test('sessionSaveError is a prefixed message when the 409 body is incomplete', () => {
+test('sessionSaveError is the fallback when the 409 body is incomplete', () => {
   expect(sessionSaveError(httpError(409, { detail: 'Session overlaps with an existing session' }), 'fallback')).toEqual({
     kind: 'message',
-    message: '409: Session overlaps with an existing session',
+    message: 'fallback',
   });
   expect(sessionSaveError(httpError(409, {
     detail: { detail: 'Session overlaps with an existing session', conflicting_session: null },
   }), 'fallback')).toEqual({
     kind: 'message',
-    message: '409: Session overlaps with an existing session',
+    message: 'fallback',
   });
 });

@@ -19,12 +19,12 @@ const conflict: ConflictResponse = {
 test('message kind shows the alert text', async () => {
   const { getByText, queryByText } = await render(
     <SaveErrorSheet
-      error={{ kind: 'message', message: '409: Session overlaps with an existing session' }}
+      error={{ kind: 'message', message: 'Nie udało się zapisać zmian' }}
       onDismiss={jest.fn()}
       onEdit={jest.fn()}
     />,
   );
-  expect(getByText('409: Session overlaps with an existing session')).toBeTruthy();
+  expect(getByText('Nie udało się zapisać zmian')).toBeTruthy();
   expect(queryByText('Wiedźmin 3')).toBeNull();
   expect(queryByText('Nakładające się sesje')).toBeNull();
 });
