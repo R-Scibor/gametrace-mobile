@@ -102,15 +102,15 @@ test('sessionSaveError maps a bounds 422 string and turns a pydantic list into t
   });
 });
 
-test('sessionSaveError is the fallback when the 409 body is incomplete', () => {
+test('sessionSaveError is a translated conflict message when the 409 body is incomplete', () => {
   expect(sessionSaveError(httpError(409, { detail: 'Session overlaps with an existing session' }), 'fallback')).toEqual({
     kind: 'message',
-    message: 'fallback',
+    message: 'Ta sesja koliduje z inną albo zmieniła się w międzyczasie. Odśwież dane i spróbuj ponownie.',
   });
   expect(sessionSaveError(httpError(409, {
     detail: { detail: 'Session overlaps with an existing session', conflicting_session: null },
   }), 'fallback')).toEqual({
     kind: 'message',
-    message: 'fallback',
+    message: 'Ta sesja koliduje z inną albo zmieniła się w międzyczasie. Odśwież dane i spróbuj ponownie.',
   });
 });

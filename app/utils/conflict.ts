@@ -1,4 +1,5 @@
 import type { ConflictResponse, ConflictingSession, SessionStatus } from '../types/api';
+import i18n from '../i18n';
 import { apiErrorMessage } from './apiError';
 import { boundsCodeFromDetail, boundsMessage } from './sessionBounds';
 
@@ -66,5 +67,7 @@ export function sessionSaveError(e: unknown, fallback: string): SaveError {
     const code = boundsCodeFromDetail(detail);
     if (code) return { kind: 'message', message: boundsMessage(code) };
   }
+  // A 409 we could not parse into a blocker is still a conflict, not a generic failure.
+  if (status === 409) return { kind: 'message', message: i18n.t('common:conflict.incompleteMessage') };
   return { kind: 'message', message: apiErrorMessage(e, fallback) };
 }

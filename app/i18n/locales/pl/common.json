@@ -31,7 +31,8 @@
     "edit": "Edytuj →",
     "overlapMessage": "Ta sesja nakłada się na inną zapisaną sesję.",
     "staleHeading": "Sesja zmieniła się w międzyczasie",
-    "staleMessage": "Ta sesja została w międzyczasie zmieniona, na przykład przez bota. Poniżej jest jej aktualna wersja."
+    "staleMessage": "Ta sesja została w międzyczasie zmieniona, na przykład przez bota. Poniżej jest jej aktualna wersja.",
+    "incompleteMessage": "Ta sesja koliduje z inną albo zmieniła się w międzyczasie. Odśwież dane i spróbuj ponownie."
   },
   "confirm": {
     "defaultCancel": "Anuluj"
