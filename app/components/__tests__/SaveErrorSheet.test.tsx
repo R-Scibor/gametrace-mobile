@@ -40,7 +40,7 @@ test('conflict kind shows the blocker and Edit fires onEdit', async () => {
   );
   expect(getByText('Nakładające się sesje')).toBeTruthy();
   expect(getByText('Wiedźmin 3')).toBeTruthy();
-  expect(getByText('Ta sesja nakłada się na inną zapisaną sesję.')).toBeTruthy();
+  expect(getByText('Ten przedział nachodzi na inną sesję.')).toBeTruthy();
   expect(queryByText('Session overlaps with an existing session')).toBeNull();
 
   const start = new Date(session.start_time).toLocaleString('pl-PL', {
@@ -89,7 +89,7 @@ test('a lost-update 409 gets its own translated heading and message', async () =
       onEdit={jest.fn()}
     />,
   );
-  expect(getByText('Sesja zmieniła się w międzyczasie')).toBeTruthy();
+  expect(getByText('Sesja zmieniona')).toBeTruthy();
   expect(
     getByText('Ta sesja została w międzyczasie zmieniona, na przykład przez bota. Poniżej jest jej aktualna wersja.'),
   ).toBeTruthy();
@@ -105,6 +105,6 @@ test('an unknown 409 detail falls back to the overlap copy, never the raw string
       onEdit={jest.fn()}
     />,
   );
-  expect(getByText('Ta sesja nakłada się na inną zapisaną sesję.')).toBeTruthy();
+  expect(getByText('Ten przedział nachodzi na inną sesję.')).toBeTruthy();
   expect(queryByText('Something new from the API')).toBeNull();
 });

@@ -29,8 +29,8 @@
   "conflict": {
     "heading": "Overlapping sessions",
     "edit": "Edit →",
-    "overlapMessage": "This session overlaps with another saved session.",
-    "staleHeading": "Session changed in the meantime",
+    "overlapMessage": "This time range overlaps another session.",
+    "staleHeading": "Session changed",
     "staleMessage": "This session was changed in the meantime, for example by the bot. Its current version is below.",
     "incompleteMessage": "This session clashes with another one or changed in the meantime. Refresh and try again."
   },
