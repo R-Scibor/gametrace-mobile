@@ -14,7 +14,7 @@ jest.mock('../../hooks/useVoiceRecord', () => ({
 }));
 
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import VoiceScreen from '../VoiceScreen';
+import VoiceScreen, { transcribeErrorKey } from '../VoiceScreen';
 import { transcribeAudio } from '../../api/voice';
 import { resolveGame } from '../../api/games';
 
@@ -103,4 +103,25 @@ test('a network error without a response shows the send failure copy', async () 
   await stopRecording(utils);
 
   await waitFor(() => expect(utils.getByText('Nie udało się wysłać nagrania.')).toBeTruthy());
+});
+
+describe('transcribeErrorKey', () => {
+  test('maps 429 to quotaExceeded', () => {
+    expect(transcribeErrorKey(429)).toBe('alerts.quotaExceeded');
+  });
+
+  test('maps 400 and 422 to badRecording', () => {
+    expect(transcribeErrorKey(400)).toBe('alerts.badRecording');
+    expect(transcribeErrorKey(422)).toBe('alerts.badRecording');
+  });
+
+  test('maps 502 and 503 to processingFailed', () => {
+    expect(transcribeErrorKey(502)).toBe('alerts.processingFailed');
+    expect(transcribeErrorKey(503)).toBe('alerts.processingFailed');
+  });
+
+  test('maps other statuses or undefined to sendFailed', () => {
+    expect(transcribeErrorKey(500)).toBe('alerts.sendFailed');
+    expect(transcribeErrorKey(undefined)).toBe('alerts.sendFailed');
+  });
 });

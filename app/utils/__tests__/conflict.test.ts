@@ -1,4 +1,4 @@
-import { parseConflict, sessionSaveError } from '../conflict';
+import { conflictCopyKeys, parseConflict, sessionSaveError, WRITER_CONFLICT_DETAIL } from '../conflict';
 import type { ConflictResponse, ConflictingSession } from '../../types/api';
 
 const session: ConflictingSession = {
@@ -112,5 +112,25 @@ test('sessionSaveError is a translated conflict message when the 409 body is inc
   }), 'fallback')).toEqual({
     kind: 'message',
     message: 'Ta sesja koliduje z inną albo zmieniła się w międzyczasie. Odśwież dane i spróbuj ponownie.',
+  });
+});
+
+describe('conflictCopyKeys', () => {
+  test('maps writer conflict detail to stale heading and message', () => {
+    expect(conflictCopyKeys(WRITER_CONFLICT_DETAIL)).toEqual({
+      heading: 'conflict.staleHeading',
+      message: 'conflict.staleMessage',
+    });
+  });
+
+  test('maps overlap or unknown detail to overlap heading and message', () => {
+    expect(conflictCopyKeys('Session overlaps with an existing session')).toEqual({
+      heading: 'conflict.heading',
+      message: 'conflict.overlapMessage',
+    });
+    expect(conflictCopyKeys('Something unexpected')).toEqual({
+      heading: 'conflict.heading',
+      message: 'conflict.overlapMessage',
+    });
   });
 });

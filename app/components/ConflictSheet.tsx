@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BottomSheet, sheetStyles } from './BottomSheet';
 import Cover from './Cover';
 import type { ConflictResponse, ConflictingSession } from '../types/api';
+import { conflictCopyKeys } from '../utils/conflict';
 import i18n from '../i18n';
 import { intlLocale } from '../i18n/resolve';
 import { colors } from '../theme/colors';
@@ -17,17 +18,6 @@ function formatRange(startIso: string, endIso: string | null): string {
             minute: '2-digit',
         });
     return endIso ? `${fmt(startIso)} – ${fmt(endIso)}` : fmt(startIso);
-}
-
-/** Backend 409 `detail` strings are frozen English. Map them to copy keys and
- *  never render them raw. Anything unknown reads as the common overlap case. */
-const WRITER_CONFLICT_DETAIL = 'Session was updated by another writer';
-
-export function conflictCopyKeys(detail: string): { heading: string; message: string } {
-    if (detail === WRITER_CONFLICT_DETAIL) {
-        return { heading: 'conflict.staleHeading', message: 'conflict.staleMessage' };
-    }
-    return { heading: 'conflict.heading', message: 'conflict.overlapMessage' };
 }
 
 export default function ConflictSheet({

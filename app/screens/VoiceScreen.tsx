@@ -119,9 +119,10 @@ export default function VoiceScreen() {
                     note: result.raw_transcript,
                 },
             });
-        } catch (e: any) {
-            if (__DEV__) console.log('transcribe failed', e?.response?.status, e?.response?.data, e?.message);
-            setAlert({ title: t('alerts.errorTitle'), message: t(transcribeErrorKey(e?.response?.status)) });
+        } catch (e: unknown) {
+            const err = e as { response?: { status?: number; data?: unknown }; message?: string };
+            if (__DEV__) console.log('transcribe failed', err?.response?.status, err?.response?.data, err?.message);
+            setAlert({ title: t('alerts.errorTitle'), message: t(transcribeErrorKey(err?.response?.status)) });
         } finally {
             setProcessing(false);
         }

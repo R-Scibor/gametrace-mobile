@@ -7,6 +7,17 @@ export type SaveError =
   | { kind: 'conflict'; conflict: ConflictResponse }
   | { kind: 'message'; message: string };
 
+/** Backend 409 `detail` strings are frozen English. Map them to copy keys and
+ *  never render them raw. Anything unknown reads as the common overlap case. */
+export const WRITER_CONFLICT_DETAIL = 'Session was updated by another writer';
+
+export function conflictCopyKeys(detail: string): { heading: string; message: string } {
+  if (detail === WRITER_CONFLICT_DETAIL) {
+    return { heading: 'conflict.staleHeading', message: 'conflict.staleMessage' };
+  }
+  return { heading: 'conflict.heading', message: 'conflict.overlapMessage' };
+}
+
 function isSessionStatus(value: unknown): value is SessionStatus {
   return value === 'ONGOING' || value === 'COMPLETED' || value === 'ERROR';
 }
@@ -59,15 +70,19 @@ function responseDetail(error: unknown): { status?: number; detail?: unknown } {
 }
 
 export function sessionSaveError(e: unknown, fallback: string): SaveError {
-  const conflict = parseConflict(e);
-  if (conflict) return { kind: 'conflict', conflict };
-
   const { status, detail } = responseDetail(e);
+
+  if (status === 409) {
+    const conflict = parseConflict(e);
+    if (conflict) return { kind: 'conflict', conflict };
+    // A 409 we could not parse into a blocker is still a conflict, not a generic failure.
+    return { kind: 'message', message: i18n.t('common:conflict.incompleteMessage') };
+  }
+
   if (status === 422) {
     const code = boundsCodeFromDetail(detail);
     if (code) return { kind: 'message', message: boundsMessage(code) };
   }
-  // A 409 we could not parse into a blocker is still a conflict, not a generic failure.
-  if (status === 409) return { kind: 'message', message: i18n.t('common:conflict.incompleteMessage') };
+
   return { kind: 'message', message: apiErrorMessage(e, fallback) };
 }
